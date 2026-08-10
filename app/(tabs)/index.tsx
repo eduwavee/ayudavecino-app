@@ -1,10 +1,28 @@
 import { useState, useRef, useEffect } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Dimensions } from 'react-native'
 import { useRouter } from 'expo-router'
+import * as Location from 'expo-location'
 import { Colors } from '../../constants/colors'
 import { useAuthStore } from '../../store/authStore'
+import { useTema, TemaTokens } from '../../store/temaStore'
 import { pedidosService } from '../../services/pedidos.service'
 import { notificacionesService } from '../../services/notificaciones.service'
+import { usuariosService } from '../../services/usuarios.service'
+import { distanciaKm, formatearDistancia } from '../../utils/distancia'
+import { SkeletonBlock } from '../../components/ui/Skeleton'
+
+function SkeletonProvCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
+  return (
+    <View style={styles.provCard}>
+      <SkeletonBlock height={80} borderRadius={0} />
+      <View style={styles.provCardBody}>
+        <SkeletonBlock width="80%" height={14} style={{ marginBottom: 6 }} />
+        <SkeletonBlock width="55%" height={11} style={{ marginBottom: 10 }} />
+        <SkeletonBlock width="100%" height={20} borderRadius={100} />
+      </View>
+    </View>
+  )
+}
 
 
 
@@ -20,12 +38,11 @@ const CATEGORIAS = [
   { ico:'🎨', nombre:'Pintura',      value:'pintura' },
 ]
 
-const PROVEEDORES = [
-  { id:'1', nombre:'Carlos M.', cat:'Plomero',      rating:'4.9', dist:'1.2 km', precio:'6.000', bg:'#C8F5D0', ico:'🔧' },
-  { id:'2', nombre:'Diego R.',  cat:'Electricista', rating:'4.8', dist:'0.8 km', precio:'7.000', bg:'#FFF3CC', ico:'⚡' },
-  { id:'3', nombre:'Omar S.',   cat:'Albañil',      rating:'4.7', dist:'2.1 km', precio:'9.000', bg:'#CCE5FF', ico:'🏗️' },
-  { id:'4', nombre:'Laura P.',  cat:'Pintora',      rating:'5.0', dist:'3.0 km', precio:'8.500', bg:'#FFE5E5', ico:'🎨' },
-]
+const TARJETA_BG = ['#C8F5D0', '#FFF3CC', '#CCE5FF', '#FFE5E5']
+
+function categoriaInfo(value?: string) {
+  return CATEGORIAS.find(c => c.value === value) ?? { ico: '🔨', nombre: 'Servicios' }
+}
 
 const STATS = [
   { num:'2.400+', label:'Vecinos' },
@@ -36,11 +53,62 @@ const STATS = [
 export default function HomeScreen() {
   const router  = useRouter()
   const usuario = useAuthStore(s => s.usuario)
+  const tema = useTema()
+  const styles = getStyles(tema)
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(20)).current
 
+  const [proveedoresCerca, setProveedoresCerca] = useState<any[]>([])
+  const [loadingCerca, setLoadingCerca] = useState(true)
+
   const hora = new Date().getHours()
   const saludo = hora < 12 ? 'Buenos días ☀️' : hora < 18 ? 'Buenas tardes 🌤️' : 'Buenas noches 🌙'
+
+  useEffect(() => {
+    cargarProveedoresCerca()
+  }, [])
+
+  async function cargarProveedoresCerca() {
+    try {
+      const [proveedores, ubicacion] = await Promise.all([
+        usuariosService.listarProveedores(),
+        obtenerUbicacion(),
+      ])
+
+      const conCoords = (proveedores ?? []).filter(
+        (p: any) => typeof p.latitud === 'number' && typeof p.longitud === 'number'
+      )
+
+      const conDistancia = conCoords.map((p: any) => ({
+        ...p,
+        distanciaKm: ubicacion
+          ? distanciaKm(ubicacion, { latitude: p.latitud, longitude: p.longitud })
+          : null,
+      }))
+
+      conDistancia.sort((a: any, b: any) => {
+        if (a.distanciaKm == null || b.distanciaKm == null) return 0
+        return a.distanciaKm - b.distanciaKm
+      })
+
+      setProveedoresCerca(conDistancia.slice(0, 8))
+    } catch {
+      setProveedoresCerca([])
+    } finally {
+      setLoadingCerca(false)
+    }
+  }
+
+  async function obtenerUbicacion(): Promise<{ latitude: number; longitude: number } | null> {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== 'granted') return null
+      const pos = await Location.getCurrentPositionAsync({})
+      return { latitude: pos.coords.latitude, longitude: pos.coords.longitude }
+    } catch {
+      return null
+    }
+  }
 
   useEffect(() => {
   Animated.parallel([
@@ -176,28 +244,51 @@ export default function HomeScreen() {
           <Text style={styles.sectionLink}>Ver mapa →</Text>
         </TouchableOpacity>
       </View>
+      {loadingCerca ? (
+        <View style={[styles.provsScroll, { flexDirection:'row' }]}>
+          {[0, 1].map(i => <SkeletonProvCard key={i} styles={styles} />)}
+        </View>
+      ) : proveedoresCerca.length === 0 ? (
+        <View style={styles.emptyCerca}>
+          <Text style={styles.emptyCercaText}>Todavía no hay proveedores con ubicación cargada cerca tuyo</Text>
+        </View>
+      ) : (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.provsScroll}>
-        {PROVEEDORES.map(p => (
-          <TouchableOpacity key={p.id} style={styles.provCard} activeOpacity={.85}>
-            <View style={[styles.provCardTop, { backgroundColor: p.bg }]}>
-              <Text style={styles.provCardIco}>{p.ico}</Text>
-              <View style={styles.provDistBadge}>
-                <Text style={styles.provDist}>📍 {p.dist}</Text>
-              </View>
+        {proveedoresCerca.map((p, i) => {
+          const cat = categoriaInfo(p.servicios?.[0]?.categoria)
+          const precioMin = p.servicios?.length
+            ? Math.min(...p.servicios.map((s: any) => s.precio))
+            : null
+          return (
+          <TouchableOpacity
+            key={p.id}
+            style={styles.provCard}
+            activeOpacity={.85}
+            onPress={() => router.push(`/proveedor/${p.id}`)}
+          >
+            <View style={[styles.provCardTop, { backgroundColor: TARJETA_BG[i % TARJETA_BG.length] }]}>
+              <Text style={styles.provCardIco}>{cat.ico}</Text>
+              {p.distanciaKm != null && (
+                <View style={styles.provDistBadge}>
+                  <Text style={styles.provDist}>📍 {formatearDistancia(p.distanciaKm)}</Text>
+                </View>
+              )}
             </View>
             <View style={styles.provCardBody}>
               <Text style={styles.provNombre}>{p.nombre}</Text>
-              <Text style={styles.provCat}>{p.cat}</Text>
+              <Text style={styles.provCat}>{cat.nombre}</Text>
               <View style={styles.provRow}>
                 <View style={styles.ratingBadge}>
-                  <Text style={styles.ratingText}>⭐ {p.rating}</Text>
+                  <Text style={styles.ratingText}>⭐ {p.rating?.toFixed?.(1) ?? '0.0'}</Text>
                 </View>
-                <Text style={styles.provPrecio}>desde ${p.precio}</Text>
+                {precioMin != null && <Text style={styles.provPrecio}>desde ${precioMin}</Text>}
               </View>
             </View>
           </TouchableOpacity>
-        ))}
+          )
+        })}
       </ScrollView>
+      )}
 
       {/* ── BANNER PROVEEDOR ── */}
       {usuario?.rol === 'CLIENTE' && (
@@ -230,43 +321,43 @@ export default function HomeScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container:           { flex:1, backgroundColor:Colors.cream },
+const getStyles = (tema: TemaTokens) => StyleSheet.create({
+  container:           { flex:1, backgroundColor:tema.bg },
   header:              { flexDirection:'row', alignItems:'center', justifyContent:'space-between', paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
   headerLeft:          { flex:1 },
-  saludo:              { fontSize:11, color:Colors.gray, fontWeight:'600', marginBottom:2 },
-  nombre:              { fontSize:24, fontWeight:'900', color:Colors.dark },
+  saludo:              { fontSize:11, color:tema.subTexto, fontWeight:'600', marginBottom:2 },
+  nombre:              { fontSize:24, fontWeight:'900', color:tema.texto },
   nombreVerde:         { color:Colors.primary },
   headerRight:         { flexDirection:'row', gap:10, alignItems:'center' },
-  notifBtn:            { width:42, height:42, borderRadius:13, backgroundColor:'white', alignItems:'center', justifyContent:'center', position:'relative', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:6, elevation:2 },
+  notifBtn:            { width:42, height:42, borderRadius:13, backgroundColor:tema.card, alignItems:'center', justifyContent:'center', position:'relative', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:6, elevation:2 },
   notifIco:            { fontSize:18 },
-  notifDot:            { position:'absolute', top:8, right:8, width:9, height:9, borderRadius:5, backgroundColor:'#FF4757', borderWidth:2, borderColor:Colors.cream },
-  avatarBtn:           { shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:6, elevation:3 },
+  notifDot:            { position:'absolute', top:8, right:8, width:9, height:9, borderRadius:5, backgroundColor:'#FF4757', borderWidth:2, borderColor:tema.bg },
+  avatarBtn:           { shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:6, elevation:3 },
   avatar:              { width:42, height:42, borderRadius:13, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center' },
   avatarText:          { color:'white', fontSize:18, fontWeight:'900' },
-  searchBar:           { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'white', borderRadius:18, padding:14, marginHorizontal:22, marginBottom:10, shadowColor:'#000', shadowOffset:{width:0,height:3}, shadowOpacity:.08, shadowRadius:10, elevation:4 },
+  searchBar:           { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:tema.card, borderRadius:18, padding:14, marginHorizontal:22, marginBottom:10, shadowColor:tema.sombra, shadowOffset:{width:0,height:3}, shadowOpacity:.08, shadowRadius:10, elevation:4 },
   searchLeft:          { flexDirection:'row', alignItems:'center', gap:10, flex:1 },
   searchIcon:          { fontSize:16 },
-  searchPlaceholder:   { fontSize:14, color:'#bbb', flex:1 },
-  filterBtn:           { width:34, height:34, borderRadius:10, backgroundColor:Colors.cream, alignItems:'center', justifyContent:'center' },
+  searchPlaceholder:   { fontSize:14, color:tema.subTexto, flex:1 },
+  filterBtn:           { width:34, height:34, borderRadius:10, backgroundColor:tema.bg, alignItems:'center', justifyContent:'center' },
   filterIco:           { fontSize:14 },
   locationRow:         { flexDirection:'row', alignItems:'center', paddingHorizontal:22, marginBottom:20, gap:6 },
   locDot:              { width:8, height:8, borderRadius:4, backgroundColor:Colors.primary },
-  locText:             { fontSize:12, color:Colors.gray, flex:1 },
+  locText:             { fontSize:12, color:tema.subTexto, flex:1 },
   locChange:           { fontSize:12, color:Colors.primary, fontWeight:'700' },
-  statsStrip:          { flexDirection:'row', backgroundColor:'white', marginHorizontal:22, borderRadius:18, padding:16, marginBottom:24, shadowColor:'#000', shadowOffset:{width:0,height:3}, shadowOpacity:.06, shadowRadius:10, elevation:3 },
+  statsStrip:          { flexDirection:'row', backgroundColor:tema.card, marginHorizontal:22, borderRadius:18, padding:16, marginBottom:24, shadowColor:tema.sombra, shadowOffset:{width:0,height:3}, shadowOpacity:.06, shadowRadius:10, elevation:3 },
   statItem:            { flex:1, alignItems:'center' },
-  statBorder:          { borderLeftWidth:1, borderLeftColor:'#f0f0f0' },
-  statNum:             { fontSize:18, fontWeight:'900', color:Colors.dark, marginBottom:2 },
-  statLabel:           { fontSize:10, color:Colors.gray, fontWeight:'500' },
+  statBorder:          { borderLeftWidth:1, borderLeftColor:tema.border },
+  statNum:             { fontSize:18, fontWeight:'900', color:tema.texto, marginBottom:2 },
+  statLabel:           { fontSize:10, color:tema.subTexto, fontWeight:'500' },
   sectionHeader:       { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingHorizontal:22, marginBottom:14 },
-  sectionTitle:        { fontSize:18, fontWeight:'900', color:Colors.dark },
+  sectionTitle:        { fontSize:18, fontWeight:'900', color:tema.texto },
   sectionLink:         { fontSize:12, color:Colors.primary, fontWeight:'700' },
   catsScroll:          { paddingHorizontal:22, gap:10, marginBottom:24 },
   catChip:             { alignItems:'center', gap:8, width:76 },
-  catIcoWrap:          { width:56, height:56, borderRadius:18, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:3}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
+  catIcoWrap:          { width:56, height:56, borderRadius:18, backgroundColor:tema.card, alignItems:'center', justifyContent:'center', shadowColor:tema.sombra, shadowOffset:{width:0,height:3}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
   catIco:              { fontSize:26 },
-  catNombre:           { fontSize:10, fontWeight:'700', color:Colors.dark, textAlign:'center' },
+  catNombre:           { fontSize:10, fontWeight:'700', color:tema.texto, textAlign:'center' },
   promoBanner:         { marginHorizontal:22, marginBottom:24, backgroundColor:'#1a1a1a', borderRadius:22, padding:22, flexDirection:'row', justifyContent:'space-between', alignItems:'center', overflow:'hidden' },
   promoBg:             { position:'absolute', width:200, height:200, borderRadius:100, backgroundColor:Colors.primary, opacity:.12, right:-60, top:-60 },
   promoContent:        { flex:1 },
@@ -278,17 +369,19 @@ const styles = StyleSheet.create({
   promoCtaText:        { fontSize:12, fontWeight:'700', color:'#1a1a1a' },
   promoEmoji:          { fontSize:48 },
   provsScroll:         { paddingHorizontal:22, gap:14, marginBottom:24 },
-  provCard:            { width:170, backgroundColor:'white', borderRadius:22, overflow:'hidden', shadowColor:'#000', shadowOffset:{width:0,height:4}, shadowOpacity:.08, shadowRadius:12, elevation:4 },
+  emptyCerca:          { marginHorizontal:22, marginBottom:24, padding:20, borderRadius:16, backgroundColor:tema.card, alignItems:'center' },
+  emptyCercaText:      { fontSize:12, color:tema.subTexto, textAlign:'center' },
+  provCard:            { width:170, backgroundColor:tema.card, borderRadius:22, overflow:'hidden', shadowColor:tema.sombra, shadowOffset:{width:0,height:4}, shadowOpacity:.08, shadowRadius:12, elevation:4 },
   provCardTop:         { height:80, justifyContent:'space-between', flexDirection:'row', alignItems:'flex-end', padding:14, paddingTop:10 },
   provCardIco:         { fontSize:32, transform:[{translateY:16}] },
   provDistBadge:       { backgroundColor:'white', paddingHorizontal:8, paddingVertical:3, borderRadius:100 },
   provDist:            { fontSize:9, fontWeight:'700', color:Colors.dark },
   provCardBody:        { padding:14, paddingTop:22 },
-  provNombre:          { fontSize:15, fontWeight:'900', color:Colors.dark, marginBottom:2 },
-  provCat:             { fontSize:11, color:Colors.gray, marginBottom:10 },
+  provNombre:          { fontSize:15, fontWeight:'900', color:tema.texto, marginBottom:2 },
+  provCat:             { fontSize:11, color:tema.subTexto, marginBottom:10 },
   provRow:             { flexDirection:'row', alignItems:'center', justifyContent:'space-between' },
-  ratingBadge:         { backgroundColor:Colors.cream, paddingHorizontal:8, paddingVertical:3, borderRadius:100 },
-  ratingText:          { fontSize:11, fontWeight:'700', color:Colors.dark },
+  ratingBadge:         { backgroundColor:tema.bg, paddingHorizontal:8, paddingVertical:3, borderRadius:100 },
+  ratingText:          { fontSize:11, fontWeight:'700', color:tema.texto },
   provPrecio:          { fontSize:11, fontWeight:'700', color:Colors.primary },
   proveedorBanner:     { flexDirection:'row', alignItems:'center', justifyContent:'space-between', marginHorizontal:22, marginBottom:24, backgroundColor:Colors.greenLight, borderRadius:18, padding:18, borderWidth:1.5, borderColor:Colors.primary },
   proveedorBannerTitle:{ fontSize:15, fontWeight:'900', color:Colors.dark, marginBottom:3 },

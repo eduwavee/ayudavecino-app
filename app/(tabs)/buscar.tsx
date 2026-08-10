@@ -1,11 +1,29 @@
 import { useState, useEffect } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
-  FlatList, StyleSheet, ActivityIndicator
+  FlatList, StyleSheet
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { serviciosService } from '../../services/servicios.service'
+import { useTema, TemaTokens } from '../../store/temaStore'
+import { SkeletonBlock } from '../../components/ui/Skeleton'
+
+function SkeletonServiceCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
+  return (
+    <View style={styles.serviceCard}>
+      <View style={styles.serviceLeft}>
+        <SkeletonBlock width={48} height={48} borderRadius={14} />
+        <View style={styles.serviceInfo}>
+          <SkeletonBlock width="70%" height={14} style={{ marginBottom: 6 }} />
+          <SkeletonBlock width="45%" height={11} style={{ marginBottom: 8 }} />
+          <SkeletonBlock width={90} height={16} borderRadius={100} />
+        </View>
+      </View>
+      <SkeletonBlock width={44} height={16} />
+    </View>
+  )
+}
 
 const CATEGORIAS = [
   { label:'Todos',        value:'' },
@@ -20,6 +38,8 @@ const CATEGORIAS = [
 
 export default function BuscarScreen() {
   const router = useRouter()
+  const tema = useTema()
+  const styles = getStyles(tema)
   const { categoria } = useLocalSearchParams<{ categoria?: string }>()
   const [servicios, setServicios] = useState<any[]>([])
   const [loading, setLoading]     = useState(true)
@@ -62,7 +82,7 @@ export default function BuscarScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar servicio o proveedor..."
-          placeholderTextColor="#bbb"
+          placeholderTextColor={tema.subTexto}
           value={busqueda}
           onChangeText={setBusqueda}
         />
@@ -99,7 +119,9 @@ export default function BuscarScreen() {
       )}
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop:40 }} />
+        <View style={styles.listContainer}>
+          {[0, 1, 2, 3].map(i => <SkeletonServiceCard key={i} styles={styles} />)}
+        </View>
       ) : (
         <FlatList
           data={filtrados}
@@ -142,37 +164,37 @@ export default function BuscarScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container:        { flex:1, backgroundColor:Colors.cream },
+const getStyles = (tema: TemaTokens) => StyleSheet.create({
+  container:        { flex:1, backgroundColor:tema.bg },
   header:           { paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
-  title:            { fontSize:26, fontWeight:'900', color:Colors.dark },
-  searchWrap:       { flexDirection:'row', alignItems:'center', backgroundColor:'white', borderRadius:16, padding:12, marginHorizontal:22, marginBottom:14, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:3 },
+  title:            { fontSize:26, fontWeight:'900', color:tema.texto },
+  searchWrap:       { flexDirection:'row', alignItems:'center', backgroundColor:tema.card, borderRadius:16, padding:12, marginHorizontal:22, marginBottom:14, shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:3 },
   searchIco:        { fontSize:16, marginRight:10 },
-  searchInput:      { flex:1, fontSize:14, color:Colors.dark },
-  clearBtn:         { fontSize:14, color:'#bbb', padding:4 },
+  searchInput:      { flex:1, fontSize:14, color:tema.texto },
+  clearBtn:         { fontSize:14, color:tema.subTexto, padding:4 },
   catsList:         { maxHeight:48, marginBottom:14 },
   catsContainer:    { paddingHorizontal:22, gap:8 },
-  catBtn:           { paddingHorizontal:16, paddingVertical:8, borderRadius:100, backgroundColor:'white', borderWidth:1.5, borderColor:Colors.border },
+  catBtn:           { paddingHorizontal:16, paddingVertical:8, borderRadius:100, backgroundColor:tema.card, borderWidth:1.5, borderColor:tema.border },
   catBtnActive:     { backgroundColor:Colors.dark, borderColor:Colors.dark },
-  catBtnText:       { fontSize:12, fontWeight:'600', color:'#555' },
+  catBtnText:       { fontSize:12, fontWeight:'600', color:tema.subTexto },
   catBtnTextActive: { color:'white' },
-  contador:         { paddingHorizontal:22, marginBottom:12, fontSize:12, color:Colors.gray },
-  contadorNum:      { color:Colors.dark, fontWeight:'700' },
+  contador:         { paddingHorizontal:22, marginBottom:12, fontSize:12, color:tema.subTexto },
+  contadorNum:      { color:tema.texto, fontWeight:'700' },
   listContainer:    { paddingHorizontal:22, gap:12, paddingBottom:100 },
-  serviceCard:      { backgroundColor:'white', borderRadius:18, padding:16, flexDirection:'row', alignItems:'center', justifyContent:'space-between', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
+  serviceCard:      { backgroundColor:tema.card, borderRadius:18, padding:16, flexDirection:'row', alignItems:'center', justifyContent:'space-between', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
   serviceLeft:      { flexDirection:'row', alignItems:'center', gap:12, flex:1 },
   serviceIco:       { width:48, height:48, borderRadius:14, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
   serviceIcoText:   { fontSize:22 },
   serviceInfo:      { flex:1 },
-  serviceName:      { fontSize:14, fontWeight:'700', color:Colors.dark, marginBottom:2 },
-  serviceProveedor: { fontSize:11, color:Colors.gray, marginBottom:6 },
+  serviceName:      { fontSize:14, fontWeight:'700', color:tema.texto, marginBottom:2 },
+  serviceProveedor: { fontSize:11, color:tema.subTexto, marginBottom:6 },
   serviceRow:       { flexDirection:'row', alignItems:'center', gap:8 },
-  serviceRating:    { fontSize:11, fontWeight:'700', color:Colors.dark },
+  serviceRating:    { fontSize:11, fontWeight:'700', color:tema.texto },
   verifiedBadge:    { backgroundColor:Colors.greenLight, paddingHorizontal:8, paddingVertical:2, borderRadius:100 },
   verifiedText:     { fontSize:9, fontWeight:'700', color:Colors.primary },
-  servicePrice:     { fontSize:16, fontWeight:'900', color:Colors.dark },
+  servicePrice:     { fontSize:16, fontWeight:'900', color:tema.texto },
   empty:            { alignItems:'center', paddingTop:60 },
   emptyIco:         { fontSize:48, marginBottom:12, opacity:.3 },
-  emptyText:        { fontSize:16, fontWeight:'700', color:Colors.gray },
-  emptySub:         { fontSize:13, color:'#bbb', marginTop:4 },
+  emptyText:        { fontSize:16, fontWeight:'700', color:tema.subTexto },
+  emptySub:         { fontSize:13, color:tema.subTexto, marginTop:4 },
 })
