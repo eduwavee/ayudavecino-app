@@ -2,17 +2,18 @@ import { useState, useRef, useEffect } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, Alert, ActivityIndicator,
-  Animated
+  Animated, Image
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as Location from 'expo-location'
+import * as ImagePicker from 'expo-image-picker'
 import MapView, { Marker } from 'react-native-maps'
 import { Colors } from '../constants/colors'
+import { API_URL, avatarUrl } from '../constants/config'
 import { useAuthStore } from '../store/authStore'
+import { usuariosService } from '../services/usuarios.service'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
-const API_URL = 'http://192.168.1.37:3000/api'
 
 export default function EditarPerfilScreen() {
   const router  = useRouter()
@@ -28,6 +29,7 @@ export default function EditarPerfilScreen() {
   const [loading, setLoading]   = useState(false)
   const [focused, setFocused]   = useState<string|null>(null)
   const [guardado, setGuardado] = useState(false)
+  const [subiendoAvatar, setSubiendoAvatar] = useState(false)
 
   const fadeAnim  = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(20)).current
@@ -39,6 +41,32 @@ export default function EditarPerfilScreen() {
       Animated.timing(slideAnim, { toValue:0, duration:500, useNativeDriver:true }),
     ]).start()
   }, [])
+
+  async function handleCambiarFoto() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('Permiso necesario', 'Activá el permiso de galería para elegir una foto de perfil')
+      return
+    }
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    })
+    if (resultado.canceled || !resultado.assets?.[0] || !usuario?.id) return
+
+    setSubiendoAvatar(true)
+    try {
+      const usuarioActualizado = await usuariosService.subirAvatar(usuario.id, resultado.assets[0].uri)
+      const token = await AsyncStorage.getItem('token')
+      setUsuario(usuarioActualizado, token!)
+    } catch (err: any) {
+      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo subir la foto')
+    } finally {
+      setSubiendoAvatar(false)
+    }
+  }
 
   async function handleUsarUbicacionActual() {
     setUbicando(true)
@@ -116,11 +144,24 @@ export default function EditarPerfilScreen() {
           <View style={styles.avatarSection}>
             <View style={styles.avatarWrap}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {nombre?.charAt(0).toUpperCase()}
-                </Text>
+                {avatarUrl(usuario?.avatar) ? (
+                  <Image source={{ uri: avatarUrl(usuario?.avatar)! }} style={styles.avatarImg} />
+                ) : (
+                  <Text style={styles.avatarText}>
+                    {nombre?.charAt(0).toUpperCase()}
+                  </Text>
+                )}
+                {subiendoAvatar && (
+                  <View style={styles.avatarLoading}>
+                    <ActivityIndicator color="white" />
+                  </View>
+                )}
               </View>
-              <TouchableOpacity style={styles.avatarEdit}>
+              <TouchableOpacity
+                style={styles.avatarEdit}
+                onPress={handleCambiarFoto}
+                disabled={subiendoAvatar}
+              >
                 <Text style={styles.avatarEditText}>📷</Text>
               </TouchableOpacity>
             </View>
@@ -290,7 +331,9 @@ const styles = StyleSheet.create({
   content:            { paddingHorizontal:22 },
   avatarSection:      { alignItems:'center', marginBottom:28 },
   avatarWrap:         { position:'relative', marginBottom:8 },
-  avatar:             { width:90, height:90, borderRadius:28, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', shadowColor:Colors.primary, shadowOffset:{width:0,height:6}, shadowOpacity:.3, shadowRadius:12, elevation:6 },
+  avatar:             { width:90, height:90, borderRadius:28, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', overflow:'hidden', shadowColor:Colors.primary, shadowOffset:{width:0,height:6}, shadowOpacity:.3, shadowRadius:12, elevation:6 },
+  avatarImg:          { width:'100%', height:'100%' },
+  avatarLoading:       { ...StyleSheet.absoluteFillObject, backgroundColor:'rgba(0,0,0,.4)', alignItems:'center', justifyContent:'center' },
   avatarText:         { color:'white', fontSize:36, fontWeight:'900' },
   avatarEdit:         { position:'absolute', bottom:-4, right:-4, width:32, height:32, borderRadius:10, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:4, elevation:3 },
   avatarEditText:     { fontSize:16 },

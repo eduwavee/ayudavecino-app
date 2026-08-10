@@ -39,4 +39,22 @@ export const usuariosService = {
     })
     return response.data
   },
+
+  async subirAvatar(id: string, imagenUri: string) {
+    const token = await AsyncStorage.getItem('token')
+    const nombreArchivo = imagenUri.split('/').pop() ?? 'avatar.jpg'
+    const extension = nombreArchivo.split('.').pop()?.toLowerCase() ?? 'jpg'
+
+    const formData = new FormData()
+    formData.append('avatar', {
+      uri: imagenUri,
+      name: nombreArchivo,
+      type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
+    } as any)
+
+    const response = await axios.post(`${API_URL}/usuarios/${id}/avatar`, formData, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data.usuario
+  },
 }
