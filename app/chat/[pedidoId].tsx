@@ -8,6 +8,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { useAuthStore } from '../../store/authStore'
 import { chatService } from '../../services/chat.service'
+import { pedidosService } from '../../services/pedidos.service'
 
 const { width } = Dimensions.get('window')
 
@@ -29,6 +30,7 @@ export default function ChatScreen() {
   const [escribiendo, setEscribiendo] = useState(false)
   const [conectado, setConectado]     = useState(false)
   const [inputAlto, setInputAlto]     = useState(false)
+  const [cargandoHistorial, setCargandoHistorial] = useState(true)
 
   const flatListRef   = useRef<FlatList>(null)
   const typingTimeout = useRef<any>(null)
@@ -62,6 +64,18 @@ export default function ChatScreen() {
   }, [escribiendo])
 
   async function iniciarChat() {
+    try {
+      console.log('Cargando historial del pedido:', pedidoId)
+      const historial = await pedidosService.obtenerMensajes(pedidoId)
+      console.log('Historial recibido:', historial?.length ?? 0, 'mensajes')
+      setMensajes(historial ?? [])
+    } catch (err: any) {
+      console.log('Error cargando historial:', err?.response?.status, err?.response?.data ?? err?.message)
+      // Si falla la carga del historial, el chat sigue funcionando en vivo igual
+    } finally {
+      setCargandoHistorial(false)
+    }
+
     const socket = await chatService.conectar()
     if (!socket) return
     setConectado(true)
@@ -166,10 +180,12 @@ export default function ChatScreen() {
                 <View style={styles.emptyChatBubble}>
                   <Text style={styles.emptyChatIco}>💬</Text>
                   <Text style={styles.emptyChatTitle}>
-                    {conectado ? 'Iniciá la conversación' : 'Conectando...'}
+                    {cargandoHistorial ? 'Cargando...' : conectado ? 'Iniciá la conversación' : 'Conectando...'}
                   </Text>
                   <Text style={styles.emptyChatSub}>
-                    {conectado
+                    {cargandoHistorial
+                      ? 'Buscando mensajes anteriores...'
+                      : conectado
                       ? `Chateá con ${nombreContraparte} sobre tu pedido`
                       : 'Estableciendo conexión en tiempo real...'
                     }
