@@ -1,10 +1,66 @@
 import { useState, useEffect } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { usuariosService } from '../../services/usuarios.service'
+import { resenasService } from '../../services/resenas.service'
+import { SkeletonBlock } from '../../components/ui/Skeleton'
 
 const TABS = ['Sobre mí', 'Servicios', 'Reseñas']
+
+function SkeletonPerfilProveedor() {
+  return (
+    <View style={styles.container}>
+      <View style={styles.hero}>
+        <View style={styles.avatarWrap}>
+          <SkeletonBlock width={72} height={72} borderRadius={20} style={{ backgroundColor:'rgba(255,255,255,.12)' }} />
+          <View>
+            <SkeletonBlock width={140} height={18} style={{ marginBottom:6, backgroundColor:'rgba(255,255,255,.12)' }} />
+            <SkeletonBlock width={90} height={12} style={{ backgroundColor:'rgba(255,255,255,.12)' }} />
+          </View>
+        </View>
+      </View>
+      <View style={styles.statsStrip}>
+        {[0, 1, 2].map(i => (
+          <View key={i} style={[styles.statItem, i > 0 && styles.statBorder]}>
+            <SkeletonBlock width={30} height={20} style={{ marginBottom:6 }} />
+            <SkeletonBlock width={44} height={10} />
+          </View>
+        ))}
+      </View>
+      <View style={[styles.tabContent, { gap:10 }]}>
+        <SkeletonBlock width="100%" height={60} borderRadius={16} />
+        <SkeletonBlock width="100%" height={60} borderRadius={16} />
+      </View>
+    </View>
+  )
+}
+
+function SkeletonResenaCard() {
+  return (
+    <View style={styles.resenaCard}>
+      <View style={styles.resenaHeader}>
+        <SkeletonBlock width={36} height={36} borderRadius={12} />
+        <View style={styles.resenaHeaderInfo}>
+          <SkeletonBlock width={100} height={12} style={{ marginBottom:5 }} />
+          <SkeletonBlock width={60} height={10} />
+        </View>
+      </View>
+      <SkeletonBlock width="90%" height={12} />
+    </View>
+  )
+}
+
+function tiempoRelativo(fecha: string) {
+  const diff = Date.now() - new Date(fecha).getTime()
+  const dias = Math.floor(diff / 86400000)
+  if (dias < 1)  return 'Hoy'
+  if (dias === 1) return 'Ayer'
+  if (dias < 30) return `Hace ${dias} días`
+  const meses = Math.floor(dias / 30)
+  if (meses < 12) return `Hace ${meses} ${meses === 1 ? 'mes' : 'meses'}`
+  return new Date(fecha).toLocaleDateString('es-AR', { year:'numeric', month:'long' })
+}
 
 export default function ProveedorScreen() {
   const { id }   = useLocalSearchParams<{ id: string }>()
@@ -13,8 +69,15 @@ export default function ProveedorScreen() {
   const [loading, setLoading]     = useState(true)
   const [tabActiva, setTabActiva] = useState('Sobre mí')
 
+  const [resenas, setResenas]         = useState<any[]>([])
+  const [promedio, setPromedio]       = useState('0.0')
+  const [loadingResenas, setLoadingResenas] = useState(true)
+
   useEffect(() => {
-    if (id) cargarProveedor()
+    if (id) {
+      cargarProveedor()
+      cargarResenas()
+    }
   }, [id])
 
   async function cargarProveedor() {
@@ -28,8 +91,20 @@ export default function ProveedorScreen() {
     }
   }
 
+  async function cargarResenas() {
+    try {
+      const data = await resenasService.obtenerDeProveedor(id)
+      setResenas(data.resenas ?? [])
+      setPromedio(data.promedio ?? '0.0')
+    } catch {
+      setResenas([])
+    } finally {
+      setLoadingResenas(false)
+    }
+  }
+
   if (loading) {
-    return <View style={styles.loadingWrap}><ActivityIndicator color={Colors.primary} size="large" /></View>
+    return <SkeletonPerfilProveedor />
   }
 
   return (
@@ -123,14 +198,42 @@ export default function ProveedorScreen() {
         {tabActiva === 'Reseñas' && (
           <View style={styles.tabContent}>
             <View style={styles.ratingBig}>
-              <Text style={styles.ratingNum}>{proveedor?.rating?.toFixed(1) ?? '0.0'}</Text>
+              <Text style={styles.ratingNum}>{promedio}</Text>
               <View>
-                <Text style={styles.ratingStars}>⭐⭐⭐⭐⭐</Text>
-                <Text style={styles.ratingCount}>{proveedor?._count?.resenasRecibidas ?? 0} reseñas</Text>
+                <Text style={styles.ratingStars}>
+                  {'⭐'.repeat(Math.round(Number(promedio))) || '☆'}
+                </Text>
+                <Text style={styles.ratingCount}>{resenas.length} reseña{resenas.length === 1 ? '' : 's'}</Text>
               </View>
             </View>
-            {(proveedor?._count?.resenasRecibidas ?? 0) === 0 && (
+
+            {loadingResenas ? (
+              <>
+                <SkeletonResenaCard />
+                <SkeletonResenaCard />
+              </>
+            ) : resenas.length === 0 ? (
               <Text style={styles.emptyTab}>Sin reseñas todavía</Text>
+            ) : (
+              resenas.map((r: any) => (
+                <View key={r.id} style={styles.resenaCard}>
+                  <View style={styles.resenaHeader}>
+                    <View style={styles.resenaAvatar}>
+                      <Text style={styles.resenaAvatarText}>
+                        {r.autor?.nombre?.charAt(0).toUpperCase() ?? '?'}
+                      </Text>
+                    </View>
+                    <View style={styles.resenaHeaderInfo}>
+                      <Text style={styles.resenaAutor}>{r.autor?.nombre ?? 'Vecino'}</Text>
+                      <Text style={styles.resenaFecha}>{tiempoRelativo(r.creadoEn)}</Text>
+                    </View>
+                    <Text style={styles.resenaEstrellas}>{'⭐'.repeat(r.puntaje)}</Text>
+                  </View>
+                  {!!r.comentario && (
+                    <Text style={styles.resenaComentario}>{r.comentario}</Text>
+                  )}
+                </View>
+              ))
             )}
           </View>
         )}
@@ -205,6 +308,15 @@ const styles = StyleSheet.create({
   ratingStars:    { fontSize:16, marginBottom:4 },
   ratingCount:    { fontSize:11, color:Colors.gray },
   emptyTab:       { textAlign:'center', color:Colors.gray, marginTop:20 },
+  resenaCard:     { backgroundColor:'white', borderRadius:16, padding:14, marginBottom:10, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:6, elevation:2 },
+  resenaHeader:   { flexDirection:'row', alignItems:'center', gap:10, marginBottom:8 },
+  resenaAvatar:   { width:36, height:36, borderRadius:12, backgroundColor:Colors.primaryLight, alignItems:'center', justifyContent:'center' },
+  resenaAvatarText:{ color:'white', fontSize:14, fontWeight:'900' },
+  resenaHeaderInfo:{ flex:1 },
+  resenaAutor:    { fontSize:13, fontWeight:'800', color:Colors.dark },
+  resenaFecha:    { fontSize:11, color:Colors.gray, marginTop:1 },
+  resenaEstrellas:{ fontSize:11 },
+  resenaComentario:{ fontSize:13, color:'#555', lineHeight:19 },
   bottomCta:      { position:'absolute', bottom:0, left:0, right:0, backgroundColor:'white', padding:16, paddingBottom:32, flexDirection:'row', gap:10, borderTopWidth:1, borderTopColor:Colors.border },
   chatBtn:        { width:50, height:50, borderRadius:14, backgroundColor:'white', borderWidth:1.5, borderColor:Colors.border, alignItems:'center', justifyContent:'center' },
   contratarBtn:   { flex:1, backgroundColor:Colors.dark, borderRadius:14, paddingVertical:14, alignItems:'center' },
