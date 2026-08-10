@@ -31,4 +31,12 @@ export const usuariosService = {
     })
     return response.data.usuario
   },
+
+  async cambiarPassword(id: string, passwordActual: string, passwordNueva: string) {
+    const token = await AsyncStorage.getItem('token')
+    const response = await axios.put(`${API_URL}/usuarios/${id}/password`, { passwordActual, passwordNueva }, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+    })
+    return response.data
+  },
 }
