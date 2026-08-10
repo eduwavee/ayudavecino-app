@@ -3,8 +3,7 @@ import * as Device from 'expo-device'
 import { Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
-
-const API_URL = 'http://192.168.1.37:3000/api'
+import { API_URL } from '../constants/config'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

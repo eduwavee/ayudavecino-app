@@ -6,10 +6,9 @@ import {
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
+import { API_URL } from '../../constants/config'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
-const API_URL = 'http://192.168.1.37:3000/api'
 
 const TAGS = [
   '✓ Puntual', '✓ Prolijo', '💰 Precio justo',
