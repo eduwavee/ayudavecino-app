@@ -21,10 +21,24 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "TU_GOOGLE_MAPS_API_KEY_ANDROID"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AyudaVecino usa tu ubicación para mostrarte proveedores y servicios cercanos."
+        }
+      ]
+    ]
   }
 }
