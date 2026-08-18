@@ -8,6 +8,7 @@ interface Usuario {
   telefono?: string
   avatar?:  string
   rating:   number
+  activo?:  boolean
   latitud?:  number | null
   longitud?: number | null
 }

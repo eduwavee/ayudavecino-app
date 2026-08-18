@@ -2,21 +2,25 @@ import { useState, useEffect, useRef } from 'react'
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Animated, Switch, ActivityIndicator,
-  Dimensions, StatusBar
+  Dimensions, StatusBar, Alert, RefreshControl
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { useAuthStore } from '../../store/authStore'
 import { pedidosService } from '../../services/pedidos.service'
+import { usuariosService } from '../../services/usuarios.service'
+import { PressScale } from '../../components/ui/PressScale'
 
 const { width } = Dimensions.get('window')
 
 export default function ProveedorDashboard() {
   const router   = useRouter()
-  const usuario  = useAuthStore(s => s.usuario)
+  const { usuario, token, setUsuario } = useAuthStore()
   const [pedidos, setPedidos]       = useState<any[]>([])
   const [loading, setLoading]       = useState(true)
-  const [disponible, setDisponible] = useState(true)
+  const [disponible, setDisponible] = useState(usuario?.activo ?? true)
+  const [guardandoDisp, setGuardandoDisp] = useState(false)
+  const [refrescando, setRefrescando] = useState(false)
 
   // Animaciones
   const fadeAnim    = useRef(new Animated.Value(0)).current
@@ -60,10 +64,45 @@ export default function ProveedorDashboard() {
     finally { setLoading(false) }
   }
 
+  async function alRefrescar() {
+    setRefrescando(true)
+    await cargarPedidos()
+    setRefrescando(false)
+  }
+
+  async function cambiarDisponibilidad(valor: boolean) {
+    if (!usuario) return
+    setDisponible(valor) // optimista
+    setGuardandoDisp(true)
+    try {
+      const usuarioActualizado = await usuariosService.editarPerfil(usuario.id, { activo: valor })
+      setUsuario(usuarioActualizado, token!)
+    } catch (err: any) {
+      setDisponible(!valor) // revertimos si falló
+      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo actualizar tu disponibilidad')
+    } finally {
+      setGuardandoDisp(false)
+    }
+  }
+
   const pendientes  = pedidos.filter(p => p.estado === 'PENDIENTE')
   const enCurso     = pedidos.filter(p => p.estado === 'EN_CURSO' || p.estado === 'ACEPTADO')
   const completados = pedidos.filter(p => p.estado === 'COMPLETADO')
-  const ganancias   = completados.reduce((acc, p) => acc + (p.montoTotal * 0.9), 0)
+
+  // Ganado este mes vs. mes anterior, en base a la fecha en que se creó cada pedido completado
+  // (proxy razonable: no tenemos un timestamp de "completadoEn" en el pedido)
+  const ahora = new Date()
+  const inicioEsteMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1)
+  const inicioMesAnterior = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1)
+  const gananciasPorMes = (desde: Date, hasta: Date) =>
+    completados
+      .filter(p => { const f = new Date(p.creadoEn); return f >= desde && f < hasta })
+      .reduce((acc, p) => acc + (p.montoTotal * 0.9), 0)
+  const gananciasEsteMes = gananciasPorMes(inicioEsteMes, ahora)
+  const gananciasMesAnterior = gananciasPorMes(inicioMesAnterior, inicioEsteMes)
+  const variacionMensual = gananciasMesAnterior > 0
+    ? Math.round(((gananciasEsteMes - gananciasMesAnterior) / gananciasMesAnterior) * 100)
+    : null
 
   const glowOpacity = glowAnim.interpolate({ inputRange:[0,1], outputRange:[0.3, 0.8] })
 
@@ -79,7 +118,12 @@ export default function ProveedorDashboard() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refrescando} onRefresh={alRefrescar} tintColor={Colors.primaryLight} colors={[Colors.primaryLight]} />
+        }
+      >
 
         {/* ── HERO HEADER ── */}
         <Animated.View style={[styles.hero, { opacity:fadeAnim }]}>
@@ -111,11 +155,15 @@ export default function ProveedorDashboard() {
             <View style={styles.gananciaLeft}>
               <Text style={styles.gananciaLabel}>Ganado este mes</Text>
               <Text style={styles.gananciaNum}>
-                ${Math.round(ganancias).toLocaleString()}
+                ${Math.round(gananciasEsteMes).toLocaleString()}
               </Text>
-              <View style={styles.gananciaBadge}>
-                <Text style={styles.gananciaBadgeText}>↑ +12% vs mes anterior</Text>
-              </View>
+              {variacionMensual !== null && (
+                <View style={styles.gananciaBadge}>
+                  <Text style={styles.gananciaBadgeText}>
+                    {variacionMensual >= 0 ? '↑' : '↓'} {variacionMensual >= 0 ? '+' : ''}{variacionMensual}% vs mes anterior
+                  </Text>
+                </View>
+              )}
             </View>
             <View style={styles.gananciaRight}>
               <Text style={styles.gananciaIco}>💰</Text>
@@ -137,7 +185,8 @@ export default function ProveedorDashboard() {
             </View>
             <Switch
               value={disponible}
-              onValueChange={setDisponible}
+              onValueChange={cambiarDisponibilidad}
+              disabled={guardandoDisp}
               trackColor={{ false:'rgba(255,255,255,.1)', true:'rgba(61,214,140,.4)' }}
               thumbColor={disponible ? Colors.primaryLight : '#666'}
             />
@@ -173,7 +222,7 @@ export default function ProveedorDashboard() {
         <View style={styles.accionesSection}>
           <Text style={styles.sectionTitle}>Acciones rápidas</Text>
           <View style={styles.accionesGrid}>
-            <TouchableOpacity
+            <PressScale
               style={[styles.accionCard, styles.accionCardGreen]}
               onPress={() => router.push('/proveedor-panel/pedidos')}
             >
@@ -184,31 +233,31 @@ export default function ProveedorDashboard() {
                   <Text style={styles.accionBadgeText}>{pendientes.length}</Text>
                 </View>
               )}
-            </TouchableOpacity>
+            </PressScale>
 
-            <TouchableOpacity
+            <PressScale
               style={[styles.accionCard, styles.accionCardBlue]}
               onPress={() => router.push('/proveedor-panel/servicios')}
             >
               <View style={styles.accionIco}><Text style={{fontSize:26}}>🔧</Text></View>
               <Text style={styles.accionLabel}>Mis servicios</Text>
-            </TouchableOpacity>
+            </PressScale>
 
-            <TouchableOpacity
+            <PressScale
               style={[styles.accionCard, styles.accionCardYellow]}
               onPress={() => router.push('/proveedor-panel/nuevo-servicio')}
             >
               <View style={styles.accionIco}><Text style={{fontSize:26}}>➕</Text></View>
               <Text style={styles.accionLabel}>Nuevo servicio</Text>
-            </TouchableOpacity>
+            </PressScale>
 
-            <TouchableOpacity
+            <PressScale
               style={[styles.accionCard, styles.accionCardPurple]}
               onPress={() => router.push('/(tabs)/perfil')}
             >
               <View style={styles.accionIco}><Text style={{fontSize:26}}>👤</Text></View>
               <Text style={styles.accionLabel}>Mi perfil</Text>
-            </TouchableOpacity>
+            </PressScale>
           </View>
         </View>
 

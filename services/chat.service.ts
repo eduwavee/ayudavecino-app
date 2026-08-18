@@ -6,9 +6,37 @@ class ChatService {
   private socket: Socket | null = null
   private pedidoActual: string | null = null
 
-  async conectar() {
-    if (this.socket?.connected) return this.socket
+  // Salas de pedidos a las que nos unimos "de fondo" (no el chat que tenés abierto,
+  // sino todos tus pedidos activos) — se re-emiten en cada reconexión del socket.
+  private salasActivas: Set<string> = new Set()
 
+  // Conexión en curso: evita que dos llamadas a conectar() casi simultáneas
+  // (ej. el layout global y una pantalla de chat abriéndose a la vez) creen
+  // dos sockets distintos y uno quede huérfano.
+  private conectando: Promise<Socket | null> | null = null
+
+  // Listeners "de pantalla": uno solo a la vez, se pisa cada vez que un chat se abre
+  private handlerMensaje: ((msg: any) => void) | null = null
+  private handlerEscribiendo: ((data: any) => void) | null = null
+  private handlerDejoEscribir: ((data: any) => void) | null = null
+
+  // Listeners "globales": conviven con los de pantalla (ej. para notificar mensajes
+  // de otros pedidos aunque no estés dentro de ese chat). No se pisan entre sí.
+  private handlersGlobales: Set<(msg: any) => void> = new Set()
+
+  async conectar(): Promise<Socket | null> {
+    if (this.socket?.connected) return this.socket
+    if (this.conectando) return this.conectando
+
+    this.conectando = this.crearConexion()
+    try {
+      return await this.conectando
+    } finally {
+      this.conectando = null
+    }
+  }
+
+  private async crearConexion(): Promise<Socket | null> {
     const token = await AsyncStorage.getItem('token')
     if (!token) return null
 
@@ -22,9 +50,9 @@ class ChatService {
 
     this.socket.on('connect', () => {
       console.log('Socket conectado:', this.socket?.id)
-      if (this.pedidoActual) {
-        this.socket?.emit('unirse_pedido', this.pedidoActual)
-      }
+      // Reingresamos a todas las salas: el chat abierto y los pedidos activos de fondo
+      if (this.pedidoActual) this.socket?.emit('unirse_pedido', this.pedidoActual)
+      this.salasActivas.forEach(id => this.socket?.emit('unirse_pedido', id))
     })
 
     this.socket.on('disconnect', (reason) => {
@@ -34,6 +62,9 @@ class ChatService {
     this.socket.on('connect_error', (err) => {
       console.log('Error conexion:', err.message)
     })
+
+    // Los listeners globales se re-atan a cada nuevo socket
+    this.handlersGlobales.forEach(cb => this.socket?.on('mensaje_nuevo', cb))
 
     return this.socket
   }
@@ -47,6 +78,7 @@ class ChatService {
     this.socket?.disconnect()
     this.socket = null
     this.pedidoActual = null
+    this.salasActivas.clear()
   }
 
   unirsePedido(pedidoId: string) {
@@ -75,24 +107,50 @@ class ChatService {
   }
 
   onMensajeNuevo(callback: (msg: any) => void) {
-    this.socket?.off('mensaje_nuevo')
+    if (this.handlerMensaje) this.socket?.off('mensaje_nuevo', this.handlerMensaje)
+    this.handlerMensaje = callback
     this.socket?.on('mensaje_nuevo', callback)
   }
 
   onUsuarioEscribiendo(callback: (data: any) => void) {
-    this.socket?.off('usuario_escribiendo')
+    if (this.handlerEscribiendo) this.socket?.off('usuario_escribiendo', this.handlerEscribiendo)
+    this.handlerEscribiendo = callback
     this.socket?.on('usuario_escribiendo', callback)
   }
 
   onUsuarioDejoEscribir(callback: (data: any) => void) {
-    this.socket?.off('usuario_dejo_escribir')
+    if (this.handlerDejoEscribir) this.socket?.off('usuario_dejo_escribir', this.handlerDejoEscribir)
+    this.handlerDejoEscribir = callback
     this.socket?.on('usuario_dejo_escribir', callback)
   }
 
   removerListeners() {
-    this.socket?.off('mensaje_nuevo')
-    this.socket?.off('usuario_escribiendo')
-    this.socket?.off('usuario_dejo_escribir')
+    if (this.handlerMensaje)     this.socket?.off('mensaje_nuevo', this.handlerMensaje)
+    if (this.handlerEscribiendo) this.socket?.off('usuario_escribiendo', this.handlerEscribiendo)
+    if (this.handlerDejoEscribir) this.socket?.off('usuario_dejo_escribir', this.handlerDejoEscribir)
+    this.handlerMensaje = null
+    this.handlerEscribiendo = null
+    this.handlerDejoEscribir = null
+  }
+
+  // ── Escucha global de mensajes, para notificar sin importar qué pantalla esté abierta ──
+  escucharMensajesGlobal(callback: (msg: any) => void) {
+    this.handlersGlobales.add(callback)
+    this.socket?.on('mensaje_nuevo', callback)
+    return () => {
+      this.handlersGlobales.delete(callback)
+      this.socket?.off('mensaje_nuevo', callback)
+    }
+  }
+
+  unirseAVariosPedidos(pedidoIds: string[]) {
+    pedidoIds.forEach(id => this.salasActivas.add(id))
+    if (!this.socket?.connected) return
+    pedidoIds.forEach(id => this.socket?.emit('unirse_pedido', id))
+  }
+
+  getPedidoActual() {
+    return this.pedidoActual
   }
 
   estaConectado() {

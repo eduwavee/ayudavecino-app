@@ -6,6 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { notificacionesService } from '../services/notificaciones.service'
 import { authService } from '../services/auth.service'
 import { usuariosService } from '../services/usuarios.service'
+import { pedidosService } from '../services/pedidos.service'
+import { chatService } from '../services/chat.service'
 import { useAuthStore } from '../store/authStore'
 import { useNotifStore } from '../store/notificacionesStore'
 import { useTema, useTemaStore } from '../store/temaStore'
@@ -15,6 +17,7 @@ import { ONBOARDING_KEY } from '../constants/config'
 export default function RootLayout() {
   const router = useRouter()
   const agregarNotif = useNotifStore(s => s.agregarNotif)
+  const usuario        = useAuthStore(s => s.usuario)
   const setUsuario    = useAuthStore(s => s.setUsuario)
   const tema = useTema()
   const oscuro = useTemaStore(s => s.oscuro)
@@ -75,6 +78,52 @@ export default function RootLayout() {
       }
     )
   }
+
+  // Se conecta al chat de forma global (no solo cuando abrís una conversación puntual) y
+  // se une a todas las salas de tus pedidos activos, para poder avisarte de mensajes nuevos
+  // aunque no estés parado en esa pantalla de chat.
+  useEffect(() => {
+    if (!usuario?.id) {
+      chatService.desconectar()
+      return
+    }
+    const miId = usuario.id
+
+    let cancelado = false
+    let dejarDeEscuchar: (() => void) | null = null
+
+    async function conectarChatGlobal() {
+      await chatService.conectar()
+      if (cancelado) return
+
+      try {
+        const pedidos = await pedidosService.misPedidos()
+        const activos = pedidos.filter((p: any) =>
+          ['PENDIENTE', 'ACEPTADO', 'EN_CURSO'].includes(p.estado)
+        )
+        chatService.unirseAVariosPedidos(activos.map((p: any) => p.id))
+      } catch {
+        // Sin pedidos o backend no disponible: no bloqueamos el resto de la app
+      }
+      if (cancelado) return
+
+      dejarDeEscuchar = chatService.escucharMensajesGlobal((msg) => {
+        if (msg.autorId === miId) return // mensaje propio
+        if (msg.pedidoId === chatService.getPedidoActual()) return // ya estás viendo ese chat
+        notificacionesService.mostrarLocal(msg.autorNombre ?? 'Nuevo mensaje', msg.texto, {
+          tipo: 'mensaje',
+          pedidoId: msg.pedidoId,
+        })
+      })
+    }
+
+    conectarChatGlobal()
+
+    return () => {
+      cancelado = true
+      dejarDeEscuchar?.()
+    }
+  }, [usuario?.id])
 
   // Recién una vez que el Stack ya está montado disparamos la redirección al onboarding,
   // una sola vez (nunca antes de que el navegador raíz esté listo).

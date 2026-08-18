@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Dimensions } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Dimensions, RefreshControl } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as Location from 'expo-location'
 import { Colors } from '../../constants/colors'
 import { useAuthStore } from '../../store/authStore'
+import { useNotifStore } from '../../store/notificacionesStore'
 import { useTema, TemaTokens } from '../../store/temaStore'
 import { pedidosService } from '../../services/pedidos.service'
 import { notificacionesService } from '../../services/notificaciones.service'
 import { usuariosService } from '../../services/usuarios.service'
 import { distanciaKm, formatearDistancia } from '../../utils/distancia'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
+import { PressScale } from '../../components/ui/PressScale'
 
 function SkeletonProvCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -53,6 +55,7 @@ const STATS = [
 export default function HomeScreen() {
   const router  = useRouter()
   const usuario = useAuthStore(s => s.usuario)
+  const noLeidas = useNotifStore(s => s.noLeidas)
   const tema = useTema()
   const styles = getStyles(tema)
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -60,6 +63,7 @@ export default function HomeScreen() {
 
   const [proveedoresCerca, setProveedoresCerca] = useState<any[]>([])
   const [loadingCerca, setLoadingCerca] = useState(true)
+  const [refrescando, setRefrescando] = useState(false)
 
   const hora = new Date().getHours()
   const saludo = hora < 12 ? 'Buenos días ☀️' : hora < 18 ? 'Buenas tardes 🌤️' : 'Buenas noches 🌙'
@@ -97,6 +101,12 @@ export default function HomeScreen() {
     } finally {
       setLoadingCerca(false)
     }
+  }
+
+  async function alRefrescar() {
+    setRefrescando(true)
+    await cargarProveedoresCerca()
+    setRefrescando(false)
   }
 
   async function obtenerUbicacion(): Promise<{ latitude: number; longitude: number } | null> {
@@ -145,7 +155,13 @@ export default function HomeScreen() {
 }, [usuario?.id])
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refrescando} onRefresh={alRefrescar} tintColor={Colors.primary} colors={[Colors.primary]} />
+      }
+    >
 
       {/* ── HEADER ── */}
       <Animated.View style={[styles.header, { opacity:fadeAnim, transform:[{translateY:slideAnim}] }]}>
@@ -158,7 +174,7 @@ export default function HomeScreen() {
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.notifBtn} onPress={() => router.push('/notificaciones')}>
             <Text style={styles.notifIco}>🔔</Text>
-            <View style={styles.notifDot} />
+            {noLeidas > 0 && <View style={styles.notifDot} />}
           </TouchableOpacity>
           <TouchableOpacity style={styles.avatarBtn} onPress={() => router.push('/(tabs)/perfil')}>
             <View style={styles.avatar}>
@@ -186,7 +202,7 @@ export default function HomeScreen() {
         <View style={styles.locationRow}>
           <View style={styles.locDot} />
           <Text style={styles.locText}>San Miguel de Tucumán, 4000</Text>
-          <TouchableOpacity><Text style={styles.locChange}>Cambiar</Text></TouchableOpacity>
+          <TouchableOpacity onPress={cargarProveedoresCerca}><Text style={styles.locChange}>Actualizar</Text></TouchableOpacity>
         </View>
       </Animated.View>
 
@@ -209,7 +225,7 @@ export default function HomeScreen() {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catsScroll}>
         {CATEGORIAS.map((cat, i) => (
-          <TouchableOpacity
+          <PressScale
             key={i}
             style={styles.catChip}
             onPress={() => router.push({ pathname: '/(tabs)/buscar', params: { categoria: cat.value } })}
@@ -218,12 +234,12 @@ export default function HomeScreen() {
               <Text style={styles.catIco}>{cat.ico}</Text>
             </View>
             <Text style={styles.catNombre}>{cat.nombre}</Text>
-          </TouchableOpacity>
+          </PressScale>
         ))}
       </ScrollView>
 
       {/* ── BANNER PROMO ── */}
-      <TouchableOpacity style={styles.promoBanner} activeOpacity={.9}>
+      <PressScale style={styles.promoBanner} onPress={() => router.push('/(tabs)/buscar')}>
         <View style={styles.promoBg} />
         <View style={styles.promoContent}>
           <View style={styles.promoTag}>
@@ -235,7 +251,7 @@ export default function HomeScreen() {
           </View>
         </View>
         <Text style={styles.promoEmoji}>🏘️</Text>
-      </TouchableOpacity>
+      </PressScale>
 
       {/* ── PROVEEDORES CERCA ── */}
       <View style={styles.sectionHeader}>
@@ -260,10 +276,9 @@ export default function HomeScreen() {
             ? Math.min(...p.servicios.map((s: any) => s.precio))
             : null
           return (
-          <TouchableOpacity
+          <PressScale
             key={p.id}
             style={styles.provCard}
-            activeOpacity={.85}
             onPress={() => router.push(`/proveedor/${p.id}`)}
           >
             <View style={[styles.provCardTop, { backgroundColor: TARJETA_BG[i % TARJETA_BG.length] }]}>
@@ -284,7 +299,7 @@ export default function HomeScreen() {
                 {precioMin != null && <Text style={styles.provPrecio}>desde ${precioMin}</Text>}
               </View>
             </View>
-          </TouchableOpacity>
+          </PressScale>
           )
         })}
       </ScrollView>

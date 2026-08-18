@@ -24,7 +24,7 @@ export const usuariosService = {
     return response.data.proveedores
   },
 
-  async editarPerfil(id: string, datos: { nombre?: string; telefono?: string; latitud?: number; longitud?: number }) {
+  async editarPerfil(id: string, datos: { nombre?: string; telefono?: string; latitud?: number; longitud?: number; activo?: boolean }) {
     const token = await AsyncStorage.getItem('token')
     const response = await axios.put(`${API_URL}/usuarios/${id}`, datos, {
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
