@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import {
   View, Text, FlatList, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, Animated,
-  Dimensions, StatusBar
+  Dimensions, StatusBar, Image, Alert, ActivityIndicator
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import * as ImagePicker from 'expo-image-picker'
 import { Colors } from '../../constants/colors'
+import { archivoUrl } from '../../constants/config'
 import { useAuthStore } from '../../store/authStore'
 import { chatService } from '../../services/chat.service'
 import { pedidosService } from '../../services/pedidos.service'
@@ -31,9 +33,11 @@ export default function ChatScreen() {
   const [conectado, setConectado]     = useState(false)
   const [inputAlto, setInputAlto]     = useState(false)
   const [cargandoHistorial, setCargandoHistorial] = useState(true)
+  const [subiendoImagen, setSubiendoImagen] = useState(false)
 
   const flatListRef   = useRef<FlatList>(null)
   const typingTimeout = useRef<any>(null)
+  const leidoTimeout  = useRef<any>(null)
   const fadeAnim      = useRef(new Animated.Value(0)).current
   const slideAnim     = useRef(new Animated.Value(20)).current
   const typingAnim    = useRef(new Animated.Value(0)).current
@@ -46,6 +50,7 @@ export default function ChatScreen() {
     ]).start()
     return () => {
       chatService.salirDelChat()
+      clearTimeout(leidoTimeout.current)
     }
   }, [])
 
@@ -80,15 +85,55 @@ export default function ChatScreen() {
     if (!socket) return
     setConectado(true)
     chatService.unirsePedido(pedidoId)
+    marcarLeidoDebounced() // lo que ya estaba sin leer, se marca al entrar al chat
 
     chatService.onMensajeNuevo((msg) => {
       setMensajes(prev => [...prev, msg])
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated:true }), 100)
+      // Si el mensaje es de la otra persona y estás viendo el chat, se marca leído
+      // (debounced: si llega una ráfaga de mensajes, se manda un solo marcar_leido)
+      if (msg.autorId !== usuario?.id) marcarLeidoDebounced()
     })
     chatService.onUsuarioEscribiendo((data) => {
       if (data.usuarioId !== usuario?.id) setEscribiendo(true)
     })
     chatService.onUsuarioDejoEscribir(() => setEscribiendo(false))
+    chatService.onMensajesLeidos((data) => {
+      if (data.pedidoId !== pedidoId) return
+      setMensajes(prev => prev.map(m => m.autorId === usuario?.id ? { ...m, leido: true } : m))
+    })
+  }
+
+  function marcarLeidoDebounced() {
+    clearTimeout(leidoTimeout.current)
+    leidoTimeout.current = setTimeout(() => chatService.marcarLeido(pedidoId), 400)
+  }
+
+  async function handleAdjuntarImagen() {
+    if (!conectado) {
+      Alert.alert('Sin conexión', 'Esperá a que se reconecte el chat para mandar fotos')
+      return
+    }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('Permiso necesario', 'Activá el permiso de galería para mandar una foto')
+      return
+    }
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    })
+    if (resultado.canceled || !resultado.assets?.[0]) return
+
+    setSubiendoImagen(true)
+    try {
+      await pedidosService.enviarImagenChat(pedidoId, resultado.assets[0].uri)
+      // El mensaje llega solo por el socket (el servidor lo emite a la sala del pedido)
+    } catch (err: any) {
+      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo mandar la foto')
+    } finally {
+      setSubiendoImagen(false)
+    }
   }
 
   function handleTexto(val: string) {
@@ -231,14 +276,23 @@ export default function ChatScreen() {
                       {!mio && !mismoAutor && (
                         <Text style={styles.bubbleAutor}>{msg.autorNombre}</Text>
                       )}
-                      <Text style={[styles.bubbleText, mio && styles.bubbleTextMio]}>
-                        {msg.texto}
-                      </Text>
+                      {msg.imagen && (
+                        <Image source={{ uri: archivoUrl(msg.imagen)! }} style={styles.bubbleImagen} />
+                      )}
+                      {!!msg.texto && (
+                        <Text style={[styles.bubbleText, mio && styles.bubbleTextMio]}>
+                          {msg.texto}
+                        </Text>
+                      )}
                       <View style={styles.bubbleMeta}>
                         <Text style={[styles.bubbleHora, mio && styles.bubbleHoraMio]}>
                           {new Date(msg.fecha).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' })}
                         </Text>
-                        {mio && <Text style={styles.bubbleTick}>✓✓</Text>}
+                        {mio && (
+                          <Text style={[styles.bubbleTick, msg.leido && styles.bubbleTickLeido]}>
+                            {msg.leido ? '✓✓' : '✓'}
+                          </Text>
+                        )}
                       </View>
                     </View>
                   </View>
@@ -288,8 +342,10 @@ export default function ChatScreen() {
 
         {/* ── INPUT ── */}
         <View style={styles.inputArea}>
-          <TouchableOpacity style={styles.attachBtn}>
-            <Text style={styles.attachIco}>📎</Text>
+          <TouchableOpacity style={styles.attachBtn} onPress={handleAdjuntarImagen} disabled={subiendoImagen}>
+            {subiendoImagen
+              ? <ActivityIndicator size="small" color={Colors.primary} />
+              : <Text style={styles.attachIco}>📎</Text>}
           </TouchableOpacity>
 
           <View style={[styles.inputWrap, inputAlto && styles.inputWrapTall]}>
@@ -381,6 +437,8 @@ const styles = StyleSheet.create({
   bubbleHora:        { fontSize:10, color:'rgba(0,0,0,.35)' },
   bubbleHoraMio:     { color:'rgba(255,255,255,.6)' },
   bubbleTick:        { fontSize:10, color:'rgba(255,255,255,.7)' },
+  bubbleTickLeido:   { color:'#8ED6FF' },
+  bubbleImagen:      { width:200, height:200, borderRadius:14, marginBottom:4 },
 
   // Typing
   typingRow:         { flexDirection:'row', alignItems:'flex-end', gap:6, paddingHorizontal:16, paddingBottom:8 },

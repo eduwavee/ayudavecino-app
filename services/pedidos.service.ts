@@ -1,6 +1,7 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../constants/config'
+import { armarFormDataImagen } from '../utils/imagenFormData'
 
 export const pedidosService = {
   async misPedidos() {
@@ -43,5 +44,15 @@ export const pedidosService = {
       headers: { Authorization: `Bearer ${token}` }
     })
     return response.data.mensajes
+  },
+
+  async enviarImagenChat(pedidoId: string, imagenUri: string) {
+    const token = await AsyncStorage.getItem('token')
+    const formData = armarFormDataImagen('imagen', imagenUri)
+
+    const response = await axios.post(`${API_URL}/pedidos/${pedidoId}/mensajes/imagen`, formData, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data.mensaje
   },
 }

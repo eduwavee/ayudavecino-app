@@ -6,12 +6,13 @@ const LAN_IP = '192.168.1.2'
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? `http://${LAN_IP}:3000/api`
 export const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL ?? `http://${LAN_IP}:3000`
 
-// El backend guarda el avatar como ruta relativa (ej: /uploads/avatars/xxx.jpg).
-// Esto arma la URL completa para poder mostrarlo con <Image>.
-export function avatarUrl(avatar?: string | null): string | null {
-  if (!avatar) return null
-  return avatar.startsWith('http') ? avatar : `${SOCKET_URL}${avatar}`
+// El backend guarda avatares e imágenes de chat como ruta relativa (ej: /uploads/avatars/xxx.jpg).
+// Esto arma la URL completa para poder mostrarlos con <Image>.
+export function archivoUrl(ruta?: string | null): string | null {
+  if (!ruta) return null
+  return ruta.startsWith('http') ? ruta : `${SOCKET_URL}${ruta}`
 }
+export const avatarUrl = archivoUrl
 
 // Clave de AsyncStorage para saber si el usuario ya vio el onboarding.
 export const ONBOARDING_KEY = 'onboarding_visto'

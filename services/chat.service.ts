@@ -19,6 +19,7 @@ class ChatService {
   private handlerMensaje: ((msg: any) => void) | null = null
   private handlerEscribiendo: ((data: any) => void) | null = null
   private handlerDejoEscribir: ((data: any) => void) | null = null
+  private handlerLeidos: ((data: any) => void) | null = null
 
   // Listeners "globales": conviven con los de pantalla (ej. para notificar mensajes
   // de otros pedidos aunque no estés dentro de ese chat). No se pisan entre sí.
@@ -106,6 +107,16 @@ class ChatService {
     this.socket?.emit('dejo_escribir', { pedidoId })
   }
 
+  marcarLeido(pedidoId: string) {
+    this.socket?.emit('marcar_leido', { pedidoId })
+  }
+
+  onMensajesLeidos(callback: (data: any) => void) {
+    if (this.handlerLeidos) this.socket?.off('mensajes_leidos', this.handlerLeidos)
+    this.handlerLeidos = callback
+    this.socket?.on('mensajes_leidos', callback)
+  }
+
   onMensajeNuevo(callback: (msg: any) => void) {
     if (this.handlerMensaje) this.socket?.off('mensaje_nuevo', this.handlerMensaje)
     this.handlerMensaje = callback
@@ -128,9 +139,11 @@ class ChatService {
     if (this.handlerMensaje)     this.socket?.off('mensaje_nuevo', this.handlerMensaje)
     if (this.handlerEscribiendo) this.socket?.off('usuario_escribiendo', this.handlerEscribiendo)
     if (this.handlerDejoEscribir) this.socket?.off('usuario_dejo_escribir', this.handlerDejoEscribir)
+    if (this.handlerLeidos)      this.socket?.off('mensajes_leidos', this.handlerLeidos)
     this.handlerMensaje = null
     this.handlerEscribiendo = null
     this.handlerDejoEscribir = null
+    this.handlerLeidos = null
   }
 
   // ── Escucha global de mensajes, para notificar sin importar qué pantalla esté abierta ──
