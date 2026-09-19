@@ -4,16 +4,19 @@ import { API_URL } from '../constants/config'
 import { armarFormDataImagen } from '../utils/imagenFormData'
 
 export const serviciosService = {
-  async listarTodos(filtros?: { categoria?: string }) {
+  async listarTodos(filtros: {
+    categoria?: string; q?: string; precioMin?: number; precioMax?: number
+    ratingMin?: number; verificados?: boolean; orden?: 'rating' | 'precio_asc' | 'precio_desc' | 'recientes'
+  } = {}) {
     const token = await AsyncStorage.getItem('token')
-    let url = API_URL + '/servicios'
-    if (filtros?.categoria) url += `?categoria=${filtros.categoria}`
-
-    console.log('GET servicios:', url)
-    const response = await axios.get(url, {
+    const params = new URLSearchParams()
+    for (const [clave, valor] of Object.entries(filtros)) {
+      if (valor !== undefined && valor !== '' && valor !== false) params.append(clave, String(valor))
+    }
+    const query = params.toString()
+    const response = await axios.get(`${API_URL}/servicios${query ? `?${query}` : ''}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-    console.log('Servicios recibidos:', response.data.servicios?.length)
     return response.data.servicios
   },
 
