@@ -215,7 +215,7 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.headerAction} onPress={llamarContraparte}>
+        <TouchableOpacity style={styles.headerAction} onPress={llamarContraparte} accessibilityRole="button" accessibilityLabel={`Llamar a ${nombreContraparte ?? 'tu contacto'}`} hitSlop={10}>
           <Text style={styles.headerActionIco}>📞</Text>
         </TouchableOpacity>
       </View>
@@ -370,7 +370,7 @@ export default function ChatScreen() {
 
         {/* ── INPUT ── */}
         <View style={styles.inputArea}>
-          <TouchableOpacity style={styles.attachBtn} onPress={handleAdjuntarImagen} disabled={subiendoImagen}>
+          <TouchableOpacity style={styles.attachBtn} onPress={handleAdjuntarImagen} disabled={subiendoImagen} accessibilityRole="button" accessibilityLabel="Adjuntar una foto" hitSlop={8}>
             {subiendoImagen
               ? <ActivityIndicator size="small" color={Colors.primary} />
               : <Text style={styles.attachIco}>📎</Text>}
@@ -390,12 +390,12 @@ export default function ChatScreen() {
           </View>
 
           {texto.trim() ? (
-            <PressScale haptico style={styles.sendBtn} onPress={() => enviar()}>
+            <PressScale haptico style={styles.sendBtn} onPress={() => enviar()} accessibilityLabel="Enviar mensaje">
               <Text style={styles.sendIco}>➤</Text>
             </PressScale>
           ) : (
             // Abre el teclado; el selector de emojis es el del teclado del telefono
-            <TouchableOpacity style={styles.emojiBtn} onPress={() => inputRef.current?.focus()}>
+            <TouchableOpacity style={styles.emojiBtn} onPress={() => inputRef.current?.focus()} accessibilityRole="button" accessibilityLabel="Abrir el teclado para escribir">
               <Text style={styles.emojiIco}>😊</Text>
             </TouchableOpacity>
           )}

@@ -130,7 +130,7 @@ export default function MapaScreen() {
           </View>
         )}
 
-        <TouchableOpacity style={styles.centrarBtn} onPress={centrarEnMiUbicacion}>
+        <TouchableOpacity style={styles.centrarBtn} onPress={centrarEnMiUbicacion} accessibilityRole="button" accessibilityLabel="Centrar el mapa en mi ubicación" hitSlop={10}>
           <Text style={styles.centrarIco}>🎯</Text>
         </TouchableOpacity>
       </View>

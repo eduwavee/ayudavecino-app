@@ -157,13 +157,16 @@ export default function BuscarScreen() {
           onChangeText={setBusqueda}
         />
         {busqueda.length > 0 &&
-          <TouchableOpacity onPress={() => setBusqueda('')}>
+          <TouchableOpacity onPress={() => setBusqueda('')} accessibilityRole="button" accessibilityLabel="Borrar búsqueda" hitSlop={10}>
             <Text style={styles.clearBtn}>✕</Text>
           </TouchableOpacity>
         }
         <TouchableOpacity
           style={[styles.filtroBtn, activos > 0 && styles.filtroBtnActivo]}
           onPress={() => { setBorrador(filtros); setPanelAbierto(true) }}
+          accessibilityRole="button"
+          accessibilityLabel={activos > 0 ? `Filtros, ${activos} activos` : 'Filtros'}
+          hitSlop={8}
         >
           <Text style={styles.filtroBtnIco}>⚙️</Text>
           {activos > 0 && <View style={styles.filtroBadge}><Text style={styles.filtroBadgeText}>{activos}</Text></View>}

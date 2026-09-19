@@ -113,6 +113,9 @@ export default function PerfilScreen() {
           <TouchableOpacity
             style={styles.settingsBtn}
             onPress={() => router.push("/ajustes")}
+            accessibilityRole="button"
+            accessibilityLabel="Ajustes"
+            hitSlop={10}
           >
             <Text style={styles.settingsIco}>⚙️</Text>
           </TouchableOpacity>

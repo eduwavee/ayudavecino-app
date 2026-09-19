@@ -167,6 +167,9 @@ export default function EditarPerfilScreen() {
                 style={styles.avatarEdit}
                 onPress={handleCambiarFoto}
                 disabled={subiendoAvatar}
+                accessibilityRole="button"
+                accessibilityLabel="Cambiar foto de perfil"
+                hitSlop={10}
               >
                 <Text style={styles.avatarEditText}>📷</Text>
               </TouchableOpacity>

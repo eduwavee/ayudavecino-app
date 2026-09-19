@@ -119,7 +119,7 @@ export default function OnboardingScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      <TouchableOpacity style={styles.skipBtn} onPress={finalizarOnboarding}>
+      <TouchableOpacity style={styles.skipBtn} onPress={finalizarOnboarding} accessibilityRole="button" accessibilityLabel="Saltar la presentación" hitSlop={10}>
         <Text style={styles.skipText}>Saltar</Text>
       </TouchableOpacity>
 
