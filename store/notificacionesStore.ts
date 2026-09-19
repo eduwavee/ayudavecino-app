@@ -1,41 +1,60 @@
 import { create } from 'zustand'
+import api from '../services/api'
 
-interface Notificacion {
-  id:      string
-  titulo:  string
-  cuerpo:  string
-  tipo:    'pedido' | 'pago' | 'mensaje' | 'sistema'
-  leida:   boolean
-  fecha:   Date
-  datos?:  any
+export interface Notificacion {
+  id:        string
+  titulo:    string
+  cuerpo:    string
+  tipo:      'pedido' | 'pago' | 'mensaje' | 'resena' | 'sistema'
+  ruta:      string | null
+  pedidoId:  string | null
+  leida:     boolean
+  creadoEn:  string
 }
 
 interface NotifStore {
   notificaciones: Notificacion[]
   noLeidas:       number
-  agregarNotif:   (n: Omit<Notificacion, 'id' | 'leida' | 'fecha'>) => void
-  marcarLeidas:   () => void
-  limpiarTodo:    () => void
+  cargar:         () => Promise<void>
+  recibir:        (n: Notificacion) => void
+  marcarLeida:    (id: string) => Promise<void>
+  marcarTodas:    () => Promise<void>
+  limpiar:        () => void
 }
 
+const contarNoLeidas = (lista: Notificacion[]) => lista.filter(n => !n.leida).length
+
+// Notificaciones guardadas en el backend (/api/notificaciones). Las nuevas llegan
+// por socket (evento notificacion_nueva) y se agregan con recibir().
 export const useNotifStore = create<NotifStore>((set, get) => ({
   notificaciones: [],
   noLeidas: 0,
 
-  agregarNotif: (n) => {
-    const nueva: Notificacion = {
-      ...n,
-      id:    Date.now().toString(),
-      leida: false,
-      fecha: new Date(),
+  cargar: async () => {
+    try {
+      const { data } = await api.get('/notificaciones')
+      set({ notificaciones: data.notificaciones, noLeidas: data.noLeidas })
+    } catch {
+      // Sin conexion: se mantiene lo que ya habia
     }
-    set(state => ({
-      notificaciones: [nueva, ...state.notificaciones],
-      noLeidas: state.noLeidas + 1,
-    }))
   },
 
-  marcarLeidas: () => set({ noLeidas: 0, notificaciones: get().notificaciones.map(n => ({ ...n, leida: true })) }),
+  // Una notificacion agrupada (mensajes del mismo chat) llega con el mismo id: se reemplaza y sube arriba
+  recibir: (n) => {
+    const lista = [n, ...get().notificaciones.filter(x => x.id !== n.id)]
+    set({ notificaciones: lista, noLeidas: contarNoLeidas(lista) })
+  },
 
-  limpiarTodo: () => set({ notificaciones: [], noLeidas: 0 }),
+  marcarLeida: async (id) => {
+    const lista = get().notificaciones.map(n => (n.id === id ? { ...n, leida: true } : n))
+    set({ notificaciones: lista, noLeidas: contarNoLeidas(lista) })
+    try { await api.patch(`/notificaciones/${id}/leida`) } catch {}
+  },
+
+  marcarTodas: async () => {
+    set({ notificaciones: get().notificaciones.map(n => ({ ...n, leida: true })), noLeidas: 0 })
+    try { await api.patch('/notificaciones/leer-todas') } catch {}
+  },
+
+  limpiar: () => set({ notificaciones: [], noLeidas: 0 }),
 }))

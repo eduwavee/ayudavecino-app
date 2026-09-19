@@ -6,7 +6,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { notificacionesService } from '../services/notificaciones.service'
 import { authService } from '../services/auth.service'
 import { usuariosService } from '../services/usuarios.service'
-import { pedidosService } from '../services/pedidos.service'
 import { chatService } from '../services/chat.service'
 import { useAuthStore } from '../store/authStore'
 import { useNotifStore } from '../store/notificacionesStore'
@@ -16,7 +15,10 @@ import { ONBOARDING_KEY } from '../constants/config'
 
 export default function RootLayout() {
   const router = useRouter()
-  const agregarNotif = useNotifStore(s => s.agregarNotif)
+  const cargarNotificaciones = useNotifStore(s => s.cargar)
+  const recibirNotificacion  = useNotifStore(s => s.recibir)
+  const marcarNotifLeida     = useNotifStore(s => s.marcarLeida)
+  const limpiarNotificaciones = useNotifStore(s => s.limpiar)
   const usuario        = useAuthStore(s => s.usuario)
   const setUsuario    = useAuthStore(s => s.setUsuario)
   const tema = useTema()
@@ -65,64 +67,35 @@ export default function RootLayout() {
     }
 
     notificacionesService.agregarListeners(
-      (notif) => {
-        agregarNotif({
-          titulo: notif.request.content.title ?? 'AyudaVecino',
-          cuerpo: notif.request.content.body  ?? '',
-          tipo:   notif.request.content.data?.tipo ?? 'sistema',
-          datos:  notif.request.content.data,
-        })
-      },
+      () => {},
+      // Tocar el aviso del sistema abre la pantalla de esa notificacion
       (response) => {
-        console.log('Notificación tocada:', response.notification.request.content.data)
+        const datos = response.notification.request.content.data ?? {}
+        if (datos.notificacionId) marcarNotifLeida(datos.notificacionId)
+        if (datos.ruta) router.push(datos.ruta)
       }
     )
   }
 
-  // Se conecta al chat de forma global (no solo cuando abrís una conversación puntual) y
-  // se une a todas las salas de tus pedidos activos, para poder avisarte de mensajes nuevos
-  // aunque no estés parado en esa pantalla de chat.
+  // Con sesion iniciada: carga las notificaciones guardadas y escucha las nuevas, que el
+  // backend empuja por socket a la sala personal del usuario (pedidos, mensajes, reseñas, pagos).
   useEffect(() => {
     if (!usuario?.id) {
       chatService.desconectar()
+      limpiarNotificaciones()
       return
     }
-    const miId = usuario.id
 
-    let cancelado = false
-    let dejarDeEscuchar: (() => void) | null = null
+    cargarNotificaciones()
+    const dejarDeEscuchar = chatService.escucharNotificaciones((n) => {
+      recibirNotificacion(n)
+      // Si ya estás mirando ese chat, no hace falta el aviso del sistema
+      if (n.tipo === 'mensaje' && n.pedidoId === chatService.getPedidoActual()) return
+      notificacionesService.mostrarLocal(n.titulo, n.cuerpo, { ruta: n.ruta, notificacionId: n.id })
+    })
+    chatService.conectar()
 
-    async function conectarChatGlobal() {
-      await chatService.conectar()
-      if (cancelado) return
-
-      try {
-        const pedidos = await pedidosService.misPedidos()
-        const activos = pedidos.filter((p: any) =>
-          ['PENDIENTE', 'ACEPTADO', 'EN_CURSO'].includes(p.estado)
-        )
-        chatService.unirseAVariosPedidos(activos.map((p: any) => p.id))
-      } catch {
-        // Sin pedidos o backend no disponible: no bloqueamos el resto de la app
-      }
-      if (cancelado) return
-
-      dejarDeEscuchar = chatService.escucharMensajesGlobal((msg) => {
-        if (msg.autorId === miId) return // mensaje propio
-        if (msg.pedidoId === chatService.getPedidoActual()) return // ya estás viendo ese chat
-        notificacionesService.mostrarLocal(msg.autorNombre ?? 'Nuevo mensaje', msg.texto, {
-          tipo: 'mensaje',
-          pedidoId: msg.pedidoId,
-        })
-      })
-    }
-
-    conectarChatGlobal()
-
-    return () => {
-      cancelado = true
-      dejarDeEscuchar?.()
-    }
+    return dejarDeEscuchar
   }, [usuario?.id])
 
   // Recién una vez que el Stack ya está montado disparamos la redirección al onboarding,

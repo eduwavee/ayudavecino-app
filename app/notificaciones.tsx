@@ -1,21 +1,22 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, Animated
+  StyleSheet, RefreshControl
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Colors } from '../constants/colors'
-import { useNotifStore } from '../store/notificacionesStore'
+import { useNotifStore, Notificacion } from '../store/notificacionesStore'
 import { notificacionesService } from '../services/notificaciones.service'
 
 const TIPO_CONFIG: Record<string, { ico: string; color: string; bg: string }> = {
   pedido:  { ico:'📋', color:Colors.primary,  bg:'rgba(26,158,92,.1)' },
   pago:    { ico:'💳', color:'#FFD23F',        bg:'rgba(255,210,63,.1)' },
   mensaje: { ico:'💬', color:'#74B9FF',        bg:'rgba(116,185,255,.1)' },
+  resena:  { ico:'⭐', color:'#FFD23F',        bg:'rgba(255,210,63,.1)' },
   sistema: { ico:'🏘️', color:'#888',           bg:'rgba(0,0,0,.05)' },
 }
 
-function tiempoRelativo(fecha: Date) {
+function tiempoRelativo(fecha: string) {
   const diff = Date.now() - new Date(fecha).getTime()
   const mins = Math.floor(diff / 60000)
   const hs   = Math.floor(diff / 3600000)
@@ -27,23 +28,25 @@ function tiempoRelativo(fecha: Date) {
 }
 
 export default function NotificacionesScreen() {
-  const router         = useRouter()
-  const { notificaciones, noLeidas, marcarLeidas, limpiarTodo } = useNotifStore()
+  const router = useRouter()
+  const { notificaciones, noLeidas, cargar, marcarLeida, marcarTodas } = useNotifStore()
+  const [refrescando, setRefrescando] = useState(false)
 
   useEffect(() => {
     notificacionesService.limpiarBadge()
-    marcarLeidas()
+    cargar()
   }, [])
 
-  // Notificaciones de ejemplo si está vacío
-  const EJEMPLOS = [
-    { id:'1', titulo:'Pedido aceptado', cuerpo:'Carlos Méndez aceptó tu pedido de reparación de caño', tipo:'pedido', leida:false, fecha:new Date(Date.now()-300000) },
-    { id:'2', titulo:'Pago retenido',   cuerpo:'Tu pago de $9.350 está retenido en escrow', tipo:'pago', leida:true, fecha:new Date(Date.now()-600000) },
-    { id:'3', titulo:'Nuevo mensaje',   cuerpo:'Carlos: "Llego en 10 minutos"', tipo:'mensaje', leida:true, fecha:new Date(Date.now()-900000) },
-    { id:'4', titulo:'¡Bienvenido!',    cuerpo:'Gracias por unirte a AyudaVecino 🏘️', tipo:'sistema', leida:true, fecha:new Date(Date.now()-86400000) },
-  ]
+  async function alRefrescar() {
+    setRefrescando(true)
+    await cargar()
+    setRefrescando(false)
+  }
 
-  const data = notificaciones.length > 0 ? notificaciones : EJEMPLOS
+  function abrir(n: Notificacion) {
+    if (!n.leida) marcarLeida(n.id)
+    if (n.ruta) router.push(n.ruta as any)
+  }
 
   return (
     <View style={styles.container}>
@@ -54,28 +57,24 @@ export default function NotificacionesScreen() {
           <Text style={styles.backText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Notificaciones</Text>
-        {data.length > 0 && (
-          <TouchableOpacity onPress={limpiarTodo}>
-            <Text style={styles.clearBtn}>Limpiar</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Badge no leídas */}
       {noLeidas > 0 && (
         <View style={styles.unreadBanner}>
           <Text style={styles.unreadText}>🔴 {noLeidas} sin leer</Text>
-          <TouchableOpacity onPress={marcarLeidas}>
+          <TouchableOpacity onPress={marcarTodas}>
             <Text style={styles.marcarBtn}>Marcar todas como leídas</Text>
           </TouchableOpacity>
         </View>
       )}
 
       <FlatList
-        data={data}
+        data={notificaciones}
         keyExtractor={i => i.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refrescando} onRefresh={alRefrescar} tintColor={Colors.primary} colors={[Colors.primary]} />}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyIco}>🔔</Text>
@@ -89,6 +88,7 @@ export default function NotificacionesScreen() {
             <TouchableOpacity
               style={[styles.notifCard, !n.leida && styles.notifCardUnread]}
               activeOpacity={.8}
+              onPress={() => abrir(n)}
             >
               {!n.leida && <View style={styles.unreadDot} />}
               <View style={[styles.notifIco, { backgroundColor: cfg.bg }]}>
@@ -97,26 +97,12 @@ export default function NotificacionesScreen() {
               <View style={styles.notifContent}>
                 <Text style={styles.notifTitulo}>{n.titulo}</Text>
                 <Text style={styles.notifCuerpo} numberOfLines={2}>{n.cuerpo}</Text>
-                <Text style={styles.notifFecha}>{tiempoRelativo(n.fecha)}</Text>
+                <Text style={styles.notifFecha}>{tiempoRelativo(n.creadoEn)}</Text>
               </View>
             </TouchableOpacity>
           )
         }}
       />
-
-      {/* Botón de prueba */}
-      <View style={styles.testWrap}>
-        <TouchableOpacity
-          style={styles.testBtn}
-          onPress={() => notificacionesService.mostrarLocal(
-            '🔧 Pedido aceptado',
-            'Carlos Méndez aceptó tu pedido',
-            { tipo:'pedido', ruta:'/(tabs)/pedidos' }
-          )}
-        >
-          <Text style={styles.testBtnText}>🧪 Probar notificación</Text>
-        </TouchableOpacity>
-      </View>
 
     </View>
   )

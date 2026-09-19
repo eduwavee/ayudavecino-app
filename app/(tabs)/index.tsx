@@ -7,8 +7,6 @@ import { CATEGORIAS, categoriaInfo } from '../../constants/categorias'
 import { useAuthStore } from '../../store/authStore'
 import { useNotifStore } from '../../store/notificacionesStore'
 import { useTema, TemaTokens } from '../../store/temaStore'
-import { pedidosService } from '../../services/pedidos.service'
-import { notificacionesService } from '../../services/notificaciones.service'
 import { usuariosService } from '../../services/usuarios.service'
 import { estadisticasService, Estadisticas } from '../../services/estadisticas.service'
 import { nombreDeLugar } from '../../utils/ubicacion'
@@ -130,34 +128,7 @@ export default function HomeScreen() {
     Animated.timing(fadeAnim,  { toValue:1, duration:600, useNativeDriver:true }),
     Animated.timing(slideAnim, { toValue:0, duration:600, useNativeDriver:true }),
   ]).start()
-
-  // Polling de notificaciones
-  if (!usuario?.id) return
-  const prevEstados: Record<string, string> = {}
-  const intervalo = setInterval(async () => {
-    try {
-      const pedidos = await pedidosService.misPedidos()
-      for (const p of pedidos) {
-        const anterior = prevEstados[p.id]
-        const actual   = p.estado
-        if (!anterior) { prevEstados[p.id] = actual; continue }
-        if (anterior !== actual) {
-          const msgs: Record<string, string> = {
-            ACEPTADO:  '✅ El proveedor aceptó tu pedido',
-            EN_CURSO:  '🔧 El trabajo está en curso',
-            COMPLETADO:'🎉 Trabajo completado, confirmá el pago',
-            CANCELADO: '❌ El pedido fue cancelado',
-          }
-          if (msgs[actual]) {
-            await notificacionesService.mostrarLocal('AyudaVecino', msgs[actual])
-          }
-          prevEstados[p.id] = actual
-        }
-      }
-    } catch {}
-  }, 30000)
-  return () => clearInterval(intervalo)
-}, [usuario?.id])
+  }, [])
 
   return (
     <ScrollView

@@ -24,6 +24,7 @@ class ChatService {
   // Listeners "globales": conviven con los de pantalla (ej. para notificar mensajes
   // de otros pedidos aunque no estés dentro de ese chat). No se pisan entre sí.
   private handlersGlobales: Set<(msg: any) => void> = new Set()
+  private handlersNotificacion: Set<(n: any) => void> = new Set()
 
   async conectar(): Promise<Socket | null> {
     if (this.socket?.connected) return this.socket
@@ -66,6 +67,7 @@ class ChatService {
 
     // Los listeners globales se re-atan a cada nuevo socket
     this.handlersGlobales.forEach(cb => this.socket?.on('mensaje_nuevo', cb))
+    this.handlersNotificacion.forEach(cb => this.socket?.on('notificacion_nueva', cb))
 
     return this.socket
   }
@@ -153,6 +155,16 @@ class ChatService {
     return () => {
       this.handlersGlobales.delete(callback)
       this.socket?.off('mensaje_nuevo', callback)
+    }
+  }
+
+  // ── Notificaciones que el backend empuja a la sala personal del usuario ──
+  escucharNotificaciones(callback: (notificacion: any) => void) {
+    this.handlersNotificacion.add(callback)
+    this.socket?.on('notificacion_nueva', callback)
+    return () => {
+      this.handlersNotificacion.delete(callback)
+      this.socket?.off('notificacion_nueva', callback)
     }
   }
 
