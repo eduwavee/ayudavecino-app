@@ -11,11 +11,16 @@ import { useAuthStore } from '../../store/authStore'
 import { EMAIL_REGEX, USERNAME_REGEX, PASSWORD_REGEX, MENSAJE_USERNAME, MENSAJE_PASSWORD } from '../../utils/validaciones'
 import { FUENTES as F } from '../../constants/diseno'
 import { alertaError, haptica } from '../../utils/haptica'
+import Reanimated from 'react-native-reanimated'
+import { useSacudida } from '../../hooks/useSacudida'
 import { PressScale } from '../../components/ui/PressScale'
 
 const PASOS = ['Rol', 'Datos', 'Listo']
 
 export default function RegistroScreen() {
+  const sacudida = useSacudida()
+  // Error: vibra, sacude el formulario y muestra el mensaje
+  const fallar = (mensaje: string) => { sacudida.sacudir(); alertaError(mensaje) }
   const router     = useRouter()
   const setUsuario = useAuthStore(s => s.setUsuario)
   const [paso, setPaso]         = useState(0)
@@ -50,11 +55,11 @@ export default function RegistroScreen() {
     if (paso === 0) {
       setPaso(1)
     } else if (paso === 1) {
-      if (!email || !username || !password || !confirmarPassword) return alertaError('Completá todos los campos')
-      if (!EMAIL_REGEX.test(email.trim())) return alertaError('Ingresá un email válido')
-      if (!USERNAME_REGEX.test(username.trim().toLowerCase())) return alertaError(MENSAJE_USERNAME)
-      if (!PASSWORD_REGEX.test(password)) return alertaError(MENSAJE_PASSWORD)
-      if (password !== confirmarPassword) return alertaError('Las contraseñas no coinciden')
+      if (!email || !username || !password || !confirmarPassword) return fallar('Completá todos los campos')
+      if (!EMAIL_REGEX.test(email.trim())) return fallar('Ingresá un email válido')
+      if (!USERNAME_REGEX.test(username.trim().toLowerCase())) return fallar(MENSAJE_USERNAME)
+      if (!PASSWORD_REGEX.test(password)) return fallar(MENSAJE_PASSWORD)
+      if (password !== confirmarPassword) return fallar('Las contraseñas no coinciden')
       handleRegistro()
     }
   }
@@ -71,7 +76,7 @@ export default function RegistroScreen() {
         || err.response?.data?.errores?.[0]?.msg
         || err.message
         || 'Error al registrarse'
-      alertaError(msg)
+      fallar(msg)
     } finally {
       setLoading(false)
     }
@@ -118,6 +123,7 @@ export default function RegistroScreen() {
 
         {/* FORM */}
         <Animated.View style={[styles.formSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <Reanimated.View style={sacudida.estilo}>
 
           {/* PASO 0 — Elegir rol */}
           {paso === 0 && (
@@ -258,6 +264,7 @@ export default function RegistroScreen() {
             </TouchableOpacity>
           </View>
 
+          </Reanimated.View>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -9,6 +9,7 @@ import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
 import { alertaError, haptica } from '../../utils/haptica'
+import { ProgresoPedido } from '../../components/ui/ProgresoPedido'
 import { PressScale } from '../../components/ui/PressScale'
 
 function SkeletonPedidoCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
@@ -273,6 +274,8 @@ export default function PedidosScreen() {
                     )}
                   </View>
                 )}
+
+                <ProgresoPedido estado={item.estado} pagado={!!item.pago} />
 
                 {/* Estado del pago */}
                 {item.pago && (

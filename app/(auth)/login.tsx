@@ -10,9 +10,14 @@ import { authService } from '../../services/auth.service'
 import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
 import { alertaError, haptica } from '../../utils/haptica'
+import Reanimated from 'react-native-reanimated'
+import { useSacudida } from '../../hooks/useSacudida'
 import { PressScale } from '../../components/ui/PressScale'
 
 export default function LoginScreen() {
+  const sacudida = useSacudida()
+  // Error: vibra, sacude el formulario y muestra el mensaje
+  const fallar = (mensaje: string) => { sacudida.sacudir(); alertaError(mensaje) }
   const router     = useRouter()
   const setUsuario = useAuthStore(s => s.setUsuario)
   const [username, setUsername] = useState('')
@@ -35,7 +40,7 @@ export default function LoginScreen() {
   }, [])
 
   async function handleLogin() {
-    if (!username || !password) return alertaError('Completá todos los campos')
+    if (!username || !password) return fallar('Completá todos los campos')
     setLoading(true)
     try {
       const data = await authService.login(username.trim(), password, rol)
@@ -47,7 +52,7 @@ export default function LoginScreen() {
       const msg = err.response?.status === 401
         ? `Usuario o contraseña incorrectos para una cuenta de ${rol === 'CLIENTE' ? 'cliente' : 'proveedor'}`
         : err.response?.data?.mensaje || err.response?.data?.errores?.[0]?.msg || err.message || 'Error al iniciar sesión'
-      alertaError(msg)
+      fallar(msg)
     } finally {
       setLoading(false)
     }
@@ -74,6 +79,7 @@ export default function LoginScreen() {
 
         {/* FORM */}
         <Animated.View style={[styles.formSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}>
+          <Reanimated.View style={sacudida.estilo}>
 
           <Text style={styles.title}>Hola de{'\n'}nuevo 👋</Text>
           <Text style={styles.subtitle}>Ingresá a tu cuenta para continuar</Text>
@@ -162,6 +168,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
+          </Reanimated.View>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -9,6 +9,7 @@ import { pedidosService } from '../../services/pedidos.service'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
 import { alertaError, haptica } from '../../utils/haptica'
+import { ProgresoPedido } from '../../components/ui/ProgresoPedido'
 import { PressScale } from '../../components/ui/PressScale'
 
 const FILTROS = ['Todos','Pendientes','En curso','Completados','Cancelados']
@@ -170,6 +171,8 @@ export default function PedidosProveedorScreen() {
                 {p.descripcion && (
                   <Text style={styles.pedidoDesc}>💬 "{p.descripcion}"</Text>
                 )}
+
+                <ProgresoPedido estado={p.estado} pagado={!!p.pago} />
 
                 {isLoading ? (
                   <ActivityIndicator color={Colors.primary} style={{ marginTop:12 }} />
