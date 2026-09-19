@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
+import { FUENTES as F } from '../../constants/diseno'
 
 const { width } = Dimensions.get('window')
 
@@ -169,32 +170,32 @@ const styles = StyleSheet.create({
   checkRing2:      { position:'absolute', width:120, height:120, borderRadius:60, backgroundColor:'rgba(255,255,255,.12)' },
   checkRing1:      { position:'absolute', width:90, height:90, borderRadius:45, backgroundColor:'rgba(255,255,255,.18)' },
   checkCircle:     { width:72, height:72, borderRadius:36, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:8}, shadowOpacity:.2, shadowRadius:16, elevation:8 },
-  checkMark:       { fontSize:32, color:Colors.primary, fontWeight:'900' },
+  checkMark:       { fontSize:32, color:Colors.primary, fontFamily: F.extrabold },
   topTexts:        { alignItems:'center' },
-  exitoTitle:      { fontSize:36, fontWeight:'900', color:'white', textAlign:'center', lineHeight:42, marginBottom:8 },
-  exitoSub:        { fontSize:14, color:'rgba(255,255,255,.7)', textAlign:'center' },
+  exitoTitle:      { fontSize:36, fontFamily: F.extrabold, color:'white', textAlign:'center', lineHeight:42, marginBottom:8 },
+  exitoSub:        { fontFamily: F.regular, fontSize:14, color:'rgba(255,255,255,.7)', textAlign:'center' },
   card:            { backgroundColor:'white', marginHorizontal:20, borderRadius:24, padding:20, shadowColor:'#000', shadowOffset:{width:0,height:8}, shadowOpacity:.15, shadowRadius:24, elevation:8 },
   orderIdRow:      { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:16 },
-  orderIdLabel:    { fontSize:12, color:'#888' },
-  orderId:         { fontSize:14, fontWeight:'900', color:Colors.primary, fontVariant:['tabular-nums'] },
+  orderIdLabel:    { fontFamily: F.regular, fontSize:12, color:'#6B6B6B' },
+  orderId:         { fontSize:14, fontFamily: F.extrabold, color:Colors.primary, fontVariant:['tabular-nums'] },
   divider:         { height:1, backgroundColor:'#f0f0f0', marginVertical:14 },
   detailRow:       { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:10 },
-  detailLabel:     { fontSize:13, color:'#888' },
-  detailValue:     { fontSize:13, fontWeight:'600', color:'#1a1a1a' },
-  detailMonto:     { fontSize:18, fontWeight:'900', color:'#1a1a1a' },
+  detailLabel:     { fontFamily: F.regular, fontSize:13, color:'#6B6B6B' },
+  detailValue:     { fontSize:13, fontFamily: F.semibold, color:'#1a1a1a' },
+  detailMonto:     { fontSize:18, fontFamily: F.extrabold, color:'#1a1a1a' },
   tracker:         { gap:0 },
   trackStep:       { flexDirection:'row', gap:12, alignItems:'flex-start' },
   trackDot:        { width:26, height:26, borderRadius:13, alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2 },
   trackDotDone:    { backgroundColor:Colors.primary },
   trackDotActive:  { backgroundColor:Colors.primary, shadowColor:Colors.primary, shadowOffset:{width:0,height:0}, shadowOpacity:.5, shadowRadius:6, elevation:4 },
-  trackDotText:    { color:'white', fontSize:12, fontWeight:'900' },
+  trackDotText:    { color:'white', fontSize:12, fontFamily: F.extrabold },
   trackLine:       { position:'absolute', left:12, top:28, width:2, height:36, backgroundColor:Colors.primary, marginLeft:0 },
   trackInfo:       { flex:1, paddingBottom:24 },
-  trackTitle:      { fontSize:13, fontWeight:'700', color:'#1a1a1a', marginBottom:2 },
-  trackDesc:       { fontSize:11, color:'#aaa' },
+  trackTitle:      { fontSize:13, fontFamily: F.bold, color:'#1a1a1a', marginBottom:2 },
+  trackDesc:       { fontFamily: F.regular, fontSize:11, color:'#aaa' },
   buttons:         { padding:20, gap:10 },
   btnPrimary:      { backgroundColor:'white', borderRadius:16, paddingVertical:16, alignItems:'center' },
-  btnPrimaryText:  { color:Colors.primary, fontSize:15, fontWeight:'800' },
+  btnPrimaryText:  { color:Colors.primary, fontSize:15, fontFamily: F.extrabold },
   btnSecondary:    { borderRadius:16, paddingVertical:14, alignItems:'center' },
-  btnSecondaryText:{ color:'rgba(255,255,255,.7)', fontSize:14, fontWeight:'600' },
+  btnSecondaryText:{ color:'rgba(255,255,255,.7)', fontSize:14, fontFamily: F.semibold },
 })

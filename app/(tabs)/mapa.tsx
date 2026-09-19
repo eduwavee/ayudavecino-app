@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { useTema, TemaTokens } from '../../store/temaStore'
 import { usuariosService } from '../../services/usuarios.service'
+import { FUENTES as F } from '../../constants/diseno'
 
 // Fallback si no hay permiso de ubicación: San Miguel de Tucumán
 const REGION_DEFAULT = {
@@ -140,19 +141,19 @@ export default function MapaScreen() {
 const getStyles = (tema: TemaTokens) => StyleSheet.create({
   container:       { flex:1, backgroundColor:tema.bg },
   header:          { flexDirection:'row', alignItems:'center', justifyContent:'space-between', paddingHorizontal:22, paddingTop:60, paddingBottom:14 },
-  title:           { fontSize:26, fontWeight:'900', color:tema.texto },
-  subtitle:        { fontSize:12, color:tema.subTexto, marginTop:2 },
+  title:           { fontSize:26, fontFamily: F.extrabold, color:tema.texto },
+  subtitle:        { fontFamily: F.regular, fontSize:12, color:tema.subTexto, marginTop:2 },
   contadorChip:    { backgroundColor:Colors.greenLight, paddingHorizontal:12, paddingVertical:6, borderRadius:100 },
-  contadorText:    { fontSize:12, fontWeight:'700', color:Colors.primary },
+  contadorText:    { fontSize:12, fontFamily: F.bold, color:Colors.primary },
   mapWrap:         { flex:1, position:'relative' },
   loadingOverlay:  { ...StyleSheet.absoluteFill, alignItems:'center', justifyContent:'center', backgroundColor:tema.bg + 'CC' },
   permisoBanner:   { position:'absolute', top:14, left:16, right:16, backgroundColor:tema.card, borderRadius:14, padding:14, flexDirection:'row', alignItems:'center', justifyContent:'space-between', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:8, elevation:4 },
-  permisoText:     { flex:1, fontSize:12, color:tema.texto, fontWeight:'600', marginRight:8 },
-  permisoBtn:      { fontSize:12, fontWeight:'800', color:Colors.primary },
+  permisoText:     { flex:1, fontSize:12, color:tema.texto, fontFamily: F.semibold, marginRight:8 },
+  permisoBtn:      { fontSize:12, fontFamily: F.extrabold, color:Colors.primary },
   centrarBtn:      { position:'absolute', bottom:24, right:20, width:48, height:48, borderRadius:24, backgroundColor:tema.card, alignItems:'center', justifyContent:'center', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.15, shadowRadius:8, elevation:4 },
-  centrarIco:      { fontSize:20 },
+  centrarIco:      { fontFamily: F.regular, fontSize:20 },
   callout:         { minWidth:140, padding:4 },
-  calloutNombre:   { fontSize:13, fontWeight:'800', color:Colors.dark, marginBottom:2 },
-  calloutRating:   { fontSize:11, color:Colors.gray, marginBottom:4 },
-  calloutLink:     { fontSize:11, fontWeight:'700', color:Colors.primary },
+  calloutNombre:   { fontSize:13, fontFamily: F.extrabold, color:Colors.dark, marginBottom:2 },
+  calloutRating:   { fontFamily: F.regular, fontSize:11, color:'#6B6B6B', marginBottom:4 },
+  calloutLink:     { fontSize:11, fontFamily: F.bold, color:Colors.primary },
 })

@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { authService } from '../../services/auth.service'
 import { EMAIL_REGEX, PASSWORD_REGEX, MENSAJE_PASSWORD } from '../../utils/validaciones'
+import { FUENTES as F } from '../../constants/diseno'
 
 type Paso = 'email' | 'codigo' | 'listo'
 
@@ -79,7 +80,7 @@ export default function RecuperarScreen() {
         <Text style={styles.inputIco}>{ico}</Text>
         <TextInput
           style={styles.input}
-          placeholderTextColor="#aaa"
+          placeholderTextColor="#767676"
           autoCapitalize="none"
           autoCorrect={false}
           onFocus={() => setFocused(key)}
@@ -171,24 +172,24 @@ const styles = StyleSheet.create({
   scroll:           { flexGrow:1 },
   topSection:       { height:240, backgroundColor:'#1a1a1a', overflow:'hidden', justifyContent:'flex-end', padding:24, paddingBottom:44 },
   backBtn:          { position:'absolute', top:52, left:20, width:38, height:38, borderRadius:12, backgroundColor:'rgba(255,255,255,.1)', alignItems:'center', justifyContent:'center', zIndex:10 },
-  backText:         { color:'white', fontSize:18 },
+  backText:         { fontFamily: F.regular, color:'white', fontSize:18 },
   bigCircle:        { position:'absolute', width:200, height:200, borderRadius:100, backgroundColor:'#1A9E5C', opacity:.2, top:-40, right:-40 },
   smallCircle:      { position:'absolute', width:100, height:100, borderRadius:50, backgroundColor:'#FFD23F', opacity:.15, bottom:60, right:60 },
-  mainEmoji:        { fontSize:52, marginBottom:10 },
+  mainEmoji:        { fontFamily: F.regular, fontSize:52, marginBottom:10 },
   chip:             { backgroundColor:'rgba(26,158,92,.2)', borderRadius:100, paddingHorizontal:14, paddingVertical:6, borderWidth:1, borderColor:'rgba(26,158,92,.3)', alignSelf:'flex-start' },
-  chipText:         { color:'#3DD68C', fontSize:12, fontWeight:'700' },
+  chipText:         { color:'#3DD68C', fontSize:12, fontFamily: F.bold },
   formSection:      { flex:1, backgroundColor:'white', borderTopLeftRadius:28, borderTopRightRadius:28, marginTop:-20, padding:28, paddingTop:32 },
-  title:            { fontSize:30, fontWeight:'900', color:'#1a1a1a', lineHeight:36, marginBottom:8 },
-  subtitle:         { fontSize:13, color:'#888', lineHeight:20, marginBottom:24 },
-  emailDestacado:   { color:'#1a1a1a', fontWeight:'700' },
+  title:            { fontSize:30, fontFamily: F.extrabold, color:'#1a1a1a', lineHeight:36, marginBottom:8 },
+  subtitle:         { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', lineHeight:20, marginBottom:24 },
+  emailDestacado:   { color:'#1a1a1a', fontFamily: F.bold },
   inputWrap:        { flexDirection:'row', alignItems:'center', backgroundColor:'#f7f7f7', borderRadius:14, paddingHorizontal:14, marginBottom:12, borderWidth:1.5, borderColor:'transparent' },
   inputWrapFocused: { borderColor:Colors.primary, backgroundColor:'#F0FDF4' },
-  inputIco:         { fontSize:16, marginRight:10 },
-  input:            { flex:1, paddingVertical:14, fontSize:14, color:'#1a1a1a' },
+  inputIco:         { fontFamily: F.regular, fontSize:16, marginRight:10 },
+  input:            { fontFamily: F.regular, flex:1, paddingVertical:14, fontSize:14, color:'#1a1a1a' },
   tipBox:           { backgroundColor:'#F0FDF4', borderRadius:14, padding:14, marginBottom:20, marginTop:8 },
-  tipText:          { fontSize:12, color:'#555', lineHeight:18 },
+  tipText:          { fontFamily: F.regular, fontSize:12, color:'#555', lineHeight:18 },
   btn:              { backgroundColor:'#1a1a1a', borderRadius:16, paddingVertical:16, alignItems:'center', marginBottom:16, marginTop:8 },
-  btnText:          { color:'white', fontSize:15, fontWeight:'700', letterSpacing:.3 },
+  btnText:          { color:'white', fontSize:15, fontFamily: F.bold, letterSpacing:.3 },
   linkBtn:          { alignSelf:'center', padding:6 },
-  linkText:         { fontSize:13, color:Colors.primary, fontWeight:'700' },
+  linkText:         { fontSize:13, color:Colors.primary, fontFamily: F.bold },
 })

@@ -15,6 +15,7 @@ import { Colors } from "../constants/colors";
 import { useAuthStore } from "../store/authStore";
 import { useTemaStore, useTema, TemaTokens } from "../store/temaStore";
 import { authService } from "../services/auth.service";
+import { FUENTES as F } from '../constants/diseno'
 
 export default function AjustesScreen() {
   const router = useRouter();
@@ -407,8 +408,8 @@ const getStyles = (tema: TemaTokens) =>
       alignItems: "center",
       justifyContent: "center",
     },
-    backText: { fontSize: 16, color: tema.texto },
-    title: { fontSize: 22, fontWeight: "900", color: tema.texto },
+    backText: { fontFamily: F.regular, fontSize: 16, color: tema.texto },
+    title: { fontSize: 22, fontFamily: F.extrabold, color: tema.texto },
     perfilCard: {
       flexDirection: "row",
       alignItems: "center",
@@ -432,16 +433,16 @@ const getStyles = (tema: TemaTokens) =>
       alignItems: "center",
       justifyContent: "center",
     },
-    perfilAvatarText: { color: "white", fontSize: 22, fontWeight: "900" },
+    perfilAvatarText: { color: "white", fontSize: 22, fontFamily: F.extrabold },
     perfilInfo: { flex: 1 },
     perfilNombre: {
       fontSize: 16,
-      fontWeight: "800",
+      fontFamily: F.extrabold,
       color: tema.texto,
       marginBottom: 2,
     },
-    perfilEmail: { fontSize: 12, color: tema.subTexto, marginBottom: 4 },
-    perfilEditar: { fontSize: 11, color: Colors.primary, fontWeight: "600" },
+    perfilEmail: { fontFamily: F.regular, fontSize: 12, color: tema.subTexto, marginBottom: 4 },
+    perfilEditar: { fontSize: 11, color: Colors.primary, fontFamily: F.semibold },
     rolBadge: {
       backgroundColor: "rgba(255,210,63,.15)",
       paddingHorizontal: 10,
@@ -454,11 +455,11 @@ const getStyles = (tema: TemaTokens) =>
       backgroundColor: "rgba(26,158,92,.1)",
       borderColor: "rgba(26,158,92,.25)",
     },
-    rolBadgeText: { fontSize: 11, fontWeight: "800", color: Colors.dark },
+    rolBadgeText: { fontSize: 11, fontFamily: F.extrabold, color: Colors.dark },
     section: { paddingHorizontal: 22, marginBottom: 20 },
     sectionTitle: {
       fontSize: 13,
-      fontWeight: "800",
+      fontFamily: F.extrabold,
       color: tema.texto,
       marginBottom: 10,
       letterSpacing: 0.3,
@@ -480,15 +481,15 @@ const getStyles = (tema: TemaTokens) =>
       padding: 16,
     },
     settingLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
-    settingIco: { fontSize: 22, width: 32, textAlign: "center" },
+    settingIco: { fontFamily: F.regular, fontSize: 22, width: 32, textAlign: "center" },
     settingLabel: {
       fontSize: 14,
-      fontWeight: "600",
+      fontFamily: F.semibold,
       color: tema.texto,
       marginBottom: 2,
     },
-    settingDesc: { fontSize: 11, color: tema.subTexto },
-    settingArrow: { fontSize: 22, color: tema.subTexto },
+    settingDesc: { fontFamily: F.regular, fontSize: 11, color: tema.subTexto },
+    settingArrow: { fontFamily: F.regular, fontSize: 22, color: tema.subTexto },
     rowDivider: { height: 1, backgroundColor: tema.border, marginLeft: 60 },
     versionBadge: {
       backgroundColor: "rgba(26,158,92,.1)",
@@ -496,7 +497,7 @@ const getStyles = (tema: TemaTokens) =>
       paddingVertical: 4,
       borderRadius: 100,
     },
-    versionBadgeText: { fontSize: 10, fontWeight: "700", color: Colors.primary },
+    versionBadgeText: { fontSize: 10, fontFamily: F.bold, color: Colors.primary },
     logoutBtn: {
       backgroundColor: tema.card,
       borderRadius: 16,
@@ -511,7 +512,7 @@ const getStyles = (tema: TemaTokens) =>
       shadowRadius: 6,
       elevation: 2,
     },
-    logoutText: { color: "#FF7675", fontSize: 15, fontWeight: "700" },
+    logoutText: { color: "#FF7675", fontSize: 15, fontFamily: F.bold },
     deleteBtn: { borderRadius: 16, paddingVertical: 14, alignItems: "center" },
-    deleteText: { color: tema.subTexto, fontSize: 13, fontWeight: "600" },
+    deleteText: { color: tema.subTexto, fontSize: 13, fontFamily: F.semibold },
   });

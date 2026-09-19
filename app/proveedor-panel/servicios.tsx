@@ -6,6 +6,7 @@ import { categoriaInfo } from '../../constants/categorias'
 import { archivoUrl } from '../../constants/config'
 import { serviciosService } from '../../services/servicios.service'
 import { useAuthStore } from '../../store/authStore'
+import { FUENTES as F } from '../../constants/diseno'
 
 
 export default function ServiciosProveedorScreen() {
@@ -69,7 +70,7 @@ export default function ServiciosProveedorScreen() {
                   <View style={styles.serviceIco}>
                     {s.fotos?.[0]
                       ? <Image source={{ uri: archivoUrl(s.fotos[0])! }} style={styles.serviceFoto} />
-                      : <Text style={{fontSize:24}}>{categoriaInfo(s.categoria).ico}</Text>}
+                      : <Text style={{ fontFamily: F.regular, fontSize:24}}>{categoriaInfo(s.categoria).ico}</Text>}
                   </View>
                   <View style={styles.serviceInfo}>
                     <Text style={styles.serviceName}>{s.nombre}</Text>
@@ -109,10 +110,10 @@ const styles = StyleSheet.create({
   container:     { flex:1, backgroundColor:Colors.cream },
   header:        { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
   backBtn:       { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },
-  backText:      { fontSize:16, color:Colors.dark },
-  title:         { flex:1, fontSize:22, fontWeight:'900', color:Colors.dark },
+  backText:      { fontFamily: F.regular, fontSize:16, color:Colors.dark },
+  title:         { flex:1, fontSize:22, fontFamily: F.extrabold, color:Colors.dark },
   addBtn:        { backgroundColor:Colors.primary, paddingHorizontal:14, paddingVertical:8, borderRadius:100 },
-  addBtnText:    { color:'white', fontSize:13, fontWeight:'700' },
+  addBtnText:    { color:'white', fontSize:13, fontFamily: F.bold },
   listContainer: { paddingHorizontal:22, gap:14, paddingBottom:100 },
   serviceCard:   { backgroundColor:'white', borderRadius:20, padding:18, shadowColor:'#000', shadowOffset:{width:0,height:3}, shadowOpacity:.06, shadowRadius:10, elevation:3 },
   serviceTop:    { flexDirection:'row', alignItems:'flex-start', justifyContent:'space-between', marginBottom:14 },
@@ -120,19 +121,19 @@ const styles = StyleSheet.create({
   serviceIco:    { width:50, height:50, borderRadius:15, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
   serviceFoto:   { width:'100%', height:'100%', borderRadius:15 },
   serviceInfo:   { flex:1, gap:4 },
-  serviceName:   { fontSize:15, fontWeight:'800', color:Colors.dark },
-  serviceDesc:   { fontSize:12, color:Colors.gray, lineHeight:18 },
+  serviceName:   { fontSize:15, fontFamily: F.extrabold, color:Colors.dark },
+  serviceDesc:   { fontFamily: F.regular, fontSize:12, color:'#6B6B6B', lineHeight:18 },
   serviceTags:   { flexDirection:'row', gap:6, flexWrap:'wrap', marginTop:4 },
   catTag:        { backgroundColor:Colors.cream, paddingHorizontal:10, paddingVertical:3, borderRadius:100 },
-  catTagText:    { fontSize:10, fontWeight:'700', color:Colors.gray },
-  servicePrice:  { fontSize:18, fontWeight:'900', color:Colors.dark },
+  catTagText:    { fontSize:10, fontFamily: F.bold, color:'#6B6B6B' },
+  servicePrice:  { fontSize:18, fontFamily: F.extrabold, color:Colors.dark },
   serviceActions:{ borderTopWidth:1, borderTopColor:Colors.border, paddingTop:12, flexDirection:'row', gap:10 },
   editBtn:       { flex:1, paddingVertical:10, borderRadius:12, borderWidth:1.5, borderColor:Colors.border, alignItems:'center' },
-  editBtnText:   { fontSize:13, fontWeight:'700', color:Colors.dark },
+  editBtnText:   { fontSize:13, fontFamily: F.bold, color:Colors.dark },
   empty:         { alignItems:'center', paddingTop:60, paddingHorizontal:32 },
-  emptyIco:      { fontSize:56, marginBottom:16, opacity:.3 },
-  emptyTitle:    { fontSize:18, fontWeight:'800', color:Colors.dark, marginBottom:8 },
-  emptySub:      { fontSize:13, color:Colors.gray, textAlign:'center', lineHeight:20, marginBottom:24 },
+  emptyIco:      { fontFamily: F.regular, fontSize:56, marginBottom:16, opacity:.3 },
+  emptyTitle:    { fontSize:18, fontFamily: F.extrabold, color:Colors.dark, marginBottom:8 },
+  emptySub:      { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', textAlign:'center', lineHeight:20, marginBottom:24 },
   emptyBtn:      { backgroundColor:Colors.primary, paddingHorizontal:24, paddingVertical:14, borderRadius:16 },
-  emptyBtnText:  { color:'white', fontSize:14, fontWeight:'700' },
+  emptyBtnText:  { color:'white', fontSize:14, fontFamily: F.bold },
 })

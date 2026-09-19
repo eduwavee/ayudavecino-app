@@ -33,7 +33,7 @@ export const TEMAS = {
     bg:       '#F7F3EE',
     card:     '#FFFFFF',
     texto:    '#1a1a1a',
-    subTexto: '#888888',
+    subTexto: '#6B6B6B', // 5.3:1 sobre blanco (antes #888: 3.5:1, no pasaba WCAG AA)
     border:   '#EFEFEF',
     inputBg:  '#F7F7F7',
     overlay:  'rgba(0,0,0,.06)',

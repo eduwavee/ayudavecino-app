@@ -9,6 +9,7 @@ import { Colors } from '../../constants/colors'
 import { API_URL } from '../../constants/config'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { FUENTES as F } from '../../constants/diseno'
 
 const TAGS = [
   '✓ Puntual', '✓ Prolijo', '💰 Precio justo',
@@ -147,7 +148,7 @@ export default function NuevaResenaScreen() {
           <TextInput
             style={styles.comentarioInput}
             placeholder="Contá tu experiencia... ¿qué fue lo que más te gustó?"
-            placeholderTextColor="#bbb"
+            placeholderTextColor="#767676"
             value={comentario}
             onChangeText={setComentario}
             multiline
@@ -180,34 +181,34 @@ const styles = StyleSheet.create({
   container:         { flex:1, backgroundColor:Colors.cream },
   header:            { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:20 },
   backBtn:           { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },
-  backText:          { fontSize:16, color:Colors.dark },
-  title:             { fontSize:20, fontWeight:'900', color:Colors.dark },
+  backText:          { fontFamily: F.regular, fontSize:16, color:Colors.dark },
+  title:             { fontSize:20, fontFamily: F.extrabold, color:Colors.dark },
   content:           { paddingHorizontal:22 },
   provCard:          { flexDirection:'row', alignItems:'center', gap:14, backgroundColor:'white', borderRadius:18, padding:16, marginBottom:24, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
   provAvatar:        { width:50, height:50, borderRadius:16, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center' },
-  provAvatarText:    { color:'white', fontSize:20, fontWeight:'900' },
+  provAvatarText:    { color:'white', fontSize:20, fontFamily: F.extrabold },
   provInfo:          { flex:1 },
-  provNombre:        { fontSize:16, fontWeight:'800', color:Colors.dark, marginBottom:3 },
-  provServicio:      { fontSize:12, color:Colors.gray },
-  provIco:           { fontSize:24 },
+  provNombre:        { fontSize:16, fontFamily: F.extrabold, color:Colors.dark, marginBottom:3 },
+  provServicio:      { fontFamily: F.regular, fontSize:12, color:'#6B6B6B' },
+  provIco:           { fontFamily: F.regular, fontSize:24 },
   starsSection:      { backgroundColor:'white', borderRadius:18, padding:20, marginBottom:16, alignItems:'center', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
-  starsTitle:        { fontSize:15, fontWeight:'700', color:Colors.dark, marginBottom:16 },
+  starsTitle:        { fontSize:15, fontFamily: F.bold, color:Colors.dark, marginBottom:16 },
   starsRow:          { flexDirection:'row', gap:8, marginBottom:10 },
-  star:              { fontSize:40, opacity:.3 },
+  star:              { fontFamily: F.regular, fontSize:40, opacity:.3 },
   starActive:        { opacity:1 },
-  starLabel:         { fontSize:16, fontWeight:'900', color:Colors.dark, marginTop:4 },
+  starLabel:         { fontSize:16, fontFamily: F.extrabold, color:Colors.dark, marginTop:4 },
   tagsSection:       { backgroundColor:'white', borderRadius:18, padding:16, marginBottom:16, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
-  tagsTitle:         { fontSize:13, fontWeight:'700', color:Colors.dark, marginBottom:12 },
+  tagsTitle:         { fontSize:13, fontFamily: F.bold, color:Colors.dark, marginBottom:12 },
   tagsWrap:          { flexDirection:'row', flexWrap:'wrap', gap:8 },
   tagBtn:            { paddingHorizontal:14, paddingVertical:8, borderRadius:100, backgroundColor:Colors.cream, borderWidth:1.5, borderColor:'#eee' },
   tagBtnActive:      { backgroundColor:'#F0FDF4', borderColor:Colors.primary },
-  tagText:           { fontSize:12, fontWeight:'600', color:'#555' },
+  tagText:           { fontSize:12, fontFamily: F.semibold, color:'#555' },
   tagTextActive:     { color:Colors.primary },
   comentarioSection: { backgroundColor:'white', borderRadius:18, padding:16, marginBottom:24, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
-  comentarioTitle:   { fontSize:13, fontWeight:'700', color:Colors.dark, marginBottom:10 },
-  comentarioInput:   { backgroundColor:Colors.cream, borderRadius:14, padding:14, fontSize:13, color:Colors.dark, minHeight:100, borderWidth:1.5, borderColor:'#eee' },
-  charCount:         { textAlign:'right', fontSize:10, color:'#bbb', marginTop:6 },
+  comentarioTitle:   { fontSize:13, fontFamily: F.bold, color:Colors.dark, marginBottom:10 },
+  comentarioInput:   { fontFamily: F.regular, backgroundColor:Colors.cream, borderRadius:14, padding:14, fontSize:13, color:Colors.dark, minHeight:100, borderWidth:1.5, borderColor:'#eee' },
+  charCount:         { fontFamily: F.regular, textAlign:'right', fontSize:10, color:'#bbb', marginTop:6 },
   enviarBtn:         { backgroundColor:Colors.primary, borderRadius:16, paddingVertical:16, alignItems:'center', shadowColor:Colors.primary, shadowOffset:{width:0,height:4}, shadowOpacity:.3, shadowRadius:10, elevation:5 },
   enviarBtnDisabled: { backgroundColor:'#ccc', shadowOpacity:0, elevation:0 },
-  enviarBtnText:     { color:'white', fontSize:15, fontWeight:'800' },
+  enviarBtnText:     { color:'white', fontSize:15, fontFamily: F.extrabold },
 })

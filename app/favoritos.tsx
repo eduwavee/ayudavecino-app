@@ -5,6 +5,7 @@ import { Colors } from '../constants/colors'
 import { categoriaInfo } from '../constants/categorias'
 import { favoritosService } from '../services/favoritos.service'
 import { useTema, TemaTokens } from '../store/temaStore'
+import { FUENTES as F } from '../constants/diseno'
 
 // Proveedores que el cliente guardó con el corazón en su perfil
 export default function FavoritosScreen() {
@@ -64,7 +65,7 @@ export default function FavoritosScreen() {
             const precioMin = p.servicios?.length ? Math.min(...p.servicios.map((s: any) => s.precio)) : null
             return (
               <TouchableOpacity style={styles.card} activeOpacity={.8} onPress={() => router.push(`/proveedor/${p.id}`)}>
-                <View style={styles.ico}><Text style={{ fontSize:24 }}>{cat.ico}</Text></View>
+                <View style={styles.ico}><Text style={{ fontFamily: F.regular, fontSize:24 }}>{cat.ico}</Text></View>
                 <View style={styles.info}>
                   <Text style={styles.nombre}>{p.nombre}{p.verificado ? '  ✓' : ''}</Text>
                   <Text style={styles.sub}>{cat.nombre} · ⭐ {p.rating?.toFixed(1) ?? '0.0'}</Text>
@@ -86,18 +87,18 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   container:  { flex:1, backgroundColor:tema.bg },
   header:     { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
   backBtn:    { width:38, height:38, borderRadius:12, backgroundColor:tema.overlay, alignItems:'center', justifyContent:'center' },
-  backText:   { fontSize:16, color:tema.texto },
-  title:      { fontSize:24, fontWeight:'900', color:tema.texto },
+  backText:   { fontFamily: F.regular, fontSize:16, color:tema.texto },
+  title:      { fontSize:24, fontFamily: F.extrabold, color:tema.texto },
   list:       { paddingHorizontal:22, paddingBottom:40, flexGrow:1 },
   card:       { flexDirection:'row', alignItems:'center', gap:12, backgroundColor:tema.card, borderRadius:18, padding:14, marginBottom:10, shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:6, elevation:2 },
   ico:        { width:50, height:50, borderRadius:15, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
   info:       { flex:1 },
-  nombre:     { fontSize:15, fontWeight:'800', color:tema.texto, marginBottom:2 },
-  sub:        { fontSize:12, color:tema.subTexto },
-  precio:     { fontSize:12, fontWeight:'700', color:Colors.primary, marginTop:3 },
-  corazon:    { fontSize:20 },
+  nombre:     { fontSize:15, fontFamily: F.extrabold, color:tema.texto, marginBottom:2 },
+  sub:        { fontFamily: F.regular, fontSize:12, color:tema.subTexto },
+  precio:     { fontSize:12, fontFamily: F.bold, color:Colors.primary, marginTop:3 },
+  corazon:    { fontFamily: F.regular, fontSize:20 },
   empty:      { alignItems:'center', paddingTop:80, paddingHorizontal:30 },
-  emptyIco:   { fontSize:52, marginBottom:14 },
-  emptyTitle: { fontSize:16, fontWeight:'800', color:tema.texto, marginBottom:6, textAlign:'center' },
-  emptySub:   { fontSize:13, color:tema.subTexto, textAlign:'center', lineHeight:19 },
+  emptyIco:   { fontFamily: F.regular, fontSize:52, marginBottom:14 },
+  emptyTitle: { fontSize:16, fontFamily: F.extrabold, color:tema.texto, marginBottom:6, textAlign:'center' },
+  emptySub:   { fontFamily: F.regular, fontSize:13, color:tema.subTexto, textAlign:'center', lineHeight:19 },
 })

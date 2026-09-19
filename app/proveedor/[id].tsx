@@ -10,6 +10,7 @@ import { nombreDeLugar } from '../../utils/ubicacion'
 import { archivoUrl } from '../../constants/config'
 import { favoritosService } from '../../services/favoritos.service'
 import { useAuthStore } from '../../store/authStore'
+import { FUENTES as F } from '../../constants/diseno'
 
 const TABS = ['Sobre mí', 'Servicios', 'Reseñas']
 
@@ -222,7 +223,7 @@ export default function ProveedorScreen() {
                   onPress={() => router.push({ pathname:'/pedido/nuevo', params:{ servicioId:s.id, servicioNombre:s.nombre, precio:s.precio, proveedorId:id } })}
                 >
                   <View style={styles.serviceLeft}>
-                    <View style={styles.serviceIco}><Text style={{fontSize:20}}>{categoriaInfo(s.categoria).ico}</Text></View>
+                    <View style={styles.serviceIco}><Text style={{ fontFamily: F.regular, fontSize:20}}>{categoriaInfo(s.categoria).ico}</Text></View>
                     <View style={{ flex:1 }}>
                       <Text style={styles.serviceName}>{s.nombre}</Text>
                       <Text style={styles.serviceDesc}>{s.descripcion}</Text>
@@ -305,7 +306,7 @@ export default function ProveedorScreen() {
           style={styles.chatBtn}
           onPress={() => Alert.alert('Chat', 'El chat con el proveedor se habilita cuando te acepta un pedido. Lo vas a encontrar en la pestaña Pedidos.')}
         >
-          <Text style={{fontSize:20}}>💬</Text>
+          <Text style={{ fontFamily: F.regular, fontSize:20}}>💬</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.contratarBtn}
@@ -330,64 +331,64 @@ const styles = StyleSheet.create({
   loadingWrap:    { flex:1, alignItems:'center', justifyContent:'center', backgroundColor:Colors.cream },
   hero:           { height:200, backgroundColor:'#1a1a1a', justifyContent:'flex-end', padding:20, overflow:'hidden' },
   favBtn:         { position:'absolute', top:52, right:20, width:36, height:36, borderRadius:10, backgroundColor:'rgba(255,255,255,.12)', alignItems:'center', justifyContent:'center', zIndex:10 },
-  favIco:         { fontSize:17 },
+  favIco:         { fontFamily: F.regular, fontSize:17 },
   heroPattern:    { position:'absolute', inset:0, opacity:.15 },
   backBtn:        { position:'absolute', top:52, left:20, width:36, height:36, borderRadius:10, backgroundColor:'rgba(255,255,255,.12)', alignItems:'center', justifyContent:'center' },
-  backText:       { color:'white', fontSize:16 },
+  backText:       { fontFamily: F.regular, color:'white', fontSize:16 },
   avatarWrap:     { flexDirection:'row', alignItems:'flex-end', gap:14, marginBottom:8 },
   avatar:         { width:72, height:72, borderRadius:20, backgroundColor:Colors.primaryLight, alignItems:'center', justifyContent:'center', borderWidth:3, borderColor:Colors.cream },
-  avatarIco:      { fontSize:32 },
-  heroName:       { fontSize:20, fontWeight:'900', color:'white', marginBottom:2 },
-  heroCat:        { fontSize:12, color:'rgba(255,255,255,.6)' },
+  avatarIco:      { fontFamily: F.regular, fontSize:32 },
+  heroName:       { fontSize:20, fontFamily: F.extrabold, color:'white', marginBottom:2 },
+  heroCat:        { fontFamily: F.regular, fontSize:12, color:'rgba(255,255,255,.6)' },
   badgesRow:      { flexDirection:'row', gap:6, position:'absolute', bottom:14, right:20 },
   badgeGreen:     { backgroundColor:'rgba(61,214,140,.2)', paddingHorizontal:10, paddingVertical:4, borderRadius:100, borderWidth:1, borderColor:'rgba(61,214,140,.3)' },
-  badgeGreenText: { fontSize:10, fontWeight:'700', color:'#3DD68C' },
+  badgeGreenText: { fontSize:10, fontFamily: F.bold, color:'#3DD68C' },
   badgeYellow:    { backgroundColor:'rgba(255,210,63,.2)', paddingHorizontal:10, paddingVertical:4, borderRadius:100, borderWidth:1, borderColor:'rgba(255,210,63,.3)' },
-  badgeYellowText:{ fontSize:10, fontWeight:'700', color:'#FFD23F' },
+  badgeYellowText:{ fontSize:10, fontFamily: F.bold, color:'#FFD23F' },
   statsStrip:     { flexDirection:'row', backgroundColor:'white', marginHorizontal:20, marginTop:20, borderRadius:18, padding:16, shadowColor:'#000', shadowOffset:{width:0,height:4}, shadowOpacity:.06, shadowRadius:12, elevation:3 },
   statItem:       { flex:1, alignItems:'center' },
   statBorder:     { borderLeftWidth:1, borderLeftColor:Colors.border },
-  statNum:        { fontSize:22, fontWeight:'900', color:Colors.dark, marginBottom:2 },
-  statLabel:      { fontSize:10, color:Colors.gray },
+  statNum:        { fontSize:22, fontFamily: F.extrabold, color:Colors.dark, marginBottom:2 },
+  statLabel:      { fontFamily: F.regular, fontSize:10, color:'#6B6B6B' },
   tabs:           { flexDirection:'row', paddingHorizontal:20, marginTop:20, borderBottomWidth:1, borderBottomColor:Colors.border },
   tab:            { paddingVertical:10, paddingHorizontal:14, borderBottomWidth:2, borderBottomColor:'transparent', marginBottom:-1 },
   tabActive:      { borderBottomColor:Colors.dark },
-  tabText:        { fontSize:13, fontWeight:'600', color:'#aaa' },
+  tabText:        { fontSize:13, fontFamily: F.semibold, color:'#aaa' },
   tabTextActive:  { color:Colors.dark },
   tabContent:     { padding:20 },
-  aboutText:      { fontSize:13, color:'#555', lineHeight:20, marginBottom:16 },
+  aboutText:      { fontFamily: F.regular, fontSize:13, color:'#555', lineHeight:20, marginBottom:16 },
   infoRows:       { gap:12 },
   infoRow:        { flexDirection:'row', alignItems:'center', gap:10 },
-  infoIco:        { fontSize:16 },
-  infoText:       { fontSize:13, color:'#555' },
+  infoIco:        { fontFamily: F.regular, fontSize:16 },
+  infoText:       { fontFamily: F.regular, fontSize:13, color:'#555' },
   serviceBlock:   { marginBottom:10 },
   fotosRow:       { gap:8, paddingTop:8 },
   fotoMini:       { width:88, height:66, borderRadius:10, backgroundColor:'#eee' },
   visor:          { flex:1, backgroundColor:'rgba(0,0,0,.92)', alignItems:'center', justifyContent:'center' },
   visorFoto:      { width:'100%', height:'75%' },
-  visorCerrar:    { color:'rgba(255,255,255,.6)', fontSize:12, marginTop:16 },
+  visorCerrar:    { fontFamily: F.regular, color:'rgba(255,255,255,.6)', fontSize:12, marginTop:16 },
   serviceCard:    { backgroundColor:'white', borderRadius:16, padding:14, flexDirection:'row', alignItems:'center', justifyContent:'space-between', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:6, elevation:2 },
   serviceLeft:    { flexDirection:'row', alignItems:'center', gap:12, flex:1 },
   serviceIco:     { width:42, height:42, borderRadius:12, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
-  serviceName:    { fontSize:14, fontWeight:'700', color:Colors.dark, marginBottom:2 },
-  serviceDesc:    { fontSize:11, color:Colors.gray },
-  servicePrice:   { fontSize:16, fontWeight:'900', color:Colors.dark },
+  serviceName:    { fontSize:14, fontFamily: F.bold, color:Colors.dark, marginBottom:2 },
+  serviceDesc:    { fontFamily: F.regular, fontSize:11, color:'#6B6B6B' },
+  servicePrice:   { fontSize:16, fontFamily: F.extrabold, color:Colors.dark },
   ratingBig:      { flexDirection:'row', alignItems:'center', gap:16, marginBottom:16 },
-  ratingNum:      { fontSize:48, fontWeight:'900', color:Colors.dark },
-  ratingStars:    { fontSize:16, marginBottom:4 },
-  ratingCount:    { fontSize:11, color:Colors.gray },
+  ratingNum:      { fontSize:48, fontFamily: F.extrabold, color:Colors.dark },
+  ratingStars:    { fontFamily: F.regular, fontSize:16, marginBottom:4 },
+  ratingCount:    { fontFamily: F.regular, fontSize:11, color:'#6B6B6B' },
   emptyTab:       { textAlign:'center', color:Colors.gray, marginTop:20 },
   resenaCard:     { backgroundColor:'white', borderRadius:16, padding:14, marginBottom:10, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:6, elevation:2 },
   resenaHeader:   { flexDirection:'row', alignItems:'center', gap:10, marginBottom:8 },
   resenaAvatar:   { width:36, height:36, borderRadius:12, backgroundColor:Colors.primaryLight, alignItems:'center', justifyContent:'center' },
-  resenaAvatarText:{ color:'white', fontSize:14, fontWeight:'900' },
+  resenaAvatarText:{ color:'white', fontSize:14, fontFamily: F.extrabold },
   resenaHeaderInfo:{ flex:1 },
-  resenaAutor:    { fontSize:13, fontWeight:'800', color:Colors.dark },
-  resenaFecha:    { fontSize:11, color:Colors.gray, marginTop:1 },
-  resenaEstrellas:{ fontSize:11 },
-  resenaComentario:{ fontSize:13, color:'#555', lineHeight:19 },
+  resenaAutor:    { fontSize:13, fontFamily: F.extrabold, color:Colors.dark },
+  resenaFecha:    { fontFamily: F.regular, fontSize:11, color:'#6B6B6B', marginTop:1 },
+  resenaEstrellas:{ fontFamily: F.regular, fontSize:11 },
+  resenaComentario:{ fontFamily: F.regular, fontSize:13, color:'#555', lineHeight:19 },
   bottomCta:      { position:'absolute', bottom:0, left:0, right:0, backgroundColor:'white', padding:16, paddingBottom:32, flexDirection:'row', gap:10, borderTopWidth:1, borderTopColor:Colors.border },
   chatBtn:        { width:50, height:50, borderRadius:14, backgroundColor:'white', borderWidth:1.5, borderColor:Colors.border, alignItems:'center', justifyContent:'center' },
   contratarBtn:   { flex:1, backgroundColor:Colors.dark, borderRadius:14, paddingVertical:14, alignItems:'center' },
-  contratarText:  { color:'white', fontSize:15, fontWeight:'700' },
+  contratarText:  { color:'white', fontSize:15, fontFamily: F.bold },
 })

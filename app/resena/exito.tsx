@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
+import { FUENTES as F } from '../../constants/diseno'
 
 export default function ResenaExitoScreen() {
   const router = useRouter()
@@ -74,17 +75,17 @@ const styles = StyleSheet.create({
   checkRing2:   { position:'absolute', width:140, height:140, borderRadius:70, backgroundColor:'rgba(255,255,255,.15)' },
   checkRing1:   { position:'absolute', width:100, height:100, borderRadius:50, backgroundColor:'rgba(255,255,255,.2)' },
   checkCircle:  { width:80, height:80, borderRadius:40, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:8}, shadowOpacity:.2, shadowRadius:16, elevation:8 },
-  checkEmoji:   { fontSize:38 },
+  checkEmoji:   { fontFamily: F.regular, fontSize:38 },
   textWrap:     { alignItems:'center', marginBottom:40 },
-  title:        { fontSize:34, fontWeight:'900', color:'#1a1a1a', textAlign:'center', lineHeight:40, marginBottom:12 },
-  subtitle:     { fontSize:14, color:'rgba(0,0,0,.6)', textAlign:'center', lineHeight:21, marginBottom:20 },
+  title:        { fontSize:34, fontFamily: F.extrabold, color:'#1a1a1a', textAlign:'center', lineHeight:40, marginBottom:12 },
+  subtitle:     { fontFamily: F.regular, fontSize:14, color:'rgba(0,0,0,.6)', textAlign:'center', lineHeight:21, marginBottom:20 },
   starsRow:     { flexDirection:'row', gap:4, marginBottom:20 },
-  star:         { fontSize:28 },
+  star:         { fontFamily: F.regular, fontSize:28 },
   infoCard:     { backgroundColor:'rgba(255,255,255,.3)', borderRadius:14, padding:14, paddingHorizontal:20 },
-  infoText:     { fontSize:13, color:'#1a1a1a', fontWeight:'600', textAlign:'center' },
+  infoText:     { fontSize:13, color:'#1a1a1a', fontFamily: F.semibold, textAlign:'center' },
   buttons:      { width:'100%', gap:10 },
   btnPrimary:   { backgroundColor:'#1a1a1a', borderRadius:16, paddingVertical:16, alignItems:'center' },
-  btnPrimaryText:{ color:'white', fontSize:15, fontWeight:'800' },
+  btnPrimaryText:{ color:'white', fontSize:15, fontFamily: F.extrabold },
   btnSecondary: { borderRadius:16, paddingVertical:14, alignItems:'center' },
-  btnSecondaryText:{ color:'rgba(0,0,0,.6)', fontSize:14, fontWeight:'600' },
+  btnSecondaryText:{ color:'rgba(0,0,0,.6)', fontSize:14, fontFamily: F.semibold },
 })

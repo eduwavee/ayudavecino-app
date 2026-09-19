@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { pedidosService } from '../../services/pedidos.service'
 import { useAuthStore } from '../../store/authStore'
+import { FUENTES as F } from '../../constants/diseno'
 
 export default function ChatListScreen() {
   const router  = useRouter()
@@ -96,21 +97,21 @@ export default function ChatListScreen() {
 const styles = StyleSheet.create({
   container:    { flex:1, backgroundColor:Colors.cream },
   header:       { paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
-  title:        { fontSize:26, fontWeight:'900', color:Colors.dark },
-  count:        { fontSize:13, color:Colors.gray, marginTop:2 },
+  title:        { fontSize:26, fontFamily: F.extrabold, color:Colors.dark },
+  count:        { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', marginTop:2 },
   list:         { paddingHorizontal:22, gap:10, paddingBottom:100 },
   chatItem:     { backgroundColor:'white', borderRadius:18, padding:16, flexDirection:'row', alignItems:'center', gap:14, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
   chatAvatar:   { width:52, height:52, borderRadius:16, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', position:'relative' },
-  chatAvatarText:{ color:'white', fontSize:20, fontWeight:'900' },
+  chatAvatarText:{ color:'white', fontSize:20, fontFamily: F.extrabold },
   onlineDot:    { position:'absolute', bottom:2, right:2, width:12, height:12, borderRadius:6, borderWidth:2, borderColor:'white' },
   chatInfo:     { flex:1, gap:3 },
   chatTop:      { flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
-  chatNombre:   { fontSize:15, fontWeight:'800', color:Colors.dark },
-  chatFecha:    { fontSize:11, color:Colors.gray },
-  chatServicio: { fontSize:12, color:Colors.gray },
-  chatEstado:   { fontSize:11, fontWeight:'700' },
+  chatNombre:   { fontSize:15, fontFamily: F.extrabold, color:Colors.dark },
+  chatFecha:    { fontFamily: F.regular, fontSize:11, color:'#6B6B6B' },
+  chatServicio: { fontFamily: F.regular, fontSize:12, color:'#6B6B6B' },
+  chatEstado:   { fontSize:11, fontFamily: F.bold },
   empty:        { alignItems:'center', paddingTop:80 },
-  emptyIco:     { fontSize:56, marginBottom:16, opacity:.3 },
-  emptyTitle:   { fontSize:18, fontWeight:'800', color:Colors.dark, marginBottom:6 },
-  emptySub:     { fontSize:13, color:Colors.gray, textAlign:'center', paddingHorizontal:32 },
+  emptyIco:     { fontFamily: F.regular, fontSize:56, marginBottom:16, opacity:.3 },
+  emptyTitle:   { fontSize:18, fontFamily: F.extrabold, color:Colors.dark, marginBottom:6 },
+  emptySub:     { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', textAlign:'center', paddingHorizontal:32 },
 })

@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Colors } from '../constants/colors'
 import { ONBOARDING_KEY } from '../constants/config'
+import { FUENTES as F } from '../constants/diseno'
 
 const { width } = Dimensions.get('window')
 
@@ -124,16 +125,16 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container:   { flex:1, backgroundColor:'white' },
   skipBtn:     { position:'absolute', top:56, right:22, zIndex:10, padding:8 },
-  skipText:    { fontSize:14, fontWeight:'700', color:Colors.gray },
+  skipText:    { fontSize:14, fontFamily: F.bold, color:'#6B6B6B' },
   slide:       { alignItems:'center', justifyContent:'center', paddingHorizontal:36, paddingTop:80 },
   iconRing:    { width:200, height:200, borderRadius:100, alignItems:'center', justifyContent:'center', marginBottom:40 },
   iconCircle:  { width:120, height:120, borderRadius:36, alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:8}, shadowOpacity:.15, shadowRadius:16, elevation:8 },
-  emoji:       { fontSize:56 },
-  titulo:      { fontSize:24, fontWeight:'900', color:Colors.dark, textAlign:'center', marginBottom:14 },
-  texto:       { fontSize:14, color:Colors.gray, textAlign:'center', lineHeight:21, paddingHorizontal:8 },
+  emoji:       { fontFamily: F.regular, fontSize:56 },
+  titulo:      { fontSize:24, fontFamily: F.extrabold, color:Colors.dark, textAlign:'center', marginBottom:14 },
+  texto:       { fontFamily: F.regular, fontSize:14, color:'#6B6B6B', textAlign:'center', lineHeight:21, paddingHorizontal:8 },
   bottom:      { paddingHorizontal:28, paddingBottom:48, paddingTop:12, gap:24 },
   dots:        { flexDirection:'row', justifyContent:'center', alignItems:'center', gap:6 },
   dot:         { height:8, borderRadius:4, backgroundColor:Colors.primary },
   nextBtn:     { backgroundColor:Colors.primary, borderRadius:18, paddingVertical:17, alignItems:'center', shadowColor:Colors.primary, shadowOffset:{width:0,height:6}, shadowOpacity:.35, shadowRadius:12, elevation:6 },
-  nextText:    { color:'white', fontSize:16, fontWeight:'800', letterSpacing:.3 },
+  nextText:    { color:'white', fontSize:16, fontFamily: F.extrabold, letterSpacing:.3 },
 })

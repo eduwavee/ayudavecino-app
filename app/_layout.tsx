@@ -12,6 +12,9 @@ import { useNotifStore } from '../store/notificacionesStore'
 import { useTema, useTemaStore } from '../store/temaStore'
 import { Colors } from '../constants/colors'
 import { ONBOARDING_KEY } from '../constants/config'
+import {
+  useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold,
+} from '@expo-google-fonts/poppins'
 
 export default function RootLayout() {
   const router = useRouter()
@@ -26,6 +29,11 @@ export default function RootLayout() {
   const [listo, setListo] = useState(false)
   const [necesitaOnboarding, setNecesitaOnboarding] = useState(false)
   const redirigidoOnboarding = useRef(false)
+  // Si la fuente falla (sin red la primera vez), la app arranca igual con la del sistema
+  const [fuentesCargadas, errorFuentes] = useFonts({
+    Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold,
+  })
+  const fuentesListas = fuentesCargadas || !!errorFuentes
 
   useEffect(() => {
     inicializar()
@@ -101,13 +109,13 @@ export default function RootLayout() {
   // Recién una vez que el Stack ya está montado disparamos la redirección al onboarding,
   // una sola vez (nunca antes de que el navegador raíz esté listo).
   useEffect(() => {
-    if (listo && necesitaOnboarding && !redirigidoOnboarding.current) {
+    if (listo && fuentesListas && necesitaOnboarding && !redirigidoOnboarding.current) {
       redirigidoOnboarding.current = true
       router.replace('/onboarding')
     }
-  }, [listo, necesitaOnboarding])
+  }, [listo, fuentesListas, necesitaOnboarding])
 
-  if (!listo) {
+  if (!listo || !fuentesListas) {
     return (
       <View style={{ flex:1, alignItems:'center', justifyContent:'center', backgroundColor:tema.bg }}>
         <StatusBar style={oscuro ? 'light' : 'dark'} />
@@ -119,7 +127,21 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style={oscuro ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+          animationDuration: 280,
+          contentStyle: { backgroundColor: tema.bg },
+        }}
+      >
+        {/* Pantallas de "éxito" y notificaciones suben desde abajo, como un momento aparte */}
+        <Stack.Screen name="pedido/exito" options={{ animation: 'fade_from_bottom', gestureEnabled: false }} />
+        <Stack.Screen name="resena/exito" options={{ animation: 'fade_from_bottom', gestureEnabled: false }} />
+        <Stack.Screen name="proveedor-panel/servicio-publicado" options={{ animation: 'fade_from_bottom', gestureEnabled: false }} />
+        <Stack.Screen name="notificaciones" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+      </Stack>
     </>
   )
 }

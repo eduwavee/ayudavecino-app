@@ -9,6 +9,7 @@ import { Colors } from '../constants/colors'
 import { useAuthStore } from '../store/authStore'
 import { usuariosService } from '../services/usuarios.service'
 import { PASSWORD_REGEX, MENSAJE_PASSWORD } from '../utils/validaciones'
+import { FUENTES as F } from '../constants/diseno'
 
 export default function CambiarPasswordScreen() {
   const router = useRouter()
@@ -90,7 +91,7 @@ export default function CambiarPasswordScreen() {
                   value={passwordActual}
                   onChangeText={setPasswordActual}
                   placeholder="••••••••"
-                  placeholderTextColor="#bbb"
+                  placeholderTextColor="#767676"
                   secureTextEntry
                   onFocus={() => setFocused('actual')}
                   onBlur={() => setFocused(null)}
@@ -109,7 +110,7 @@ export default function CambiarPasswordScreen() {
                   value={passwordNueva}
                   onChangeText={setPasswordNueva}
                   placeholder="Mínimo 8, letras y números"
-                  placeholderTextColor="#bbb"
+                  placeholderTextColor="#767676"
                   secureTextEntry
                   onFocus={() => setFocused('nueva')}
                   onBlur={() => setFocused(null)}
@@ -128,7 +129,7 @@ export default function CambiarPasswordScreen() {
                   value={passwordConfirmar}
                   onChangeText={setPasswordConfirmar}
                   placeholder="Repetí la nueva contraseña"
-                  placeholderTextColor="#bbb"
+                  placeholderTextColor="#767676"
                   secureTextEntry
                   onFocus={() => setFocused('confirmar')}
                   onBlur={() => setFocused(null)}
@@ -173,23 +174,23 @@ const styles = StyleSheet.create({
   container:          { flex: 1, backgroundColor: Colors.cream },
   header:             { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 22, paddingTop: 56, paddingBottom: 20 },
   backBtn:            { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(0,0,0,.06)', alignItems: 'center', justifyContent: 'center' },
-  backText:           { fontSize: 16, color: Colors.dark },
-  title:              { fontSize: 20, fontWeight: '900', color: Colors.dark },
+  backText:           { fontFamily: F.regular, fontSize: 16, color: Colors.dark },
+  title:              { fontSize: 20, fontFamily: F.extrabold, color: Colors.dark },
   content:            { paddingHorizontal: 22 },
-  sectionLabel:       { fontSize: 11, fontWeight: '700', color: '#999', letterSpacing: 1.5, marginBottom: 10 },
+  sectionLabel:       { fontSize: 11, fontFamily: F.bold, color: '#6B6B6B', letterSpacing: 1.5, marginBottom: 10 },
   fieldGroup:         { backgroundColor: 'white', borderRadius: 18, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: .05, shadowRadius: 8, elevation: 2 },
   fieldWrap:          { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 18 },
   fieldFocused:       { borderColor: Colors.primary, backgroundColor: '#F0FDF4' },
-  fieldIco:           { fontSize: 22, width: 28, textAlign: 'center' },
+  fieldIco:           { fontFamily: F.regular, fontSize: 22, width: 28, textAlign: 'center' },
   fieldContent:       { flex: 1 },
-  fieldLabel:         { fontSize: 10, fontWeight: '700', color: '#aaa', marginBottom: 4, textTransform: 'uppercase', letterSpacing: .5 },
-  fieldInput:         { fontSize: 15, color: Colors.dark, fontWeight: '500' },
+  fieldLabel:         { fontSize: 10, fontFamily: F.bold, color: '#aaa', marginBottom: 4, textTransform: 'uppercase', letterSpacing: .5 },
+  fieldInput:         { fontSize: 15, color: Colors.dark, fontFamily: F.medium },
   fieldDivider:       { height: 1, backgroundColor: '#f5f5f5', marginLeft: 56 },
-  hint:               { fontSize: 11, color: '#bbb', marginTop: 10, paddingHorizontal: 4 },
+  hint:               { fontFamily: F.regular, fontSize: 11, color: '#bbb', marginTop: 10, paddingHorizontal: 4 },
   bottomBar:          { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: Colors.cream, padding: 16, paddingBottom: 32 },
   guardarBtn:         { backgroundColor: Colors.primary, borderRadius: 16, paddingVertical: 16, alignItems: 'center', shadowColor: Colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: .3, shadowRadius: 10, elevation: 5 },
   guardarBtnDisabled: { backgroundColor: '#ddd', shadowOpacity: 0, elevation: 0 },
-  guardarBtnText:     { color: 'white', fontSize: 15, fontWeight: '700' },
+  guardarBtnText:     { color: 'white', fontSize: 15, fontFamily: F.bold },
   successToast:       { position: 'absolute', bottom: 100, alignSelf: 'center', backgroundColor: '#1a1a1a', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 100 },
-  successToastText:   { color: 'white', fontSize: 14, fontWeight: '700' },
+  successToastText:   { color: 'white', fontSize: 14, fontFamily: F.bold },
 })

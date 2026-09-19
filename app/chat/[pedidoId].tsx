@@ -11,6 +11,7 @@ import { archivoUrl } from '../../constants/config'
 import { useAuthStore } from '../../store/authStore'
 import { chatService } from '../../services/chat.service'
 import { pedidosService } from '../../services/pedidos.service'
+import { FUENTES as F } from '../../constants/diseno'
 
 const { width } = Dimensions.get('window')
 
@@ -367,7 +368,7 @@ export default function ChatScreen() {
               ref={inputRef}
               style={styles.input}
               placeholder="Mensaje..."
-              placeholderTextColor="#bbb"
+              placeholderTextColor="#767676"
               value={texto}
               onChangeText={handleTexto}
               multiline
@@ -399,45 +400,45 @@ const styles = StyleSheet.create({
   // Header
   header:            { backgroundColor:'white', flexDirection:'row', alignItems:'center', paddingHorizontal:14, paddingTop:52, paddingBottom:12, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:4 },
   backBtn:           { width:36, height:36, alignItems:'center', justifyContent:'center', marginRight:4 },
-  backIco:           { fontSize:30, color:Colors.dark, fontWeight:'300', lineHeight:36 },
+  backIco:           { fontSize:30, color:Colors.dark, fontFamily: F.regular, lineHeight:36 },
   headerCenter:      { flex:1, flexDirection:'row', alignItems:'center', gap:10 },
   avatarWrap:        { position:'relative' },
   avatar:            { width:42, height:42, borderRadius:21, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center' },
-  avatarText:        { color:'white', fontSize:17, fontWeight:'900' },
+  avatarText:        { color:'white', fontSize:17, fontFamily: F.extrabold },
   onlineDot:         { position:'absolute', bottom:1, right:1, width:11, height:11, borderRadius:6, backgroundColor:'#2ecc71', borderWidth:2, borderColor:'white' },
   headerTexts:       { flex:1 },
-  headerNombre:      { fontSize:16, fontWeight:'800', color:Colors.dark },
-  headerStatus:      { fontSize:11, color:Colors.primary, fontWeight:'500', marginTop:1 },
+  headerNombre:      { fontSize:16, fontFamily: F.extrabold, color:Colors.dark },
+  headerStatus:      { fontSize:11, color:Colors.primary, fontFamily: F.medium, marginTop:1 },
   headerAction:      { width:38, height:38, borderRadius:19, backgroundColor:Colors.cream, alignItems:'center', justifyContent:'center' },
-  headerActionIco:   { fontSize:18 },
+  headerActionIco:   { fontFamily: F.regular, fontSize:18 },
 
   // Pedido chip
   pedidoChip:        { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'white', marginHorizontal:16, marginVertical:8, borderRadius:14, padding:10, paddingHorizontal:14, shadowColor:'#000', shadowOffset:{width:0,height:1}, shadowOpacity:.04, shadowRadius:4, elevation:1 },
   pedidoChipLeft:    { flexDirection:'row', alignItems:'center', gap:8, flex:1 },
-  pedidoChipIco:     { fontSize:16 },
-  pedidoChipText:    { fontSize:13, fontWeight:'600', color:Colors.dark, flex:1 },
+  pedidoChipIco:     { fontFamily: F.regular, fontSize:16 },
+  pedidoChipText:    { fontSize:13, fontFamily: F.semibold, color:Colors.dark, flex:1 },
   pedidoChipBadge:   { backgroundColor:Colors.cream, paddingHorizontal:10, paddingVertical:3, borderRadius:100 },
-  pedidoChipId:      { fontSize:10, fontWeight:'800', color:Colors.gray, fontVariant:['tabular-nums'] },
+  pedidoChipId:      { fontSize:10, fontFamily: F.extrabold, color:'#6B6B6B', fontVariant:['tabular-nums'] },
 
   // Mensajes
   messagesList:      { padding:16, paddingBottom:8, gap:2 },
   emptyChat:         { alignItems:'center', paddingTop:40, paddingHorizontal:32 },
   emptyChatBubble:   { backgroundColor:'white', borderRadius:20, padding:24, alignItems:'center', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
-  emptyChatIco:      { fontSize:40, marginBottom:12 },
-  emptyChatTitle:    { fontSize:16, fontWeight:'800', color:Colors.dark, marginBottom:6, textAlign:'center' },
-  emptyChatSub:      { fontSize:13, color:Colors.gray, textAlign:'center', lineHeight:19 },
+  emptyChatIco:      { fontFamily: F.regular, fontSize:40, marginBottom:12 },
+  emptyChatTitle:    { fontSize:16, fontFamily: F.extrabold, color:Colors.dark, marginBottom:6, textAlign:'center' },
+  emptyChatSub:      { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', textAlign:'center', lineHeight:19 },
 
   // Fecha separador
   fechaSep:          { flexDirection:'row', alignItems:'center', gap:10, marginVertical:16 },
   fechaLine:         { flex:1, height:1, backgroundColor:'rgba(0,0,0,.08)' },
-  fechaText:         { fontSize:11, color:'#aaa', fontWeight:'600', backgroundColor:'#F0EDE8', paddingHorizontal:4 },
+  fechaText:         { fontSize:11, color:'#aaa', fontFamily: F.semibold, backgroundColor:'#F0EDE8', paddingHorizontal:4 },
 
   // Rows de mensajes
   msgRow:            { flexDirection:'row', alignItems:'flex-end', gap:6, marginBottom:2 },
   msgRowMio:         { justifyContent:'flex-end' },
   msgRowEllos:       { justifyContent:'flex-start' },
   msgAvatar:         { width:28, height:28, borderRadius:14, backgroundColor:Colors.primaryLight, alignItems:'center', justifyContent:'center', flexShrink:0, marginBottom:2 },
-  msgAvatarText:     { color:'white', fontSize:11, fontWeight:'900' },
+  msgAvatarText:     { color:'white', fontSize:11, fontFamily: F.extrabold },
   msgAvatarSpacer:   { width:28, flexShrink:0 },
 
   // Burbujas
@@ -446,20 +447,20 @@ const styles = StyleSheet.create({
   bubbleEllos:       { backgroundColor:'white', borderBottomLeftRadius:4, shadowColor:'#000', shadowOffset:{width:0,height:1}, shadowOpacity:.06, shadowRadius:4, elevation:1 },
   bubbleMioGroup:    { borderBottomRightRadius:20, borderTopRightRadius:4 },
   bubbleEllosGroup:  { borderBottomLeftRadius:20, borderTopLeftRadius:4 },
-  bubbleAutor:       { fontSize:10, fontWeight:'800', color:Colors.primaryLight, marginBottom:3 },
-  bubbleText:        { fontSize:15, color:Colors.dark, lineHeight:21 },
+  bubbleAutor:       { fontSize:10, fontFamily: F.extrabold, color:Colors.primaryLight, marginBottom:3 },
+  bubbleText:        { fontFamily: F.regular, fontSize:15, color:Colors.dark, lineHeight:21 },
   bubbleTextMio:     { color:'white' },
   bubbleMeta:        { flexDirection:'row', alignItems:'center', justifyContent:'flex-end', gap:4, marginTop:3 },
-  bubbleHora:        { fontSize:10, color:'rgba(0,0,0,.35)' },
+  bubbleHora:        { fontFamily: F.regular, fontSize:10, color:'rgba(0,0,0,.35)' },
   bubbleHoraMio:     { color:'rgba(255,255,255,.6)' },
-  bubbleTick:        { fontSize:10, color:'rgba(255,255,255,.7)' },
+  bubbleTick:        { fontFamily: F.regular, fontSize:10, color:'rgba(255,255,255,.7)' },
   bubbleTickLeido:   { color:'#8ED6FF' },
   bubbleImagen:      { width:200, height:200, borderRadius:14, marginBottom:4 },
 
   // Typing
   typingRow:         { flexDirection:'row', alignItems:'flex-end', gap:6, paddingHorizontal:16, paddingBottom:8 },
   typingAvatar:      { width:28, height:28, borderRadius:14, backgroundColor:Colors.primaryLight, alignItems:'center', justifyContent:'center' },
-  typingAvatarText:  { color:'white', fontSize:11, fontWeight:'900' },
+  typingAvatarText:  { color:'white', fontSize:11, fontFamily: F.extrabold },
   typingBubble:      { backgroundColor:'white', borderRadius:18, borderBottomLeftRadius:4, paddingHorizontal:14, paddingVertical:12, shadowColor:'#000', shadowOffset:{width:0,height:1}, shadowOpacity:.06, shadowRadius:4, elevation:1 },
   typingDots:        { flexDirection:'row', alignItems:'center' },
   dot:               { width:7, height:7, borderRadius:4, backgroundColor:Colors.gray },
@@ -468,18 +469,18 @@ const styles = StyleSheet.create({
   quickList:         { maxHeight:44, backgroundColor:'white', borderTopWidth:1, borderTopColor:'#f0f0f0' },
   quickContent:      { paddingHorizontal:14, gap:8, alignItems:'center', paddingVertical:8 },
   quickBtn:          { flexDirection:'row', alignItems:'center', gap:5, paddingHorizontal:14, paddingVertical:6, borderRadius:100, backgroundColor:Colors.cream, borderWidth:1, borderColor:'#e8e8e8' },
-  quickIco:          { fontSize:13 },
-  quickTxt:          { fontSize:12, fontWeight:'600', color:Colors.dark },
+  quickIco:          { fontFamily: F.regular, fontSize:13 },
+  quickTxt:          { fontSize:12, fontFamily: F.semibold, color:Colors.dark },
 
   // Input
   inputArea:         { flexDirection:'row', alignItems:'flex-end', gap:8, paddingHorizontal:14, paddingVertical:10, paddingBottom:28, backgroundColor:'white', borderTopWidth:1, borderTopColor:'#f0f0f0' },
   attachBtn:         { width:38, height:38, borderRadius:19, backgroundColor:Colors.cream, alignItems:'center', justifyContent:'center', flexShrink:0 },
-  attachIco:         { fontSize:18 },
+  attachIco:         { fontFamily: F.regular, fontSize:18 },
   inputWrap:         { flex:1, backgroundColor:Colors.cream, borderRadius:22, paddingHorizontal:16, paddingVertical:10, minHeight:42, maxHeight:100, justifyContent:'center', borderWidth:1, borderColor:'#e8e8e8' },
   inputWrapTall:     { paddingVertical:12 },
-  input:             { fontSize:15, color:Colors.dark, maxHeight:80, lineHeight:20 },
+  input:             { fontFamily: F.regular, fontSize:15, color:Colors.dark, maxHeight:80, lineHeight:20 },
   sendBtn:           { width:42, height:42, borderRadius:21, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', flexShrink:0, shadowColor:Colors.primary, shadowOffset:{width:0,height:4}, shadowOpacity:.35, shadowRadius:8, elevation:5 },
-  sendIco:           { color:'white', fontSize:17, fontWeight:'900', marginLeft:2 },
+  sendIco:           { color:'white', fontSize:17, fontFamily: F.extrabold, marginLeft:2 },
   emojiBtn:          { width:42, height:42, borderRadius:21, backgroundColor:Colors.cream, alignItems:'center', justifyContent:'center', flexShrink:0 },
-  emojiIco:          { fontSize:22 },
+  emojiIco:          { fontFamily: F.regular, fontSize:22 },
 })

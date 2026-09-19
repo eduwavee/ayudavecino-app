@@ -14,6 +14,7 @@ import { useAuthStore } from '../store/authStore'
 import { usuariosService } from '../services/usuarios.service'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { FUENTES as F } from '../constants/diseno'
 
 export default function EditarPerfilScreen() {
   const router  = useRouter()
@@ -185,7 +186,7 @@ export default function EditarPerfilScreen() {
                     value={nombre}
                     onChangeText={setNombre}
                     placeholder="Tu nombre"
-                    placeholderTextColor="#bbb"
+                    placeholderTextColor="#767676"
                     onFocus={() => setFocused('nombre')}
                     onBlur={() => setFocused(null)}
                   />
@@ -203,7 +204,7 @@ export default function EditarPerfilScreen() {
                     value={telefono}
                     onChangeText={setTelefono}
                     placeholder="Ej: 381 123 4567"
-                    placeholderTextColor="#bbb"
+                    placeholderTextColor="#767676"
                     keyboardType="phone-pad"
                     onFocus={() => setFocused('telefono')}
                     onBlur={() => setFocused(null)}
@@ -223,7 +224,7 @@ export default function EditarPerfilScreen() {
                         value={bio}
                         onChangeText={setBio}
                         placeholder="Contá tu experiencia, zona de trabajo, horarios..."
-                        placeholderTextColor="#bbb"
+                        placeholderTextColor="#767676"
                         multiline
                         maxLength={300}
                         onFocus={() => setFocused('bio')}
@@ -352,40 +353,40 @@ const styles = StyleSheet.create({
   container:          { flex:1, backgroundColor:Colors.cream },
   header:             { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:20 },
   backBtn:            { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },
-  backText:           { fontSize:16, color:Colors.dark },
-  title:              { fontSize:22, fontWeight:'900', color:Colors.dark },
+  backText:           { fontFamily: F.regular, fontSize:16, color:Colors.dark },
+  title:              { fontSize:22, fontFamily: F.extrabold, color:Colors.dark },
   content:            { paddingHorizontal:22 },
   avatarSection:      { alignItems:'center', marginBottom:28 },
   avatarWrap:         { position:'relative', marginBottom:8 },
   avatar:             { width:90, height:90, borderRadius:28, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', overflow:'hidden', shadowColor:Colors.primary, shadowOffset:{width:0,height:6}, shadowOpacity:.3, shadowRadius:12, elevation:6 },
   avatarImg:          { width:'100%', height:'100%' },
   avatarLoading:       { ...StyleSheet.absoluteFill, backgroundColor:'rgba(0,0,0,.4)', alignItems:'center', justifyContent:'center' },
-  avatarText:         { color:'white', fontSize:36, fontWeight:'900' },
+  avatarText:         { color:'white', fontSize:36, fontFamily: F.extrabold },
   avatarEdit:         { position:'absolute', bottom:-4, right:-4, width:32, height:32, borderRadius:10, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:4, elevation:3 },
-  avatarEditText:     { fontSize:16 },
-  avatarHint:         { fontSize:12, color:Colors.gray },
+  avatarEditText:     { fontFamily: F.regular, fontSize:16 },
+  avatarHint:         { fontFamily: F.regular, fontSize:12, color:'#6B6B6B' },
   formSection:        { gap:0 },
-  sectionLabel:       { fontSize:11, fontWeight:'700', color:'#999', letterSpacing:1.5, marginBottom:10 },
+  sectionLabel:       { fontSize:11, fontFamily: F.bold, color:'#6B6B6B', letterSpacing:1.5, marginBottom:10 },
   fieldGroup:         { backgroundColor:'white', borderRadius:18, overflow:'hidden', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
   fieldWrap:          { flexDirection:'row', alignItems:'center', padding:16, gap:12, borderWidth:1.5, borderColor:'transparent', borderRadius:18 },
   fieldFocused:       { borderColor:Colors.primary, backgroundColor:'#F0FDF4' },
-  fieldIco:           { fontSize:22, width:28, textAlign:'center' },
+  fieldIco:           { fontFamily: F.regular, fontSize:22, width:28, textAlign:'center' },
   fieldContent:       { flex:1 },
-  fieldLabel:         { fontSize:10, fontWeight:'700', color:'#aaa', marginBottom:4, textTransform:'uppercase', letterSpacing:.5 },
-  fieldInput:         { fontSize:15, color:Colors.dark, fontWeight:'500' },
-  fieldInputReadOnly: { fontSize:15, color:'#aaa', fontWeight:'500' },
+  fieldLabel:         { fontSize:10, fontFamily: F.bold, color:'#aaa', marginBottom:4, textTransform:'uppercase', letterSpacing:.5 },
+  fieldInput:         { fontSize:15, color:Colors.dark, fontFamily: F.medium },
+  fieldInputReadOnly: { fontSize:15, color:'#aaa', fontFamily: F.medium },
   fieldDivider:       { height:1, backgroundColor:'#f5f5f5', marginLeft:56 },
   noeditBadge:        { backgroundColor:'#f5f5f5', paddingHorizontal:8, paddingVertical:3, borderRadius:100 },
-  noeditText:         { fontSize:9, fontWeight:'700', color:'#bbb' },
+  noeditText:         { fontSize:9, fontFamily: F.bold, color:'#bbb' },
   ubicacionBtn:       { backgroundColor:Colors.greenLight, paddingHorizontal:12, paddingVertical:8, borderRadius:100, minWidth:80, alignItems:'center' },
-  ubicacionBtnText:   { fontSize:11, fontWeight:'700', color:Colors.primary },
-  ubicacionHint:      { fontSize:11, color:'#bbb', marginTop:8, paddingHorizontal:4 },
+  ubicacionBtnText:   { fontSize:11, fontFamily: F.bold, color:Colors.primary },
+  ubicacionHint:      { fontFamily: F.regular, fontSize:11, color:'#bbb', marginTop:8, paddingHorizontal:4 },
   previewMapWrap:     { height:160, borderRadius:16, overflow:'hidden', marginTop:10, position:'relative' },
-  previewMapHint:     { position:'absolute', bottom:8, alignSelf:'center', backgroundColor:'rgba(0,0,0,.6)', color:'white', fontSize:10, fontWeight:'600', paddingHorizontal:10, paddingVertical:5, borderRadius:100 },
+  previewMapHint:     { position:'absolute', bottom:8, alignSelf:'center', backgroundColor:'rgba(0,0,0,.6)', color:'white', fontSize:10, fontFamily: F.semibold, paddingHorizontal:10, paddingVertical:5, borderRadius:100 },
   bottomBar:          { position:'absolute', bottom:0, left:0, right:0, backgroundColor:Colors.cream, padding:16, paddingBottom:32 },
   guardarBtn:         { backgroundColor:Colors.primary, borderRadius:16, paddingVertical:16, alignItems:'center', shadowColor:Colors.primary, shadowOffset:{width:0,height:4}, shadowOpacity:.3, shadowRadius:10, elevation:5 },
   guardarBtnDisabled: { backgroundColor:'#ddd', shadowOpacity:0, elevation:0 },
-  guardarBtnText:     { color:'white', fontSize:15, fontWeight:'700' },
+  guardarBtnText:     { color:'white', fontSize:15, fontFamily: F.bold },
   successToast:       { position:'absolute', bottom:100, alignSelf:'center', backgroundColor:'#1a1a1a', paddingHorizontal:20, paddingVertical:12, borderRadius:100 },
-  successToastText:   { color:'white', fontSize:14, fontWeight:'700' },
+  successToastText:   { color:'white', fontSize:14, fontFamily: F.bold },
 })

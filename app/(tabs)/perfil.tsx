@@ -18,6 +18,7 @@ import { useTema, TemaTokens } from "../../store/temaStore";
 import { SkeletonBlock } from "../../components/ui/Skeleton";
 import { authService } from "../../services/auth.service";
 import { pedidosService } from "../../services/pedidos.service";
+import { FUENTES as F } from '../../constants/diseno'
 
 function SkeletonPedidoRow({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -239,7 +240,7 @@ export default function PerfilScreen() {
               <View key={p.id} style={styles.pedidoCard}>
                 <View style={styles.pedidoLeft}>
                   <View style={styles.pedidoIco}>
-                    <Text style={{ fontSize: 18 }}>🔧</Text>
+                    <Text style={{ fontFamily: F.regular, fontSize: 18 }}>🔧</Text>
                   </View>
                   <View>
                     <Text style={styles.pedidoNombre}>
@@ -360,7 +361,7 @@ const getStyles = (tema: TemaTokens) =>
       paddingTop: 56,
       marginBottom: 24,
     },
-    heroTitle: { fontSize: 20, fontWeight: "900", color: "white" },
+    heroTitle: { fontSize: 20, fontFamily: F.extrabold, color: "white" },
     settingsBtn: {
       width: 38,
       height: 38,
@@ -369,7 +370,7 @@ const getStyles = (tema: TemaTokens) =>
       alignItems: "center",
       justifyContent: "center",
     },
-    settingsIco: { fontSize: 16 },
+    settingsIco: { fontFamily: F.regular, fontSize: 16 },
     avatarSection: { alignItems: "center", paddingHorizontal: 22 },
     avatarWrap: { position: "relative", marginBottom: 14 },
     avatarRing: {
@@ -391,7 +392,7 @@ const getStyles = (tema: TemaTokens) =>
       overflow: "hidden",
     },
     avatarImg: { width: "100%", height: "100%" },
-    avatarText: { color: "white", fontSize: 36, fontWeight: "900" },
+    avatarText: { color: "white", fontSize: 36, fontFamily: F.extrabold },
     rolBadge: {
       position: "absolute",
       bottom: -8,
@@ -404,14 +405,14 @@ const getStyles = (tema: TemaTokens) =>
       borderColor: "#1a1a1a",
     },
     rolBadgeProv: { backgroundColor: Colors.primaryLight },
-    rolBadgeText: { fontSize: 10, fontWeight: "900", color: "#1a1a1a" },
+    rolBadgeText: { fontSize: 10, fontFamily: F.extrabold, color: "#1a1a1a" },
     heroName: {
       fontSize: 22,
-      fontWeight: "900",
+      fontFamily: F.extrabold,
       color: "white",
       marginBottom: 4,
     },
-    heroEmail: { fontSize: 13, color: "rgba(255,255,255,.5)", marginBottom: 12 },
+    heroEmail: { fontFamily: F.regular, fontSize: 13, color: "rgba(255,255,255,.5)", marginBottom: 12 },
     ratingRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -421,9 +422,9 @@ const getStyles = (tema: TemaTokens) =>
       paddingVertical: 8,
       borderRadius: 100,
     },
-    ratingStar: { fontSize: 16 },
-    ratingNum: { fontSize: 18, fontWeight: "900", color: "white" },
-    ratingLabel: { fontSize: 12, color: "rgba(255,255,255,.6)" },
+    ratingStar: { fontFamily: F.regular, fontSize: 16 },
+    ratingNum: { fontSize: 18, fontFamily: F.extrabold, color: "white" },
+    ratingLabel: { fontFamily: F.regular, fontSize: 12, color: "rgba(255,255,255,.6)" },
     statsCard: {
       flexDirection: "row",
       backgroundColor: tema.card,
@@ -442,11 +443,11 @@ const getStyles = (tema: TemaTokens) =>
     statDivider: { width: 1, backgroundColor: tema.border },
     statNum: {
       fontSize: 24,
-      fontWeight: "900",
+      fontFamily: F.extrabold,
       color: tema.texto,
       marginBottom: 4,
     },
-    statLabel: { fontSize: 11, color: tema.subTexto, fontWeight: "500" },
+    statLabel: { fontSize: 11, color: tema.subTexto, fontFamily: F.medium },
     sectionHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -454,11 +455,11 @@ const getStyles = (tema: TemaTokens) =>
       paddingHorizontal: 22,
       marginBottom: 12,
     },
-    sectionTitle: { fontSize: 17, fontWeight: "900", color: tema.texto },
-    sectionLink: { fontSize: 12, color: Colors.primary, fontWeight: "700" },
+    sectionTitle: { fontSize: 17, fontFamily: F.extrabold, color: tema.texto },
+    sectionLink: { fontSize: 12, color: Colors.primary, fontFamily: F.bold },
     emptyPedidos: { alignItems: "center", paddingVertical: 24 },
-    emptyIco: { fontSize: 36, marginBottom: 8, opacity: 0.3 },
-    emptyText: { fontSize: 14, color: tema.subTexto },
+    emptyIco: { fontFamily: F.regular, fontSize: 36, marginBottom: 8, opacity: 0.3 },
+    emptyText: { fontFamily: F.regular, fontSize: 14, color: tema.subTexto },
     pedidoCard: {
       flexDirection: "row",
       alignItems: "center",
@@ -485,13 +486,13 @@ const getStyles = (tema: TemaTokens) =>
     },
     pedidoNombre: {
       fontSize: 13,
-      fontWeight: "700",
+      fontFamily: F.bold,
       color: tema.texto,
       marginBottom: 2,
     },
-    pedidoSub: { fontSize: 11, color: tema.subTexto },
+    pedidoSub: { fontFamily: F.regular, fontSize: 11, color: tema.subTexto },
     estadoBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
-    estadoText: { fontSize: 10, fontWeight: "700" },
+    estadoText: { fontSize: 10, fontFamily: F.bold },
     optionsCard: {
       backgroundColor: tema.card,
       marginHorizontal: 22,
@@ -510,9 +511,9 @@ const getStyles = (tema: TemaTokens) =>
       padding: 16,
       gap: 12,
     },
-    optionIco: { fontSize: 20, width: 28, textAlign: "center" },
-    optionText: { flex: 1, fontSize: 14, fontWeight: "500", color: tema.texto },
-    optionArrow: { fontSize: 20, color: tema.subTexto },
+    optionIco: { fontFamily: F.regular, fontSize: 20, width: 28, textAlign: "center" },
+    optionText: { flex: 1, fontSize: 14, fontFamily: F.medium, color: tema.texto },
+    optionArrow: { fontFamily: F.regular, fontSize: 20, color: tema.subTexto },
     optionDivider: { height: 1, backgroundColor: tema.border, marginLeft: 56 },
     logoutBtn: {
       backgroundColor: tema.card,
@@ -523,6 +524,6 @@ const getStyles = (tema: TemaTokens) =>
       borderWidth: 1.5,
       borderColor: "#FF7675",
     },
-    logoutText: { color: "#FF7675", fontSize: 15, fontWeight: "700" },
-    version: { textAlign: "center", fontSize: 11, color: tema.subTexto },
+    logoutText: { color: "#FF7675", fontSize: 15, fontFamily: F.bold },
+    version: { fontFamily: F.regular, textAlign: "center", fontSize: 11, color: tema.subTexto },
   });

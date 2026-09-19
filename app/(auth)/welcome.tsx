@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { estadisticasService } from '../../services/estadisticas.service'
+import { FUENTES as F } from '../../constants/diseno'
 
 const { width, height } = Dimensions.get('window')
 
@@ -201,8 +202,8 @@ const styles = StyleSheet.create({
 
   // Chips
   chip:           { position:'absolute', flexDirection:'row', alignItems:'center', gap:6, backgroundColor:'white', borderRadius:100, paddingHorizontal:12, paddingVertical:7, shadowColor:'#000', shadowOffset:{width:0,height:4}, shadowOpacity:.1, shadowRadius:10, elevation:4 },
-  chipIco:        { fontSize:14 },
-  chipLabel:      { fontSize:11, fontWeight:'700', color:Colors.dark },
+  chipIco:        { fontFamily: F.regular, fontSize:14 },
+  chipLabel:      { fontSize:11, fontFamily: F.bold, color:Colors.dark },
 
   // Central
   centralWrap:    { alignItems:'center', justifyContent:'center', position:'relative' },
@@ -210,12 +211,12 @@ const styles = StyleSheet.create({
   centralRing2:   { position:'absolute', width:120, height:120, borderRadius:60, backgroundColor:Colors.primary, opacity:.08 },
   centralRing1:   { position:'absolute', width:88, height:88, borderRadius:44, backgroundColor:Colors.primary, opacity:.12 },
   centralCircle:  { width:80, height:80, borderRadius:26, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', shadowColor:Colors.primary, shadowOffset:{width:0,height:8}, shadowOpacity:.35, shadowRadius:16, elevation:8 },
-  centralEmoji:   { fontSize:38 },
+  centralEmoji:   { fontFamily: F.regular, fontSize:38 },
 
   // Live badge
   liveBadge:      { position:'absolute', bottom:16, flexDirection:'row', alignItems:'center', gap:6, backgroundColor:'white', borderRadius:100, paddingHorizontal:14, paddingVertical:8, shadowColor:'#000', shadowOffset:{width:0,height:4}, shadowOpacity:.1, shadowRadius:12, elevation:4, borderWidth:1, borderColor:'#f0f0f0' },
   liveDot:        { width:8, height:8, borderRadius:4, backgroundColor:Colors.primary },
-  liveText:       { fontSize:12, fontWeight:'700', color:Colors.dark },
+  liveText:       { fontSize:12, fontFamily: F.bold, color:Colors.dark },
 
   // Bottom
   bottomSection:  { flex:1, backgroundColor:'white', borderTopLeftRadius:32, borderTopRightRadius:32, padding:28, paddingTop:24, shadowColor:'#000', shadowOffset:{width:0,height:-4}, shadowOpacity:.06, shadowRadius:16, elevation:8 },
@@ -223,26 +224,26 @@ const styles = StyleSheet.create({
   // Título
   titleWrap:      { marginBottom:20 },
   titleBadge:     { alignSelf:'flex-start', backgroundColor:Colors.greenLight, paddingHorizontal:12, paddingVertical:5, borderRadius:100, marginBottom:12 },
-  titleBadgeText: { fontSize:11, fontWeight:'800', color:Colors.primary },
-  title:          { fontSize:32, fontWeight:'900', color:Colors.dark, lineHeight:38, marginBottom:8 },
+  titleBadgeText: { fontSize:11, fontFamily: F.extrabold, color:Colors.primary },
+  title:          { fontSize:32, fontFamily: F.extrabold, color:Colors.dark, lineHeight:38, marginBottom:8 },
   titleGreen:     { color:Colors.primary },
-  subtitle:       { fontSize:14, color:Colors.gray, lineHeight:21 },
+  subtitle:       { fontFamily: F.regular, fontSize:14, color:'#6B6B6B', lineHeight:21 },
 
   // Features
   features:       { flexDirection:'row', justifyContent:'space-between', marginBottom:24, backgroundColor:Colors.cream, borderRadius:18, padding:14 },
   featureItem:    { alignItems:'center', gap:6, flex:1 },
   featureIcoWrap: { width:36, height:36, borderRadius:11, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:4, elevation:2 },
-  featureIco:     { fontSize:16 },
-  featureText:    { fontSize:9, fontWeight:'700', color:Colors.dark, textAlign:'center', lineHeight:13 },
+  featureIco:     { fontFamily: F.regular, fontSize:16 },
+  featureText:    { fontSize:9, fontFamily: F.bold, color:Colors.dark, textAlign:'center', lineHeight:13 },
 
   // Botones
   buttons:        { gap:10, marginBottom:16 },
   btnPrimary:     { backgroundColor:Colors.primary, borderRadius:18, paddingVertical:17, alignItems:'center', shadowColor:Colors.primary, shadowOffset:{width:0,height:6}, shadowOpacity:.35, shadowRadius:12, elevation:6 },
-  btnPrimaryText: { color:'white', fontSize:16, fontWeight:'800', letterSpacing:.3 },
+  btnPrimaryText: { color:'white', fontSize:16, fontFamily: F.extrabold, letterSpacing:.3 },
   btnSecondary:   { borderRadius:18, paddingVertical:15, alignItems:'center', backgroundColor:Colors.cream },
-  btnSecondaryText:{ color:Colors.dark, fontSize:15, fontWeight:'600' },
+  btnSecondaryText:{ color:Colors.dark, fontSize:15, fontFamily: F.semibold },
 
   // Terms
-  terms:          { textAlign:'center', fontSize:10, color:'#bbb', lineHeight:16 },
-  termsLink:      { color:Colors.primary, fontWeight:'600' },
+  terms:          { fontFamily: F.regular, textAlign:'center', fontSize:10, color:'#bbb', lineHeight:16 },
+  termsLink:      { color:Colors.primary, fontFamily: F.semibold },
 })

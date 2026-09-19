@@ -9,6 +9,7 @@ import { Colors } from '../../constants/colors'
 import { authService } from '../../services/auth.service'
 import { useAuthStore } from '../../store/authStore'
 import { EMAIL_REGEX, USERNAME_REGEX, PASSWORD_REGEX, MENSAJE_USERNAME, MENSAJE_PASSWORD } from '../../utils/validaciones'
+import { FUENTES as F } from '../../constants/diseno'
 
 const PASOS = ['Rol', 'Datos', 'Listo']
 
@@ -124,7 +125,7 @@ export default function RegistroScreen() {
               >
                 <View style={styles.rolCardLeft}>
                   <View style={[styles.rolIco, { backgroundColor: rol === 'CLIENTE' ? '#C8F5D0' : '#f5f5f5' }]}>
-                    <Text style={{ fontSize:28 }}>🙋</Text>
+                    <Text style={{ fontFamily: F.regular, fontSize:28 }}>🙋</Text>
                   </View>
                   <View style={styles.rolInfo}>
                     <Text style={[styles.rolTitle, rol === 'CLIENTE' && styles.rolTitleActive]}>Busco servicios</Text>
@@ -142,7 +143,7 @@ export default function RegistroScreen() {
               >
                 <View style={styles.rolCardLeft}>
                   <View style={[styles.rolIco, { backgroundColor: rol === 'PROVEEDOR' ? '#C8F5D0' : '#f5f5f5' }]}>
-                    <Text style={{ fontSize:28 }}>🔨</Text>
+                    <Text style={{ fontFamily: F.regular, fontSize:28 }}>🔨</Text>
                   </View>
                   <View style={styles.rolInfo}>
                     <Text style={[styles.rolTitle, rol === 'PROVEEDOR' && styles.rolTitleActive]}>Ofrezco servicios</Text>
@@ -164,7 +165,7 @@ export default function RegistroScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Email"
-                  placeholderTextColor="#aaa"
+                  placeholderTextColor="#767676"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -180,7 +181,7 @@ export default function RegistroScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Usuario (6 a 20 caracteres)"
-                  placeholderTextColor="#aaa"
+                  placeholderTextColor="#767676"
                   value={username}
                   onChangeText={setUsername}
                   autoCapitalize="none"
@@ -195,7 +196,7 @@ export default function RegistroScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Contraseña (mín. 8, letras y números)"
-                  placeholderTextColor="#aaa"
+                  placeholderTextColor="#767676"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -209,7 +210,7 @@ export default function RegistroScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Confirmar contraseña"
-                  placeholderTextColor="#aaa"
+                  placeholderTextColor="#767676"
                   value={confirmarPassword}
                   onChangeText={setConfirmarPassword}
                   secureTextEntry
@@ -265,40 +266,40 @@ const styles = StyleSheet.create({
   scroll:          { flexGrow:1 },
   header:          { backgroundColor:Colors.primary, padding:24, paddingTop:0, overflow:'hidden' },
   backBtn:         { marginTop:52, marginBottom:16, width:38, height:38, borderRadius:12, backgroundColor:'rgba(255,255,255,.2)', alignItems:'center', justifyContent:'center' },
-  backText:        { color:'white', fontSize:18 },
+  backText:        { fontFamily: F.regular, color:'white', fontSize:18 },
   progressTrack:   { height:4, backgroundColor:'rgba(255,255,255,.2)', borderRadius:2, marginBottom:20 },
   progressFill:    { height:4, backgroundColor:'white', borderRadius:2 },
   headerContent:   { paddingBottom:32 },
   stepBadge:       { backgroundColor:'rgba(255,255,255,.2)', alignSelf:'flex-start', paddingHorizontal:12, paddingVertical:4, borderRadius:100, marginBottom:12 },
-  stepBadgeText:   { color:'white', fontSize:11, fontWeight:'700' },
-  headerEmoji:     { fontSize:44, marginBottom:8 },
-  headerTitle:     { fontSize:30, fontWeight:'900', color:'white', lineHeight:36, marginBottom:6 },
-  headerSub:       { fontSize:13, color:'rgba(255,255,255,.7)' },
+  stepBadgeText:   { color:'white', fontSize:11, fontFamily: F.bold },
+  headerEmoji:     { fontFamily: F.regular, fontSize:44, marginBottom:8 },
+  headerTitle:     { fontSize:30, fontFamily: F.extrabold, color:'white', lineHeight:36, marginBottom:6 },
+  headerSub:       { fontFamily: F.regular, fontSize:13, color:'rgba(255,255,255,.7)' },
   formSection:     { flex:1, backgroundColor:'white', borderTopLeftRadius:28, borderTopRightRadius:28, marginTop:-20, padding:28, paddingTop:32 },
   rolCard:         { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'#f7f7f7', borderRadius:18, padding:16, marginBottom:12, borderWidth:2, borderColor:'transparent' },
   rolCardActive:   { borderColor:Colors.primary, backgroundColor:'#F0FDF4' },
   rolCardLeft:     { flexDirection:'row', alignItems:'center', gap:14, flex:1 },
   rolIco:          { width:52, height:52, borderRadius:14, alignItems:'center', justifyContent:'center' },
   rolInfo:         { flex:1 },
-  rolTitle:        { fontSize:15, fontWeight:'700', color:'#888', marginBottom:3 },
+  rolTitle:        { fontSize:15, fontFamily: F.bold, color:'#6B6B6B', marginBottom:3 },
   rolTitleActive:  { color:'#1a1a1a' },
-  rolDesc:         { fontSize:12, color:'#aaa' },
+  rolDesc:         { fontFamily: F.regular, fontSize:12, color:'#aaa' },
   rolCheck:        { width:24, height:24, borderRadius:12, borderWidth:2, borderColor:'#ddd', alignItems:'center', justifyContent:'center' },
   rolCheckActive:  { backgroundColor:Colors.primary, borderColor:Colors.primary },
-  rolCheckMark:    { color:'white', fontSize:12, fontWeight:'900' },
+  rolCheckMark:    { color:'white', fontSize:12, fontFamily: F.extrabold },
   inputWrap:       { flexDirection:'row', alignItems:'center', backgroundColor:'#f7f7f7', borderRadius:14, paddingHorizontal:14, marginBottom:12, borderWidth:1.5, borderColor:'transparent' },
   inputWrapFocused:{ borderColor:Colors.primary, backgroundColor:'#F0FDF4' },
-  inputIco:        { fontSize:16, marginRight:10 },
-  input:           { flex:1, paddingVertical:14, fontSize:14, color:'#1a1a1a' },
+  inputIco:        { fontFamily: F.regular, fontSize:16, marginRight:10 },
+  input:           { fontFamily: F.regular, flex:1, paddingVertical:14, fontSize:14, color:'#1a1a1a' },
   divider:         { flexDirection:'row', alignItems:'center', gap:12, marginBottom:14, marginTop:4 },
   dividerLine:     { flex:1, height:1, backgroundColor:'#eee' },
-  dividerText:     { fontSize:12, color:'#aaa' },
+  dividerText:     { fontFamily: F.regular, fontSize:12, color:'#aaa' },
   googleBtn:       { flexDirection:'row', alignItems:'center', justifyContent:'center', gap:10, backgroundColor:'#f7f7f7', borderRadius:14, paddingVertical:14, marginBottom:20, borderWidth:1.5, borderColor:'#eee' },
-  googleIco:       { fontSize:18 },
-  googleText:      { fontSize:14, fontWeight:'600', color:'#1a1a1a' },
+  googleIco:       { fontFamily: F.regular, fontSize:18 },
+  googleText:      { fontSize:14, fontFamily: F.semibold, color:'#1a1a1a' },
   btn:             { backgroundColor:'#1a1a1a', borderRadius:16, paddingVertical:16, alignItems:'center', marginBottom:20 },
-  btnText:         { color:'white', fontSize:15, fontWeight:'700', letterSpacing:.3 },
+  btnText:         { color:'white', fontSize:15, fontFamily: F.bold, letterSpacing:.3 },
   loginRow:        { flexDirection:'row', justifyContent:'center' },
-  loginText:       { fontSize:13, color:'#888' },
-  loginLink:       { fontSize:13, color:Colors.primary, fontWeight:'700' },
+  loginText:       { fontFamily: F.regular, fontSize:13, color:'#6B6B6B' },
+  loginLink:       { fontSize:13, color:Colors.primary, fontFamily: F.bold },
 })

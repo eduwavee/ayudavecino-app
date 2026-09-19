@@ -10,6 +10,7 @@ import { useAuthStore } from '../../store/authStore'
 import { pedidosService } from '../../services/pedidos.service'
 import { usuariosService } from '../../services/usuarios.service'
 import { PressScale } from '../../components/ui/PressScale'
+import { FUENTES as F } from '../../constants/diseno'
 
 const { width } = Dimensions.get('window')
 
@@ -226,7 +227,7 @@ export default function ProveedorDashboard() {
               style={[styles.accionCard, styles.accionCardGreen]}
               onPress={() => router.push('/proveedor-panel/pedidos')}
             >
-              <View style={styles.accionIco}><Text style={{fontSize:26}}>📋</Text></View>
+              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>📋</Text></View>
               <Text style={styles.accionLabel}>Ver pedidos</Text>
               {pendientes.length > 0 && (
                 <View style={styles.accionBadge}>
@@ -239,7 +240,7 @@ export default function ProveedorDashboard() {
               style={[styles.accionCard, styles.accionCardBlue]}
               onPress={() => router.push('/proveedor-panel/servicios')}
             >
-              <View style={styles.accionIco}><Text style={{fontSize:26}}>🔧</Text></View>
+              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>🔧</Text></View>
               <Text style={styles.accionLabel}>Mis servicios</Text>
             </PressScale>
 
@@ -247,7 +248,7 @@ export default function ProveedorDashboard() {
               style={[styles.accionCard, styles.accionCardYellow]}
               onPress={() => router.push('/proveedor-panel/nuevo-servicio')}
             >
-              <View style={styles.accionIco}><Text style={{fontSize:26}}>➕</Text></View>
+              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>➕</Text></View>
               <Text style={styles.accionLabel}>Nuevo servicio</Text>
             </PressScale>
 
@@ -255,7 +256,7 @@ export default function ProveedorDashboard() {
               style={[styles.accionCard, styles.accionCardPurple]}
               onPress={() => router.push('/(tabs)/perfil')}
             >
-              <View style={styles.accionIco}><Text style={{fontSize:26}}>👤</Text></View>
+              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>👤</Text></View>
               <Text style={styles.accionLabel}>Mi perfil</Text>
             </PressScale>
           </View>
@@ -290,7 +291,7 @@ export default function ProveedorDashboard() {
                     onPress={() => router.push('/proveedor-panel/pedidos')}
                   >
                     <View style={styles.pedidoIco}>
-                      <Text style={{fontSize:20}}>🔧</Text>
+                      <Text style={{ fontFamily: F.regular, fontSize:20}}>🔧</Text>
                     </View>
                     <View style={styles.pedidoInfo}>
                       <Text style={styles.pedidoServicio}>{p.servicio?.nombre}</Text>
@@ -327,43 +328,43 @@ const styles = StyleSheet.create({
   heroGlow:           { position:'absolute', width:200, height:200, borderRadius:100, backgroundColor:'#1A9E5C', top:20, right:20, opacity:.08 },
   heroGrid:           { position:'absolute', inset:0, opacity:.03 },
   heroTop:            { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:24 },
-  heroGreeting:       { fontSize:11, color:'rgba(255,255,255,.4)', fontWeight:'600', letterSpacing:1.5, textTransform:'uppercase', marginBottom:4 },
-  heroNombre:         { fontSize:26, fontWeight:'900', color:'white' },
+  heroGreeting:       { fontSize:11, color:'rgba(255,255,255,.4)', fontFamily: F.semibold, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4 },
+  heroNombre:         { fontSize:26, fontFamily: F.extrabold, color:'white' },
   heroAvatar:         { width:46, height:46, borderRadius:15, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', position:'relative' },
-  heroAvatarText:     { color:'white', fontSize:18, fontWeight:'900' },
+  heroAvatarText:     { color:'white', fontSize:18, fontFamily: F.extrabold },
   heroAvatarBadge:    { position:'absolute', bottom:2, right:2, width:10, height:10, borderRadius:5, backgroundColor:Colors.primaryLight, borderWidth:2, borderColor:'#0D0D0D' },
 
   // Ganancia card
   gananciaCard:       { backgroundColor:'rgba(26,158,92,.12)', borderRadius:20, padding:20, marginBottom:14, borderWidth:1, borderColor:'rgba(61,214,140,.2)', flexDirection:'row', alignItems:'center' },
   gananciaLeft:       { flex:1 },
-  gananciaLabel:      { fontSize:11, color:'rgba(255,255,255,.4)', fontWeight:'600', letterSpacing:1, textTransform:'uppercase', marginBottom:6 },
-  gananciaNum:        { fontSize:36, fontWeight:'900', color:'white', marginBottom:8 },
+  gananciaLabel:      { fontSize:11, color:'rgba(255,255,255,.4)', fontFamily: F.semibold, letterSpacing:1, textTransform:'uppercase', marginBottom:6 },
+  gananciaNum:        { fontSize:36, fontFamily: F.extrabold, color:'white', marginBottom:8 },
   gananciaBadge:      { backgroundColor:'rgba(61,214,140,.2)', alignSelf:'flex-start', paddingHorizontal:10, paddingVertical:4, borderRadius:100 },
-  gananciaBadgeText:  { fontSize:10, color:Colors.primaryLight, fontWeight:'700' },
+  gananciaBadgeText:  { fontSize:10, color:Colors.primaryLight, fontFamily: F.bold },
   gananciaRight:      { alignItems:'center', justifyContent:'center' },
-  gananciaIco:        { fontSize:48 },
+  gananciaIco:        { fontFamily: F.regular, fontSize:48 },
 
   // Toggle
   toggleCard:         { backgroundColor:'rgba(255,255,255,.05)', borderRadius:16, padding:14, flexDirection:'row', alignItems:'center', justifyContent:'space-between', borderWidth:1, borderColor:'rgba(255,255,255,.08)' },
   toggleLeft:         { flexDirection:'row', alignItems:'center', gap:10 },
   toggleDot:          { width:10, height:10, borderRadius:5 },
-  toggleTitle:        { fontSize:14, fontWeight:'700', color:'white', marginBottom:2 },
-  toggleSub:          { fontSize:11, color:'rgba(255,255,255,.35)' },
+  toggleTitle:        { fontSize:14, fontFamily: F.bold, color:'white', marginBottom:2 },
+  toggleSub:          { fontFamily: F.regular, fontSize:11, color:'rgba(255,255,255,.35)' },
 
   // Secciones
   metricasSection:    { padding:22, paddingTop:24, paddingBottom:0 },
   accionesSection:    { padding:22, paddingTop:24, paddingBottom:0 },
   pedidosSection:     { padding:22, paddingTop:24 },
-  sectionTitle:       { fontSize:16, fontWeight:'900', color:'white', marginBottom:14 },
+  sectionTitle:       { fontSize:16, fontFamily: F.extrabold, color:'white', marginBottom:14 },
   sectionRow:         { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:14 },
-  sectionLink:        { fontSize:12, color:Colors.primaryLight, fontWeight:'700' },
+  sectionLink:        { fontSize:12, color:Colors.primaryLight, fontFamily: F.bold },
 
   // Métricas
   metricasGrid:       { flexDirection:'row', gap:10 },
   metricaCard:        { flex:1, backgroundColor:'rgba(255,255,255,.05)', borderRadius:16, padding:14, alignItems:'center', gap:6, borderWidth:1, borderColor:'rgba(255,255,255,.07)' },
-  metricaIco:         { fontSize:22 },
-  metricaNum:         { fontSize:22, fontWeight:'900', color:'white' },
-  metricaLabel:       { fontSize:9, color:'rgba(255,255,255,.4)', fontWeight:'600', textAlign:'center' },
+  metricaIco:         { fontFamily: F.regular, fontSize:22 },
+  metricaNum:         { fontSize:22, fontFamily: F.extrabold, color:'white' },
+  metricaLabel:       { fontSize:9, color:'rgba(255,255,255,.4)', fontFamily: F.semibold, textAlign:'center' },
 
   // Acciones
   accionesGrid:       { flexDirection:'row', flexWrap:'wrap', gap:10 },
@@ -373,26 +374,26 @@ const styles = StyleSheet.create({
   accionCardYellow:   { backgroundColor:'rgba(255,210,63,.1)', borderColor:'rgba(255,210,63,.2)' },
   accionCardPurple:   { backgroundColor:'rgba(162,155,254,.1)', borderColor:'rgba(162,155,254,.2)' },
   accionIco:          { width:48, height:48, borderRadius:14, backgroundColor:'rgba(255,255,255,.08)', alignItems:'center', justifyContent:'center' },
-  accionLabel:        { fontSize:13, fontWeight:'700', color:'white' },
+  accionLabel:        { fontSize:13, fontFamily: F.bold, color:'white' },
   accionBadge:        { position:'absolute', top:12, right:12, width:20, height:20, borderRadius:10, backgroundColor:'#FF4757', alignItems:'center', justifyContent:'center' },
-  accionBadgeText:    { color:'white', fontSize:10, fontWeight:'900' },
+  accionBadgeText:    { color:'white', fontSize:10, fontFamily: F.extrabold },
 
   // Pedidos
   pedidoCard:         { backgroundColor:'rgba(255,255,255,.04)', borderRadius:18, marginBottom:10, borderWidth:1, borderColor:'rgba(255,255,255,.07)', overflow:'hidden' },
   pedidoInner:        { flexDirection:'row', alignItems:'center', gap:12, padding:16 },
   pedidoIco:          { width:46, height:46, borderRadius:14, backgroundColor:'rgba(26,158,92,.15)', alignItems:'center', justifyContent:'center' },
   pedidoInfo:         { flex:1, gap:3 },
-  pedidoServicio:     { fontSize:14, fontWeight:'700', color:'white' },
-  pedidoCliente:      { fontSize:11, color:'rgba(255,255,255,.4)' },
-  pedidoFecha:        { fontSize:11, color:'rgba(255,255,255,.3)' },
+  pedidoServicio:     { fontSize:14, fontFamily: F.bold, color:'white' },
+  pedidoCliente:      { fontFamily: F.regular, fontSize:11, color:'rgba(255,255,255,.4)' },
+  pedidoFecha:        { fontFamily: F.regular, fontSize:11, color:'rgba(255,255,255,.3)' },
   pedidoRight:        { alignItems:'flex-end', gap:6 },
-  pedidoMonto:        { fontSize:16, fontWeight:'900', color:'white' },
+  pedidoMonto:        { fontSize:16, fontFamily: F.extrabold, color:'white' },
   estadoBadge:        { paddingHorizontal:10, paddingVertical:4, borderRadius:100 },
-  estadoText:         { fontSize:10, fontWeight:'700' },
+  estadoText:         { fontSize:10, fontFamily: F.bold },
 
   // Empty
   empty:              { alignItems:'center', paddingVertical:40 },
-  emptyIco:           { fontSize:48, marginBottom:12, opacity:.3 },
-  emptyTitle:         { fontSize:16, fontWeight:'800', color:'rgba(255,255,255,.4)', marginBottom:6 },
-  emptySub:           { fontSize:13, color:'rgba(255,255,255,.2)', textAlign:'center' },
+  emptyIco:           { fontFamily: F.regular, fontSize:48, marginBottom:12, opacity:.3 },
+  emptyTitle:         { fontSize:16, fontFamily: F.extrabold, color:'rgba(255,255,255,.4)', marginBottom:6 },
+  emptySub:           { fontFamily: F.regular, fontSize:13, color:'rgba(255,255,255,.2)', textAlign:'center' },
 })

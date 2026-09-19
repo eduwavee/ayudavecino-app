@@ -6,6 +6,7 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { pedidosService } from '../../services/pedidos.service'
+import { FUENTES as F } from '../../constants/diseno'
 
 const FILTROS = ['Todos','Pendientes','En curso','Completados','Cancelados']
 
@@ -119,7 +120,7 @@ export default function PedidosProveedorScreen() {
               <View style={styles.pedidoCard}>
 
                 <View style={styles.pedidoTop}>
-                  <View style={styles.pedidoIco}><Text style={{fontSize:22}}>🔧</Text></View>
+                  <View style={styles.pedidoIco}><Text style={{ fontFamily: F.regular, fontSize:22}}>🔧</Text></View>
                   <View style={styles.pedidoInfo}>
                     <Text style={styles.pedidoServicio}>{p.servicio?.nombre}</Text>
                     <Text style={styles.pedidoCliente}>👤 {p.cliente?.nombre}</Text>
@@ -218,41 +219,41 @@ const styles = StyleSheet.create({
   container:          { flex:1, backgroundColor:Colors.cream },
   header:             { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
   backBtn:            { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },
-  backText:           { fontSize:16, color:Colors.dark },
-  title:              { flex:1, fontSize:22, fontWeight:'900', color:Colors.dark },
-  count:              { fontSize:13, color:Colors.gray, fontWeight:'600' },
+  backText:           { fontFamily: F.regular, fontSize:16, color:Colors.dark },
+  title:              { flex:1, fontSize:22, fontFamily: F.extrabold, color:Colors.dark },
+  count:              { fontSize:13, color:'#6B6B6B', fontFamily: F.semibold },
   filtrosList:        { maxHeight:48, marginBottom:14 },
   filtrosContainer:   { paddingHorizontal:22, gap:8 },
   filtroBtn:          { paddingHorizontal:16, paddingVertical:8, borderRadius:100, backgroundColor:'white', borderWidth:1.5, borderColor:Colors.border },
   filtroBtnActive:    { backgroundColor:Colors.dark, borderColor:Colors.dark },
-  filtroBtnText:      { fontSize:12, fontWeight:'600', color:'#555' },
+  filtroBtnText:      { fontSize:12, fontFamily: F.semibold, color:'#555' },
   filtroBtnTextActive:{ color:'white' },
   listContainer:      { paddingHorizontal:22, gap:14, paddingBottom:100 },
   pedidoCard:         { backgroundColor:'white', borderRadius:20, padding:18, shadowColor:'#000', shadowOffset:{width:0,height:3}, shadowOpacity:.07, shadowRadius:10, elevation:3 },
   pedidoTop:          { flexDirection:'row', alignItems:'flex-start', gap:12, marginBottom:12 },
   pedidoIco:          { width:46, height:46, borderRadius:14, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
   pedidoInfo:         { flex:1 },
-  pedidoServicio:     { fontSize:15, fontWeight:'800', color:Colors.dark, marginBottom:3 },
-  pedidoCliente:      { fontSize:12, color:Colors.gray },
+  pedidoServicio:     { fontSize:15, fontFamily: F.extrabold, color:Colors.dark, marginBottom:3 },
+  pedidoCliente:      { fontFamily: F.regular, fontSize:12, color:'#6B6B6B' },
   pedidoTopRight:     { alignItems:'flex-end', gap:6 },
   estadoBadge:        { paddingHorizontal:10, paddingVertical:5, borderRadius:100 },
-  estadoText:         { fontSize:10, fontWeight:'700' },
+  estadoText:         { fontSize:10, fontFamily: F.bold },
   chatBtn:            { backgroundColor:'rgba(26,158,92,.1)', paddingHorizontal:10, paddingVertical:4, borderRadius:100 },
-  chatBtnText:        { fontSize:11, fontWeight:'700', color:Colors.primary },
+  chatBtnText:        { fontSize:11, fontFamily: F.bold, color:Colors.primary },
   pedidoDetails:      { flexDirection:'row', gap:8, flexWrap:'wrap', marginBottom:10 },
   detailChip:         { backgroundColor:Colors.cream, paddingHorizontal:10, paddingVertical:5, borderRadius:100 },
-  detailText:         { fontSize:11, fontWeight:'600', color:Colors.dark },
-  pedidoDesc:         { fontSize:12, color:'#888', fontStyle:'italic', marginBottom:10, paddingHorizontal:4 },
+  detailText:         { fontSize:11, fontFamily: F.semibold, color:Colors.dark },
+  pedidoDesc:         { fontFamily: F.regular, fontSize:12, color:'#6B6B6B', fontStyle:'italic', marginBottom:10, paddingHorizontal:4 },
   acciones:           { flexDirection:'row', gap:10, marginTop:4 },
   btnRechazar:        { flex:1, paddingVertical:12, borderRadius:14, borderWidth:1.5, borderColor:'#FF7675', alignItems:'center' },
-  btnRechazarText:    { color:'#FF7675', fontWeight:'700', fontSize:14 },
+  btnRechazarText:    { color:'#FF7675', fontFamily: F.bold, fontSize:14 },
   btnAceptar:         { flex:2, paddingVertical:12, borderRadius:14, backgroundColor:Colors.primary, alignItems:'center' },
-  btnAceptarText:     { color:'white', fontWeight:'700', fontSize:14 },
+  btnAceptarText:     { color:'white', fontFamily: F.bold, fontSize:14 },
   btnEnCurso:         { flex:1, paddingVertical:12, borderRadius:14, backgroundColor:'#74B9FF', alignItems:'center' },
-  btnEnCursoText:     { color:'white', fontWeight:'700', fontSize:14 },
+  btnEnCursoText:     { color:'white', fontFamily: F.bold, fontSize:14 },
   esperandoWrap:      { flex:1, backgroundColor:'rgba(255,210,63,.1)', borderRadius:14, paddingVertical:12, alignItems:'center' },
-  esperandoText:      { color:'#D4A017', fontWeight:'700', fontSize:13 },
+  esperandoText:      { color:'#D4A017', fontFamily: F.bold, fontSize:13 },
   empty:              { alignItems:'center', paddingTop:60 },
-  emptyIco:           { fontSize:48, marginBottom:12, opacity:.3 },
-  emptyText:          { fontSize:16, fontWeight:'700', color:Colors.gray },
+  emptyIco:           { fontFamily: F.regular, fontSize:48, marginBottom:12, opacity:.3 },
+  emptyText:          { fontSize:16, fontFamily: F.bold, color:'#6B6B6B' },
 })

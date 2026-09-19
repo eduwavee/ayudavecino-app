@@ -9,6 +9,7 @@ import { Colors } from '../../constants/colors'
 import { CATEGORIAS as CATEGORIAS_SERVICIO, categoriaInfo } from '../../constants/categorias'
 import { serviciosService } from '../../services/servicios.service'
 import { archivoUrl } from '../../constants/config'
+import { FUENTES as F } from '../../constants/diseno'
 
 const MAX_FOTOS = 6
 
@@ -135,7 +136,7 @@ export default function NuevoServicioScreen() {
             <TextInput
               style={styles.input}
               placeholder="ej: Reparación de caños"
-              placeholderTextColor="#bbb"
+              placeholderTextColor="#767676"
               value={nombre}
               onChangeText={setNombre}
               onFocus={() => setFocused('nombre')}
@@ -148,7 +149,7 @@ export default function NuevoServicioScreen() {
             <TextInput
               style={[styles.input, styles.textarea]}
               placeholder="Describí qué incluye tu servicio..."
-              placeholderTextColor="#bbb"
+              placeholderTextColor="#767676"
               value={descripcion}
               onChangeText={setDescripcion}
               multiline
@@ -165,7 +166,7 @@ export default function NuevoServicioScreen() {
             <TextInput
               style={styles.input}
               placeholder="0"
-              placeholderTextColor="#bbb"
+              placeholderTextColor="#767676"
               value={String(precio)}
               onChangeText={setPrecio}
               keyboardType="numeric"
@@ -220,7 +221,7 @@ export default function NuevoServicioScreen() {
               <View style={styles.previewCard}>
                 <View style={styles.previewLeft}>
                   <View style={styles.previewIco}>
-                    <Text style={{fontSize:22}}>{categoriaInfo(categoria).ico}</Text>
+                    <Text style={{ fontFamily: F.regular, fontSize:22}}>{categoriaInfo(categoria).ico}</Text>
                   </View>
                   <View>
                     <Text style={styles.previewNombre}>{nombre}</Text>
@@ -259,38 +260,38 @@ const styles = StyleSheet.create({
   fotosRow:          { gap:10, paddingBottom:4 },
   foto:              { width:96, height:72, borderRadius:12, backgroundColor:'#eee' },
   fotoQuitar:        { position:'absolute', top:4, right:4, width:22, height:22, borderRadius:11, backgroundColor:'rgba(0,0,0,.6)', alignItems:'center', justifyContent:'center' },
-  fotoQuitarText:    { color:'white', fontSize:11, fontWeight:'900' },
+  fotoQuitarText:    { color:'white', fontSize:11, fontFamily: F.extrabold },
   fotoAgregar:       { width:96, height:72, borderRadius:12, borderWidth:1.5, borderStyle:'dashed', borderColor:Colors.primary, alignItems:'center', justifyContent:'center', backgroundColor:'#F0FDF4' },
-  fotoAgregarIco:    { fontSize:20 },
-  fotoAgregarText:   { fontSize:11, fontWeight:'700', color:Colors.primary, marginTop:2 },
-  fotosAyuda:        { fontSize:11, color:'#999', marginTop:6, marginBottom:20 },
+  fotoAgregarIco:    { fontFamily: F.regular, fontSize:20 },
+  fotoAgregarText:   { fontSize:11, fontFamily: F.bold, color:Colors.primary, marginTop:2 },
+  fotosAyuda:        { fontFamily: F.regular, fontSize:11, color:'#6B6B6B', marginTop:6, marginBottom:20 },
   container:         { flex:1, backgroundColor:Colors.cream },
   header:            { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:20 },
   backBtn:           { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },
-  backText:          { fontSize:16, color:Colors.dark },
-  title:             { fontSize:22, fontWeight:'900', color:Colors.dark },
+  backText:          { fontFamily: F.regular, fontSize:16, color:Colors.dark },
+  title:             { fontSize:22, fontFamily: F.extrabold, color:Colors.dark },
   form:              { paddingHorizontal:22 },
-  label:             { fontSize:11, fontWeight:'700', color:'#999', letterSpacing:1.5, marginBottom:10 },
+  label:             { fontSize:11, fontFamily: F.bold, color:'#6B6B6B', letterSpacing:1.5, marginBottom:10 },
   inputWrap:         { backgroundColor:'white', borderRadius:16, paddingHorizontal:16, marginBottom:20, borderWidth:1.5, borderColor:'transparent', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:6, elevation:2 },
   inputFocused:      { borderColor:Colors.primary },
   textareaWrap:      { paddingVertical:4 },
-  input:             { fontSize:14, color:Colors.dark, paddingVertical:14 },
+  input:             { fontFamily: F.regular, fontSize:14, color:Colors.dark, paddingVertical:14 },
   textarea:          { minHeight:100 },
-  pesoSign:          { position:'absolute', left:16, top:14, fontSize:16, color:Colors.dark, fontWeight:'700' },
+  pesoSign:          { position:'absolute', left:16, top:14, fontSize:16, color:Colors.dark, fontFamily: F.bold },
   catsGrid:          { flexDirection:'row', flexWrap:'wrap', gap:10, marginBottom:24 },
   catBtn:            { paddingHorizontal:16, paddingVertical:10, borderRadius:100, backgroundColor:'white', borderWidth:1.5, borderColor:Colors.border },
   catBtnActive:      { backgroundColor:Colors.dark, borderColor:Colors.dark },
-  catBtnText:        { fontSize:13, fontWeight:'600', color:'#555' },
+  catBtnText:        { fontSize:13, fontFamily: F.semibold, color:'#555' },
   catBtnTextActive:  { color:'white' },
   preview:           { marginBottom:20 },
-  previewTitle:      { fontSize:11, fontWeight:'700', color:'#999', letterSpacing:1.5, marginBottom:10 },
+  previewTitle:      { fontSize:11, fontFamily: F.bold, color:'#6B6B6B', letterSpacing:1.5, marginBottom:10 },
   previewCard:       { backgroundColor:'white', borderRadius:16, padding:14, flexDirection:'row', alignItems:'center', justifyContent:'space-between', borderWidth:1.5, borderColor:Colors.primary },
   previewLeft:       { flexDirection:'row', alignItems:'center', gap:12 },
   previewIco:        { width:44, height:44, borderRadius:12, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
-  previewNombre:     { fontSize:14, fontWeight:'700', color:Colors.dark },
-  previewCat:        { fontSize:11, color:Colors.gray },
-  previewPrecio:     { fontSize:18, fontWeight:'900', color:Colors.dark },
+  previewNombre:     { fontSize:14, fontFamily: F.bold, color:Colors.dark },
+  previewCat:        { fontFamily: F.regular, fontSize:11, color:'#6B6B6B' },
+  previewPrecio:     { fontSize:18, fontFamily: F.extrabold, color:Colors.dark },
   bottomBar:         { position:'absolute', bottom:0, left:0, right:0, backgroundColor:Colors.cream, padding:16, paddingBottom:32 },
   guardarBtn:        { backgroundColor:Colors.primary, borderRadius:16, paddingVertical:16, alignItems:'center', shadowColor:Colors.primary, shadowOffset:{width:0,height:4}, shadowOpacity:.3, shadowRadius:10, elevation:5 },
-  guardarBtnText:    { color:'white', fontSize:15, fontWeight:'700' },
+  guardarBtnText:    { color:'white', fontSize:15, fontFamily: F.bold },
 })
