@@ -11,7 +11,12 @@ import { archivoUrl } from '../../constants/config'
 import { favoritosService } from '../../services/favoritos.service'
 import { BotonCorazon } from '../../components/ui/BotonCorazon'
 import { useAuthStore } from '../../store/authStore'
-import { FUENTES as F } from '../../constants/diseno'
+import { FUENTES as F, DURACION, CURVA, RESORTE } from '../../constants/diseno'
+import Reanimated, {
+  useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, Extrapolation, withSpring,
+} from 'react-native-reanimated'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Aparecer } from '../../components/ui/Aparecer'
 import { PressScale } from '../../components/ui/PressScale'
 
 const TABS = ['Sobre mí', 'Servicios', 'Reseñas']
@@ -78,6 +83,35 @@ export default function ProveedorScreen() {
   const [tabActiva, setTabActiva] = useState('Sobre mí')
   const [lugar, setLugar]         = useState<string | null>(null)
   const [fotoAbierta, setFotoAbierta] = useState<string | null>(null)
+  const insets = useSafeAreaInsets()
+
+  // Parallax de la cabecera y barra compacta que aparece al scrollear
+  const scrollY = useSharedValue(0)
+  const alScrollear = useAnimatedScrollHandler(e => { scrollY.value = e.contentOffset.y })
+  const heroContenido = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, 120], [1, 0], Extrapolation.CLAMP),
+    transform: [
+      { translateY: interpolate(scrollY.value, [-100, 0, 200], [-30, 0, 70], Extrapolation.CLAMP) },
+      { scale: interpolate(scrollY.value, [-100, 0], [1.08, 1], Extrapolation.CLAMP) },
+    ],
+  }))
+  const barraCompacta = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [110, 160], [0, 1], Extrapolation.CLAMP),
+  }))
+
+  // Indicador que se desliza bajo la pestaña activa (translateX + scaleX, sin animar width)
+  const [tabsLayout, setTabsLayout] = useState<Record<string, { x: number; w: number }>>({})
+  const indicadorX = useSharedValue(0)
+  const indicadorW = useSharedValue(0)
+  useEffect(() => {
+    const l = tabsLayout[tabActiva]
+    if (!l) return
+    indicadorX.value = withSpring(l.x, RESORTE.firme)
+    indicadorW.value = withSpring(l.w, RESORTE.firme)
+  }, [tabActiva, tabsLayout])
+  const indicador = useAnimatedStyle(() => ({
+    transform: [{ translateX: indicadorX.value }, { scaleX: indicadorW.value / 100 }],
+  }))
   const esCliente = useAuthStore(s => s.usuario?.rol) === 'CLIENTE'
   const [favorito, setFavorito]   = useState(false)
 
@@ -139,20 +173,17 @@ export default function ProveedorScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <Reanimated.ScrollView showsVerticalScrollIndicator={false} onScroll={alScrollear} scrollEventThrottle={16}>
 
         {/* Hero */}
         <View style={styles.hero}>
           <View style={styles.heroPattern} />
-          {esCliente && (
-            <BotonCorazon activo={favorito} onToggle={toggleFavorito} style={styles.favBtn} />
-          )}
-          <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backText}>←</Text>
-          </PressScale>
+          <Reanimated.View style={heroContenido}>
           <View style={styles.avatarWrap}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarIco}>🔧</Text>
+              {proveedor?.avatar
+                ? <Image source={{ uri: archivoUrl(proveedor.avatar)! }} style={styles.avatarImg} />
+                : <Text style={styles.avatarIco}>{categoriaInfo(proveedor?.servicios?.[0]?.categoria).ico}</Text>}
             </View>
             <View>
               <Text style={styles.heroName}>{proveedor?.nombre}</Text>
@@ -165,6 +196,7 @@ export default function ProveedorScreen() {
             {proveedor?.verificado && <View style={styles.badgeGreen}><Text style={styles.badgeGreenText}>✓ Verificado</Text></View>}
             {proveedor?.topRated && <View style={styles.badgeYellow}><Text style={styles.badgeYellowText}>⭐ Top rated</Text></View>}
           </View>
+          </Reanimated.View>
         </View>
 
         {/* Stats */}
@@ -184,14 +216,27 @@ export default function ProveedorScreen() {
         </View>
 
         {/* Tabs */}
-        <View style={styles.tabs}>
+        <View style={styles.tabs} accessibilityRole="tablist">
           {TABS.map(t => (
-            <TouchableOpacity key={t} style={[styles.tab, tabActiva === t && styles.tabActive]} onPress={() => setTabActiva(t)}>
+            <TouchableOpacity
+              key={t}
+              style={styles.tab}
+              onPress={() => setTabActiva(t)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: tabActiva === t }}
+              onLayout={e => {
+                const { x, width } = e.nativeEvent.layout
+                setTabsLayout(prev => ({ ...prev, [t]: { x, w: width } }))
+              }}
+            >
               <Text style={[styles.tabText, tabActiva === t && styles.tabTextActive]}>{t}</Text>
             </TouchableOpacity>
           ))}
+          <Reanimated.View style={[styles.tabIndicador, indicador]} />
         </View>
 
+        {/* El contenido de cada pestaña entra con un fundido corto al cambiar */}
+        <Aparecer key={tabActiva} desde="lugar">
         {/* Tab: Sobre mí */}
         {tabActiva === 'Sobre mí' && (
           <View style={styles.tabContent}>
@@ -288,9 +333,21 @@ export default function ProveedorScreen() {
             )}
           </View>
         )}
+        </Aparecer>
 
         <View style={{ height:120 }} />
-      </ScrollView>
+      </Reanimated.ScrollView>
+
+      {/* Barra superior fija: aparece con el nombre al scrollear; volver y favorito siempre a mano */}
+      <Reanimated.View pointerEvents="none" style={[styles.barraCompacta, { height: insets.top + 56, paddingTop: insets.top }, barraCompacta]}>
+        <Text style={styles.barraNombre} numberOfLines={1}>{proveedor?.nombre}</Text>
+      </Reanimated.View>
+      <PressScale accessibilityLabel="Volver" hitSlop={10} style={[styles.backBtn, { top: insets.top + 10 }]} onPress={() => router.back()}>
+        <Text style={styles.backText}>←</Text>
+      </PressScale>
+      {esCliente && (
+        <BotonCorazon activo={favorito} onToggle={toggleFavorito} style={[styles.favBtn, { top: insets.top + 10 }]} />
+      )}
 
       {/* Visor de fotos de trabajos */}
       <Modal visible={!!fotoAbierta} transparent animationType="fade" onRequestClose={() => setFotoAbierta(null)}>
@@ -331,11 +388,15 @@ const styles = StyleSheet.create({
   loadingWrap:    { flex:1, alignItems:'center', justifyContent:'center', backgroundColor:Colors.cream },
   hero:           { height:200, backgroundColor:'#1a1a1a', justifyContent:'flex-end', padding:20, overflow:'hidden' },
   favBtn:         { position:'absolute', top:52, right:20, width:36, height:36, borderRadius:10, backgroundColor:'rgba(255,255,255,.12)', alignItems:'center', justifyContent:'center', zIndex:10 },
+  avatarImg:      { width:'100%', height:'100%', borderRadius:17 },
+  barraCompacta:  { position:'absolute', top:0, left:0, right:0, backgroundColor:'#1a1a1a', alignItems:'center', justifyContent:'center', zIndex:5 },
+  barraNombre:    { color:'white', fontSize:15, fontFamily: F.bold, maxWidth:'60%' },
+  tabIndicador:   { position:'absolute', left:0, bottom:-1, width:100, height:2.5, borderRadius:2, backgroundColor:Colors.primary, transformOrigin:'left' },
   heroPattern:    { position:'absolute', inset:0, opacity:.15 },
-  backBtn:        { position:'absolute', top:52, left:20, width:36, height:36, borderRadius:10, backgroundColor:'rgba(255,255,255,.12)', alignItems:'center', justifyContent:'center' },
+  backBtn:        { position:'absolute', top:52, left:20, width:36, height:36, borderRadius:10, backgroundColor:'rgba(255,255,255,.12)', alignItems:'center', justifyContent:'center', zIndex:10 },
   backText:       { fontFamily: F.regular, color:'white', fontSize:16 },
   avatarWrap:     { flexDirection:'row', alignItems:'flex-end', gap:14, marginBottom:8 },
-  avatar:         { width:72, height:72, borderRadius:20, backgroundColor:Colors.primaryLight, alignItems:'center', justifyContent:'center', borderWidth:3, borderColor:Colors.cream },
+  avatar:         { width:72, height:72, borderRadius:20, backgroundColor:Colors.primaryLight, alignItems:'center', justifyContent:'center', borderWidth:3, borderColor:Colors.cream, overflow:'hidden' },
   avatarIco:      { fontFamily: F.regular, fontSize:32 },
   heroName:       { fontSize:20, fontFamily: F.extrabold, color:'white', marginBottom:2 },
   heroCat:        { fontFamily: F.regular, fontSize:12, color:'rgba(255,255,255,.6)' },
@@ -350,8 +411,7 @@ const styles = StyleSheet.create({
   statNum:        { fontSize:22, fontFamily: F.extrabold, color:Colors.dark, marginBottom:2 },
   statLabel:      { fontFamily: F.regular, fontSize:10, color:'#6B6B6B' },
   tabs:           { flexDirection:'row', paddingHorizontal:20, marginTop:20, borderBottomWidth:1, borderBottomColor:Colors.border },
-  tab:            { paddingVertical:10, paddingHorizontal:14, borderBottomWidth:2, borderBottomColor:'transparent', marginBottom:-1 },
-  tabActive:      { borderBottomColor:Colors.dark },
+  tab:            { paddingVertical:12, paddingHorizontal:14 },
   tabText:        { fontSize:13, fontFamily: F.semibold, color:'#aaa' },
   tabTextActive:  { color:Colors.dark },
   tabContent:     { padding:20 },
