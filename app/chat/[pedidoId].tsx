@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   View, Text, FlatList, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, Animated,
-  Dimensions, StatusBar, Image, Alert, ActivityIndicator
+  Dimensions, StatusBar, Image, Alert, ActivityIndicator, Linking
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
@@ -36,6 +36,7 @@ export default function ChatScreen() {
   const [subiendoImagen, setSubiendoImagen] = useState(false)
 
   const flatListRef   = useRef<FlatList>(null)
+  const inputRef      = useRef<TextInput>(null)
   const typingTimeout = useRef<any>(null)
   const leidoTimeout  = useRef<any>(null)
   const fadeAnim      = useRef(new Animated.Value(0)).current
@@ -107,6 +108,19 @@ export default function ChatScreen() {
   function marcarLeidoDebounced() {
     clearTimeout(leidoTimeout.current)
     leidoTimeout.current = setTimeout(() => chatService.marcarLeido(pedidoId), 400)
+  }
+
+  async function llamarContraparte() {
+    try {
+      const pedido = await pedidosService.obtenerPedido(pedidoId)
+      const contraparte = pedido.clienteId === usuario?.id ? pedido.proveedor : pedido.cliente
+      if (!contraparte?.telefono) {
+        return Alert.alert('Sin teléfono', `${contraparte?.nombre ?? 'Tu contacto'} todavía no cargó un número de teléfono.`)
+      }
+      await Linking.openURL(`tel:${contraparte.telefono}`)
+    } catch {
+      Alert.alert('Error', 'No se pudo iniciar la llamada')
+    }
   }
 
   async function handleAdjuntarImagen() {
@@ -190,7 +204,7 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.headerAction}>
+        <TouchableOpacity style={styles.headerAction} onPress={llamarContraparte}>
           <Text style={styles.headerActionIco}>📞</Text>
         </TouchableOpacity>
       </View>
@@ -350,6 +364,7 @@ export default function ChatScreen() {
 
           <View style={[styles.inputWrap, inputAlto && styles.inputWrapTall]}>
             <TextInput
+              ref={inputRef}
               style={styles.input}
               placeholder="Mensaje..."
               placeholderTextColor="#bbb"
@@ -365,7 +380,8 @@ export default function ChatScreen() {
               <Text style={styles.sendIco}>➤</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.emojiBtn}>
+            // Abre el teclado; el selector de emojis es el del teclado del telefono
+            <TouchableOpacity style={styles.emojiBtn} onPress={() => inputRef.current?.focus()}>
               <Text style={styles.emojiIco}>😊</Text>
             </TouchableOpacity>
           )}

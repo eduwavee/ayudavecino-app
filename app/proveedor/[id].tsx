@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { usuariosService } from '../../services/usuarios.service'
@@ -243,7 +243,10 @@ export default function ProveedorScreen() {
 
       {/* CTA fijo */}
       <View style={styles.bottomCta}>
-        <TouchableOpacity style={styles.chatBtn}>
+        <TouchableOpacity
+          style={styles.chatBtn}
+          onPress={() => Alert.alert('Chat', 'El chat con el proveedor se habilita cuando te acepta un pedido. Lo vas a encontrar en la pestaña Pedidos.')}
+        >
           <Text style={{fontSize:20}}>💬</Text>
         </TouchableOpacity>
         <TouchableOpacity

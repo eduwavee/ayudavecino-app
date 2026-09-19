@@ -225,7 +225,10 @@ export default function RegistroScreen() {
                 <View style={styles.dividerLine} />
               </View>
 
-              <TouchableOpacity style={styles.googleBtn}>
+              <TouchableOpacity
+            style={styles.googleBtn}
+            onPress={() => Alert.alert('Próximamente', 'El ingreso con Google va a estar disponible en una próxima versión de la app.')}
+          >
                 <Text style={styles.googleIco}>🇬</Text>
                 <Text style={styles.googleText}>Continuar con Google</Text>
               </TouchableOpacity>
