@@ -4,6 +4,7 @@ import {
   Animated, Dimensions
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
+import { categoriaInfo } from '../../constants/categorias'
 
 const { width } = Dimensions.get('window')
 
@@ -46,10 +47,6 @@ export default function ServicioPublicadoScreen() {
   const rippleOpacity = ripple.interpolate({ inputRange:[0,1], outputRange:[0.5,0] })
   const rotate = rotateAnim.interpolate({ inputRange:[0,1], outputRange:['-30deg','0deg'] })
 
-  const CAT_ICOS: Record<string,string> = {
-    plomeria:'🔧', electricidad:'⚡', albanileria:'🏗️',
-    carpinteria:'🪟', jardin:'🌿', limpieza:'🧹', pintura:'🎨',
-  }
 
   return (
     <View style={styles.container}>
@@ -97,11 +94,11 @@ export default function ServicioPublicadoScreen() {
 
         <View style={styles.servicePreview}>
           <View style={styles.serviceIco}>
-            <Text style={styles.serviceIcoText}>{CAT_ICOS[categoria] ?? '🔧'}</Text>
+            <Text style={styles.serviceIcoText}>{categoriaInfo(categoria).ico}</Text>
           </View>
           <View style={styles.serviceInfo}>
             <Text style={styles.serviceName}>{nombre}</Text>
-            <Text style={styles.serviceCat}>{categoria}</Text>
+            <Text style={styles.serviceCat}>{categoriaInfo(categoria).nombre}</Text>
           </View>
           <Text style={styles.servicePrice}>${Number(precio).toLocaleString()}</Text>
         </View>

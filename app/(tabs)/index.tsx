@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Dimensi
 import { useRouter } from 'expo-router'
 import * as Location from 'expo-location'
 import { Colors } from '../../constants/colors'
+import { CATEGORIAS, categoriaInfo } from '../../constants/categorias'
 import { useAuthStore } from '../../store/authStore'
 import { useNotifStore } from '../../store/notificacionesStore'
 import { useTema, TemaTokens } from '../../store/temaStore'
@@ -30,21 +31,9 @@ function SkeletonProvCard({ styles }: { styles: ReturnType<typeof getStyles> }) 
 
 const { width } = Dimensions.get('window')
 
-const CATEGORIAS = [
-  { ico:'🔧', nombre:'Plomería',     value:'plomeria' },
-  { ico:'⚡', nombre:'Electricidad', value:'electricidad' },
-  { ico:'🏗️', nombre:'Albañilería',  value:'albanileria' },
-  { ico:'🪟', nombre:'Carpintería',  value:'carpinteria' },
-  { ico:'🌿', nombre:'Jardín',       value:'jardin' },
-  { ico:'🧹', nombre:'Limpieza',     value:'limpieza' },
-  { ico:'🎨', nombre:'Pintura',      value:'pintura' },
-]
 
 const TARJETA_BG = ['#C8F5D0', '#FFF3CC', '#CCE5FF', '#FFE5E5']
 
-function categoriaInfo(value?: string) {
-  return CATEGORIAS.find(c => c.value === value) ?? { ico: '🔨', nombre: 'Servicios' }
-}
 
 const STATS = [
   { num:'2.400+', label:'Vecinos' },

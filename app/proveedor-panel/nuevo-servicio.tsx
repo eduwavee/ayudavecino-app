@@ -5,17 +5,10 @@ import {
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
+import { CATEGORIAS as CATEGORIAS_SERVICIO, categoriaInfo } from '../../constants/categorias'
 import { serviciosService } from '../../services/servicios.service'
 
-const CATEGORIAS = [
-  { value:'plomeria',      label:'🔧 Plomería' },
-  { value:'electricidad',  label:'⚡ Electricidad' },
-  { value:'albanileria',   label:'🏗️ Albañilería' },
-  { value:'carpinteria',   label:'🪟 Carpintería' },
-  { value:'jardin',        label:'🌿 Jardín' },
-  { value:'limpieza',      label:'🧹 Limpieza' },
-  { value:'pintura',       label:'🎨 Pintura' },
-]
+const CATEGORIAS = CATEGORIAS_SERVICIO.map(c => ({ value: c.value, label: `${c.ico} ${c.nombre}` }))
 
 export default function NuevoServicioScreen() {
   const router = useRouter()
@@ -135,11 +128,11 @@ export default function NuevoServicioScreen() {
               <View style={styles.previewCard}>
                 <View style={styles.previewLeft}>
                   <View style={styles.previewIco}>
-                    <Text style={{fontSize:22}}>{CATEGORIAS.find(c => c.value === categoria)?.label.split(' ')[0]}</Text>
+                    <Text style={{fontSize:22}}>{categoriaInfo(categoria).ico}</Text>
                   </View>
                   <View>
                     <Text style={styles.previewNombre}>{nombre}</Text>
-                    <Text style={styles.previewCat}>{categoria}</Text>
+                    <Text style={styles.previewCat}>{categoriaInfo(categoria).nombre}</Text>
                   </View>
                 </View>
                 <Text style={styles.previewPrecio}>${Number(precio).toLocaleString()}</Text>

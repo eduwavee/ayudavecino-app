@@ -2,13 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { Colors } from '../../constants/colors'
+import { categoriaInfo } from '../../constants/categorias'
 import { serviciosService } from '../../services/servicios.service'
 import { useAuthStore } from '../../store/authStore'
 
-const CAT_ICOS: Record<string,string> = {
-  plomeria:'🔧', electricidad:'⚡', albanileria:'🏗️',
-  carpinteria:'🪟', jardin:'🌿', limpieza:'🧹', pintura:'🎨',
-}
 
 export default function ServiciosProveedorScreen() {
   const router  = useRouter()
@@ -69,14 +66,14 @@ export default function ServiciosProveedorScreen() {
               <View style={styles.serviceTop}>
                 <View style={styles.serviceLeft}>
                   <View style={styles.serviceIco}>
-                    <Text style={{fontSize:24}}>{CAT_ICOS[s.categoria] ?? '🔧'}</Text>
+                    <Text style={{fontSize:24}}>{categoriaInfo(s.categoria).ico}</Text>
                   </View>
                   <View style={styles.serviceInfo}>
                     <Text style={styles.serviceName}>{s.nombre}</Text>
                     <Text style={styles.serviceDesc} numberOfLines={2}>{s.descripcion}</Text>
                     <View style={styles.serviceTags}>
                       <View style={styles.catTag}>
-                        <Text style={styles.catTagText}>{s.categoria}</Text>
+                        <Text style={styles.catTagText}>{categoriaInfo(s.categoria).nombre}</Text>
                       </View>
                       <View style={[styles.catTag, { backgroundColor: s.activo ? 'rgba(26,158,92,.1)' : 'rgba(255,118,117,.1)' }]}>
                         <Text style={[styles.catTagText, { color: s.activo ? Colors.primary : '#FF7675' }]}>

@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
+import { CATEGORIAS as CATEGORIAS_SERVICIO } from '../../constants/categorias'
 import { serviciosService } from '../../services/servicios.service'
 import { useTema, TemaTokens } from '../../store/temaStore'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
@@ -26,14 +27,8 @@ function SkeletonServiceCard({ styles }: { styles: ReturnType<typeof getStyles> 
 }
 
 const CATEGORIAS = [
-  { label:'Todos',        value:'' },
-  { label:'Plomería',     value:'plomeria' },
-  { label:'Electricidad', value:'electricidad' },
-  { label:'Albañilería',  value:'albanileria' },
-  { label:'Carpintería',  value:'carpinteria' },
-  { label:'Jardín',       value:'jardin' },
-  { label:'Limpieza',     value:'limpieza' },
-  { label:'Pintura',      value:'pintura' },
+  { label:'Todos', value:'' },
+  ...CATEGORIAS_SERVICIO.map(c => ({ label: c.nombre, value: c.value })),
 ]
 
 export default function BuscarScreen() {
