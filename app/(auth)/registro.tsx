@@ -10,6 +10,7 @@ import { authService } from '../../services/auth.service'
 import { useAuthStore } from '../../store/authStore'
 import { EMAIL_REGEX, USERNAME_REGEX, PASSWORD_REGEX, MENSAJE_USERNAME, MENSAJE_PASSWORD } from '../../utils/validaciones'
 import { FUENTES as F } from '../../constants/diseno'
+import { alertaError, haptica } from '../../utils/haptica'
 
 const PASOS = ['Rol', 'Datos', 'Listo']
 
@@ -48,11 +49,11 @@ export default function RegistroScreen() {
     if (paso === 0) {
       setPaso(1)
     } else if (paso === 1) {
-      if (!email || !username || !password || !confirmarPassword) return Alert.alert('Error', 'Completá todos los campos')
-      if (!EMAIL_REGEX.test(email.trim())) return Alert.alert('Error', 'Ingresá un email válido')
-      if (!USERNAME_REGEX.test(username.trim().toLowerCase())) return Alert.alert('Error', MENSAJE_USERNAME)
-      if (!PASSWORD_REGEX.test(password)) return Alert.alert('Error', MENSAJE_PASSWORD)
-      if (password !== confirmarPassword) return Alert.alert('Error', 'Las contraseñas no coinciden')
+      if (!email || !username || !password || !confirmarPassword) return alertaError('Completá todos los campos')
+      if (!EMAIL_REGEX.test(email.trim())) return alertaError('Ingresá un email válido')
+      if (!USERNAME_REGEX.test(username.trim().toLowerCase())) return alertaError(MENSAJE_USERNAME)
+      if (!PASSWORD_REGEX.test(password)) return alertaError(MENSAJE_PASSWORD)
+      if (password !== confirmarPassword) return alertaError('Las contraseñas no coinciden')
       handleRegistro()
     }
   }
@@ -62,13 +63,14 @@ export default function RegistroScreen() {
     try {
       const data = await authService.registro(email.trim(), username.trim().toLowerCase(), password, confirmarPassword, rol)
       setUsuario(data.usuario, data.token)
+      haptica.exito()
       router.replace('/(tabs)')
     } catch (err: any) {
       const msg = err.response?.data?.mensaje
         || err.response?.data?.errores?.[0]?.msg
         || err.message
         || 'Error al registrarse'
-      Alert.alert('Error', msg)
+      alertaError(msg)
     } finally {
       setLoading(false)
     }

@@ -10,6 +10,7 @@ import { API_URL } from '../../constants/config'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { FUENTES as F } from '../../constants/diseno'
+import { haptica } from '../../utils/haptica'
 
 const TAGS = [
   '✓ Puntual', '✓ Prolijo', '💰 Precio justo',
@@ -35,6 +36,7 @@ export default function NuevaResenaScreen() {
   }, [])
 
   function seleccionarEstrella(n: number) {
+    haptica.seleccion()
     setPuntaje(n)
     Animated.sequence([
       Animated.timing(scaleAnims[n-1], { toValue:1.4, duration:150, useNativeDriver:true }),
@@ -65,6 +67,7 @@ export default function NuevaResenaScreen() {
         comentario: textoFinal,
       }, { headers: { Authorization: `Bearer ${token}` } })
 
+      haptica.exito()
       router.replace({
         pathname: '/resena/exito',
         params: { puntaje, proveedorNombre }

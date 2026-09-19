@@ -9,6 +9,7 @@ import { categoriaInfo } from '../../constants/categorias'
 import { nombreDeLugar } from '../../utils/ubicacion'
 import { archivoUrl } from '../../constants/config'
 import { favoritosService } from '../../services/favoritos.service'
+import { BotonCorazon } from '../../components/ui/BotonCorazon'
 import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
 
@@ -143,9 +144,7 @@ export default function ProveedorScreen() {
         <View style={styles.hero}>
           <View style={styles.heroPattern} />
           {esCliente && (
-            <TouchableOpacity style={styles.favBtn} onPress={toggleFavorito}>
-              <Text style={styles.favIco}>{favorito ? '❤️' : '🤍'}</Text>
-            </TouchableOpacity>
+            <BotonCorazon activo={favorito} onToggle={toggleFavorito} style={styles.favBtn} />
           )}
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
@@ -331,7 +330,6 @@ const styles = StyleSheet.create({
   loadingWrap:    { flex:1, alignItems:'center', justifyContent:'center', backgroundColor:Colors.cream },
   hero:           { height:200, backgroundColor:'#1a1a1a', justifyContent:'flex-end', padding:20, overflow:'hidden' },
   favBtn:         { position:'absolute', top:52, right:20, width:36, height:36, borderRadius:10, backgroundColor:'rgba(255,255,255,.12)', alignItems:'center', justifyContent:'center', zIndex:10 },
-  favIco:         { fontFamily: F.regular, fontSize:17 },
   heroPattern:    { position:'absolute', inset:0, opacity:.15 },
   backBtn:        { position:'absolute', top:52, left:20, width:36, height:36, borderRadius:10, backgroundColor:'rgba(255,255,255,.12)', alignItems:'center', justifyContent:'center' },
   backText:       { fontFamily: F.regular, color:'white', fontSize:16 },

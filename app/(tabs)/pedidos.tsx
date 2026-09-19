@@ -8,6 +8,7 @@ import { useTema, TemaTokens } from '../../store/temaStore'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
+import { alertaError, haptica } from '../../utils/haptica'
 
 function SkeletonPedidoCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -84,9 +85,10 @@ export default function PedidosScreen() {
             setCompletando(id)
             try {
               await pedidosService.pagar(id)
+              haptica.exito()
               await cargarPedidos()
             } catch (err: any) {
-              Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo procesar el pago')
+              alertaError(err.response?.data?.mensaje || 'No se pudo procesar el pago')
             } finally {
               setCompletando(null)
             }
@@ -108,9 +110,10 @@ export default function PedidosScreen() {
             setCompletando(id)
             try {
               await pedidosService.cambiarEstado(id, 'COMPLETADO')
+              haptica.exito()
               await cargarPedidos()
             } catch (err: any) {
-              Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo confirmar')
+              alertaError(err.response?.data?.mensaje || 'No se pudo confirmar')
             } finally {
               setCompletando(null)
             }

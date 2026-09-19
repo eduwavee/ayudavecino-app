@@ -15,6 +15,7 @@ import { usuariosService } from '../services/usuarios.service'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { FUENTES as F } from '../constants/diseno'
+import { alertaError } from '../utils/haptica'
 
 export default function EditarPerfilScreen() {
   const router  = useRouter()
@@ -64,7 +65,7 @@ export default function EditarPerfilScreen() {
       const token = await AsyncStorage.getItem('token')
       setUsuario(usuarioActualizado, token!)
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo subir la foto')
+      alertaError(err.response?.data?.mensaje || 'No se pudo subir la foto')
     } finally {
       setSubiendoAvatar(false)
     }
@@ -82,14 +83,14 @@ export default function EditarPerfilScreen() {
       setLatitud(pos.coords.latitude)
       setLongitud(pos.coords.longitude)
     } catch {
-      Alert.alert('Error', 'No se pudo obtener tu ubicación')
+      alertaError('No se pudo obtener tu ubicación')
     } finally {
       setUbicando(false)
     }
   }
 
   async function handleGuardar() {
-    if (!nombre.trim()) return Alert.alert('Error', 'El nombre no puede estar vacío')
+    if (!nombre.trim()) return alertaError('El nombre no puede estar vacío')
     setLoading(true)
     try {
       const token = await AsyncStorage.getItem('token')
@@ -118,7 +119,7 @@ export default function EditarPerfilScreen() {
         router.back()
       })
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo guardar')
+      alertaError(err.response?.data?.mensaje || 'No se pudo guardar')
     } finally {
       setLoading(false)
     }

@@ -11,7 +11,12 @@ import { archivoUrl } from '../../constants/config'
 import { useAuthStore } from '../../store/authStore'
 import { chatService } from '../../services/chat.service'
 import { pedidosService } from '../../services/pedidos.service'
-import { FUENTES as F } from '../../constants/diseno'
+import { FUENTES as F, DURACION, CURVA } from '../../constants/diseno'
+import Reanimated, { FadeInDown } from 'react-native-reanimated'
+import { haptica } from '../../utils/haptica'
+
+// Entrada de un mensaje nuevo: sube corto y rápido (power3.out)
+const ENTRADA_MENSAJE = FadeInDown.duration(DURACION.base).easing(CURVA.salida)
 
 const { width } = Dimensions.get('window')
 
@@ -164,12 +169,16 @@ export default function ChatScreen() {
     const txt = (msg ?? texto).trim()
     if (!txt || !conectado) return
     chatService.enviarMensaje(pedidoId, txt, usuario?.nombre ?? '')
+    haptica.toque()
     setTexto('')
     setInputAlto(false)
     chatService.dejoEscribir(pedidoId)
   }
 
   const esMio = (msg: any) => msg.autorId === usuario?.id
+  // Solo se animan los mensajes que llegan con el chat abierto; el historial aparece quieto
+  const abiertoEn = useRef(Date.now()).current
+  const esNuevo = (msg: any) => new Date(msg.fecha).getTime() > abiertoEn
 
   function agruparFecha(fecha: string) {
     const d = new Date(fecha)
@@ -269,11 +278,14 @@ export default function ChatScreen() {
                       <View style={styles.fechaLine} />
                     </View>
                   )}
-                  <View style={[
-                    styles.msgRow,
-                    mio ? styles.msgRowMio : styles.msgRowEllos,
-                    mismoAutor && { marginTop:2 }
-                  ]}>
+                  <Reanimated.View
+                    entering={esNuevo(msg) ? ENTRADA_MENSAJE : undefined}
+                    style={[
+                      styles.msgRow,
+                      mio ? styles.msgRowMio : styles.msgRowEllos,
+                      mismoAutor && { marginTop:2 }
+                    ]}
+                  >
                     {!mio && !mismoAutor && (
                       <View style={styles.msgAvatar}>
                         <Text style={styles.msgAvatarText}>
@@ -310,7 +322,7 @@ export default function ChatScreen() {
                         )}
                       </View>
                     </View>
-                  </View>
+                  </Reanimated.View>
                 </>
               )
             }}

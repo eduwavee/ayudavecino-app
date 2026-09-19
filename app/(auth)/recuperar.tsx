@@ -9,6 +9,7 @@ import { Colors } from '../../constants/colors'
 import { authService } from '../../services/auth.service'
 import { EMAIL_REGEX, PASSWORD_REGEX, MENSAJE_PASSWORD } from '../../utils/validaciones'
 import { FUENTES as F } from '../../constants/diseno'
+import { alertaError } from '../../utils/haptica'
 
 type Paso = 'email' | 'codigo' | 'listo'
 
@@ -47,28 +48,28 @@ export default function RecuperarScreen() {
   }
 
   async function handleEnviarCodigo() {
-    if (!EMAIL_REGEX.test(email.trim())) return Alert.alert('Error', 'Ingresá un email válido')
+    if (!EMAIL_REGEX.test(email.trim())) return alertaError('Ingresá un email válido')
     setLoading(true)
     try {
       await authService.solicitarRecuperacion(email.trim())
       setPaso('codigo')
     } catch (err: any) {
-      Alert.alert('Error', mensajeDeError(err, 'No se pudo enviar el código'))
+      alertaError(mensajeDeError(err, 'No se pudo enviar el código'))
     } finally {
       setLoading(false)
     }
   }
 
   async function handleRestablecer() {
-    if (!/^\d{6}$/.test(codigo.trim())) return Alert.alert('Error', 'El código tiene 6 números')
-    if (!PASSWORD_REGEX.test(password)) return Alert.alert('Error', MENSAJE_PASSWORD)
-    if (password !== confirmar) return Alert.alert('Error', 'Las contraseñas no coinciden')
+    if (!/^\d{6}$/.test(codigo.trim())) return alertaError('El código tiene 6 números')
+    if (!PASSWORD_REGEX.test(password)) return alertaError(MENSAJE_PASSWORD)
+    if (password !== confirmar) return alertaError('Las contraseñas no coinciden')
     setLoading(true)
     try {
       await authService.restablecerPassword(email.trim(), codigo.trim(), password, confirmar)
       setPaso('listo')
     } catch (err: any) {
-      Alert.alert('Error', mensajeDeError(err, 'No se pudo cambiar la contraseña'))
+      alertaError(mensajeDeError(err, 'No se pudo cambiar la contraseña'))
     } finally {
       setLoading(false)
     }

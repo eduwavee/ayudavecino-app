@@ -8,6 +8,7 @@ import { Colors } from '../../constants/colors'
 import { pedidosService } from '../../services/pedidos.service'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
+import { alertaError, haptica } from '../../utils/haptica'
 
 const FILTROS = ['Todos','Pendientes','En curso','Completados','Cancelados']
 
@@ -53,9 +54,10 @@ export default function PedidosProveedorScreen() {
           setAccionando(id)
           try {
             await pedidosService.cambiarEstado(id, estado)
+            haptica.exito()
             await cargarPedidos()
           } catch (err: any) {
-            Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo actualizar')
+            alertaError(err.response?.data?.mensaje || 'No se pudo actualizar')
           } finally { setAccionando(null) }
         }
       }

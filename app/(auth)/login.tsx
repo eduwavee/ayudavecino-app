@@ -9,6 +9,7 @@ import { Colors } from '../../constants/colors'
 import { authService } from '../../services/auth.service'
 import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
+import { alertaError, haptica } from '../../utils/haptica'
 
 export default function LoginScreen() {
   const router     = useRouter()
@@ -33,18 +34,19 @@ export default function LoginScreen() {
   }, [])
 
   async function handleLogin() {
-    if (!username || !password) return Alert.alert('Error', 'Completá todos los campos')
+    if (!username || !password) return alertaError('Completá todos los campos')
     setLoading(true)
     try {
       const data = await authService.login(username.trim(), password, rol)
       setUsuario(data.usuario, data.token)
+      haptica.exito()
       router.replace('/(tabs)')
     } catch (err: any) {
       // 401 = usuario/contraseña incorrectos o cuenta del otro rol; recordamos el tab elegido
       const msg = err.response?.status === 401
         ? `Usuario o contraseña incorrectos para una cuenta de ${rol === 'CLIENTE' ? 'cliente' : 'proveedor'}`
         : err.response?.data?.mensaje || err.response?.data?.errores?.[0]?.msg || err.message || 'Error al iniciar sesión'
-      Alert.alert('Error', msg)
+      alertaError(msg)
     } finally {
       setLoading(false)
     }

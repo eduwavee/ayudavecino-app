@@ -10,6 +10,7 @@ import { CATEGORIAS as CATEGORIAS_SERVICIO, categoriaInfo } from '../../constant
 import { serviciosService } from '../../services/servicios.service'
 import { archivoUrl } from '../../constants/config'
 import { FUENTES as F } from '../../constants/diseno'
+import { alertaError } from '../../utils/haptica'
 
 const MAX_FOTOS = 6
 
@@ -59,7 +60,7 @@ export default function NuevoServicioScreen() {
     try {
       setFotosGuardadas(await serviciosService.subirFoto(params.id, uri))
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo subir la foto')
+      alertaError(err.response?.data?.mensaje || 'No se pudo subir la foto')
     } finally {
       setSubiendoFoto(false)
     }
@@ -73,17 +74,17 @@ export default function NuevoServicioScreen() {
         try {
           setFotosGuardadas(await serviciosService.eliminarFoto(params.id, indice))
         } catch (err: any) {
-          Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo borrar la foto')
+          alertaError(err.response?.data?.mensaje || 'No se pudo borrar la foto')
         }
       } },
     ])
   }
 
   async function handleGuardar() {
-    if (!nombre.trim()) return Alert.alert('Error', 'El nombre es requerido')
-    if (!descripcion.trim()) return Alert.alert('Error', 'La descripción es requerida')
-    if (!precio || isNaN(Number(precio))) return Alert.alert('Error', 'El precio debe ser un número')
-    if (!categoria) return Alert.alert('Error', 'Seleccioná una categoría')
+    if (!nombre.trim()) return alertaError('El nombre es requerido')
+    if (!descripcion.trim()) return alertaError('La descripción es requerida')
+    if (!precio || isNaN(Number(precio))) return alertaError('El precio debe ser un número')
+    if (!categoria) return alertaError('Seleccioná una categoría')
 
     const datos = {
       nombre: nombre.trim(),
@@ -110,7 +111,7 @@ export default function NuevoServicioScreen() {
         params: { nombre: nombre.trim(), precio, categoria }
       })
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo guardar el servicio')
+      alertaError(err.response?.data?.mensaje || 'No se pudo guardar el servicio')
     } finally {
       setLoading(false)
     }

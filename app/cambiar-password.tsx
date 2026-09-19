@@ -10,6 +10,7 @@ import { useAuthStore } from '../store/authStore'
 import { usuariosService } from '../services/usuarios.service'
 import { PASSWORD_REGEX, MENSAJE_PASSWORD } from '../utils/validaciones'
 import { FUENTES as F } from '../constants/diseno'
+import { alertaError } from '../utils/haptica'
 
 export default function CambiarPasswordScreen() {
   const router = useRouter()
@@ -35,13 +36,13 @@ export default function CambiarPasswordScreen() {
 
   async function handleGuardar() {
     if (!passwordActual || !passwordNueva || !passwordConfirmar) {
-      return Alert.alert('Error', 'Completá los tres campos')
+      return alertaError('Completá los tres campos')
     }
     if (!PASSWORD_REGEX.test(passwordNueva)) {
-      return Alert.alert('Error', MENSAJE_PASSWORD)
+      return alertaError(MENSAJE_PASSWORD)
     }
     if (passwordNueva !== passwordConfirmar) {
-      return Alert.alert('Error', 'La confirmación no coincide con la nueva contraseña')
+      return alertaError('La confirmación no coincide con la nueva contraseña')
     }
     if (!usuario?.id) return
 
@@ -59,7 +60,7 @@ export default function CambiarPasswordScreen() {
         router.back()
       })
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo cambiar la contraseña')
+      alertaError(err.response?.data?.mensaje || 'No se pudo cambiar la contraseña')
     } finally {
       setLoading(false)
     }

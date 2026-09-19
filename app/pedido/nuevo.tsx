@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { pedidosService } from '../../services/pedidos.service'
 import { FUENTES as F } from '../../constants/diseno'
+import { alertaError, haptica } from '../../utils/haptica'
 
 const HORARIOS = ['8:00','9:30','11:00','14:00','15:30','17:00']
 
@@ -15,7 +16,7 @@ export default function NuevoPedidoScreen() {
   const [loading, setLoading]         = useState(false)
 
   async function handleCrearPedido() {
-    if (!horario) return Alert.alert('Error', 'Elegí un horario')
+    if (!horario) return alertaError('Elegí un horario')
     setLoading(true)
     try {
       const [h, m] = horario.split(':')
@@ -30,6 +31,7 @@ export default function NuevoPedidoScreen() {
       })
 
       // Navegar a pantalla de éxito
+      haptica.exito()
       router.replace({
         pathname: '/pedido/exito',
         params: {
@@ -39,7 +41,7 @@ export default function NuevoPedidoScreen() {
         }
       })
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo crear el pedido')
+      alertaError(err.response?.data?.mensaje || 'No se pudo crear el pedido')
     } finally {
       setLoading(false)
     }
