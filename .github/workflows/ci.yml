@@ -17,7 +17,12 @@ jobs:
           node-version: 20
           cache: npm
 
-      - run: npm ci
+      # --legacy-peer-deps: expo-router/@expo/cli traen como opcionales react-dom
+      # y varios @radix-ui/* (herramientas de dev web de Expo) que piden una versión
+      # de react más nueva que la que fija este proyecto (react 19.1.0, la que
+      # corresponde a Expo SDK 54). No se usan para nada en la app nativa —
+      # sin este flag, npm ci corta con ERESOLVE por ese conflicto de peers.
+      - run: npm ci --legacy-peer-deps
 
       - name: Chequeo de tipos (TypeScript)
         run: npx tsc --noEmit

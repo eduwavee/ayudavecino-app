@@ -1,39 +1,142 @@
-# AyudaVecino — App (React Native / Expo)
+# AyudaVecino — App mobile
 
-App movil de AyudaVecino, un marketplace que conecta vecinos con oficios y servicios locales (plomeros, electricistas, gasistas, etc.). Este repo es el frontend mobile; el backend (Node/Express/PostgreSQL/Prisma) vive en un repo aparte: [ayudavecino-backend](https://github.com/eduwavee/ayudavecino-backend).
+App mobile de AyudaVecino, un marketplace que conecta vecinos con oficios y servicios locales (plomeros, electricistas, gasistas, etc.). Este repo contiene el frontend (React Native + Expo); la API vive en un [repo aparte](https://github.com/eduwavee/ayudavecino-backend) y es necesaria para usar la app.
 
 ## Funcionalidades
 
-• Registro/login y onboarding en el primer arranque, con restauracion de sesion
-• Navegacion por tabs
-• Perfiles de proveedor con resenas y calificaciones
-• Sistema de pedidos entre vecinos y prestadores de servicios
-• Chat en tiempo real (Socket.io) con mensajes leidos (read receipts), envio de fotos y notificaciones globales de chat
-• Notificaciones push
-• Subida y visualizacion de foto de perfil (avatar)
-• Modo oscuro persistente (Zustand)
-• Pantallas de ajustes, cambio de contrasena y edicion de perfil
+- Registro e inicio de sesión con dos roles: **cliente** (busca servicios) y **proveedor** (los ofrece)
+- Onboarding en el primer arranque y sesión persistente
+- Búsqueda de servicios y mapa de proveedores cercanos
+- Pedidos entre clientes y proveedores, con panel propio para el proveedor
+- Chat en tiempo real (Socket.io) con historial, fotos y mensajes leídos
+- Reseñas y calificaciones
+- Perfil con foto (avatar), edición de datos y cambio de contraseña
+- Notificaciones de chat globales y notificaciones push
+- Modo oscuro persistente
 
 ## Stack
 
-• React Native + Expo (Expo Router)
-• TypeScript
-• NativeWind (Tailwind para React Native)
-• Zustand (estado global)
-• Socket.io-client (tiempo real)
-• Axios
-• React Navigation
+- **Expo SDK 54** + React Native 0.81 + React 19
+- **Expo Router** (navegación por archivos en `app/`)
+- **NativeWind** (Tailwind para React Native), **Zustand** (estado global), **Axios** (API REST), **socket.io-client** (chat)
+- **TypeScript**
 
-## Como correrlo
+## Requisitos
 
+- [Node.js](https://nodejs.org/) 20 o superior
+- El [backend de AyudaVecino](https://github.com/eduwavee/ayudavecino-backend) corriendo (requiere PostgreSQL)
+- Para probar en un celular: la app **Expo Go** ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779)), con el celular en la **misma red Wi-Fi** que la PC
+- Opcional: emulador de Android (Android Studio) o simulador de iOS (solo macOS)
+
+## Instalación
+
+### 1. Levantar el backend
+
+Seguí las instrucciones del [README del backend](https://github.com/eduwavee/ayudavecino-backend#cómo-correrlo-local). En resumen:
+
+```bash
+git clone https://github.com/eduwavee/ayudavecino-backend.git
+cd ayudavecino-backend
 npm install
-cp .env.example .env
-completar API_URL y SOCKET_URL apuntando a tu instancia de ayudavecino-backend
-npx expo start
+cp .env.example .env     # completar DATABASE_URL, JWT_SECRET, JWT_EXPIRES_IN, PORT=3000
+npx prisma migrate dev
+npm run dev
+```
 
-Necesita el backend corriendo (ver ayudavecino-backend: https://github.com/eduwavee/ayudavecino-backend) o las variables de entorno apuntando a una instancia ya desplegada.
+La API queda en `http://localhost:3000/api`.
 
-Se puede abrir en un emulador Android/iOS o escaneando el QR con la app Expo Go.
+### 2. Instalar la app
+
+```bash
+git clone https://github.com/eduwavee/ayudavecino-app.git
+cd ayudavecino-app
+npm install --legacy-peer-deps
+```
+
+> `--legacy-peer-deps` es necesario: algunas dependencias opcionales de Expo (herramientas web) piden una versión de React más nueva que la que usa el SDK 54, y sin el flag `npm` corta con un error `ERESOLVE`.
+
+### 3. Configurar la conexión al backend
+
+El celular no puede usar `localhost` para llegar a tu PC, así que la app apunta a la **IP local** de la PC. Averiguala con `ipconfig` (Windows) o `ifconfig` / `ip a` (macOS / Linux) y elegí una de estas dos opciones:
+
+- **Opción A (recomendada):** crear un archivo `.env` en la raíz del proyecto:
+
+  ```bash
+  cp .env.example .env
+  ```
+
+  y agregar:
+
+  ```env
+  EXPO_PUBLIC_API_URL=http://TU_IP_LOCAL:3000/api
+  EXPO_PUBLIC_SOCKET_URL=http://TU_IP_LOCAL:3000
+  ```
+
+- **Opción B:** cambiar la constante `LAN_IP` en `constants/config.ts`.
+
+Si usás el emulador de Android podés usar `10.0.2.2` en lugar de la IP local; en el simulador de iOS o en la web, `localhost`.
+
+### 4. (Opcional) Key de Google Maps para Android
+
+Para que el mapa se vea en un build de Android, completá `GOOGLE_MAPS_API_KEY_ANDROID` en el `.env` con una key de Google Cloud Console que tenga habilitado **Maps SDK for Android**. Si falta, la app arranca igual (vas a ver un aviso en la consola) pero el mapa no renderiza.
+
+## Ejecutar la app
+
+Con el backend corriendo:
+
+```bash
+npm start
+```
+
+Se abre Expo con un código QR:
+
+- **Celular:** escaneá el QR con Expo Go (Android) o con la cámara (iOS).
+- **Emulador Android:** presioná `a` (o `npm run android`).
+- **Simulador iOS:** presioná `i` (o `npm run ios`).
+
+Si cambiaste el `.env` y no se toman los valores nuevos, reiniciá limpiando la caché: `npx expo start -c`.
+
+## Cómo probarla
+
+Recorrido sugerido para probar el flujo completo. Lo ideal es usar **dos dispositivos** (dos celulares, o celular + emulador) para ver el chat en tiempo real:
+
+1. **Crear un proveedor:** en el dispositivo 1, completá el onboarding, andá a *Registrarse* y elegí **"Ofrezco servicios"**.
+2. **Publicar un servicio:** desde el panel de proveedor, creá un servicio nuevo (título, categoría, precio).
+3. **Crear un cliente:** en el dispositivo 2, registrate con **"Busco servicios"**.
+4. **Buscar y pedir:** en la pestaña *Buscar* (o *Mapa*) encontrá el servicio, abrí el perfil del proveedor y hacé un pedido.
+5. **Gestionar el pedido:** en el dispositivo 1, en *Pedidos* del panel de proveedor, aceptá el pedido.
+6. **Chatear:** abrí el chat del pedido desde ambos lados, mandá mensajes y fotos, y verificá que lleguen al instante y se marquen como leídos.
+7. **Reseñar:** cuando el pedido esté completado, dejá una reseña como cliente y verificá que aparezca en el perfil del proveedor.
+8. **Perfil:** probá cambiar la foto de perfil, editar datos y cambiar la contraseña desde *Perfil* / *Ajustes*.
+
+### Chequeo de tipos
+
+El proyecto no tiene tests automatizados todavía. El CI (GitHub Actions, en cada push o PR a `main`) corre el chequeo de TypeScript, que podés correr local con:
+
+```bash
+npx tsc --noEmit
+```
+
+## Problemas comunes
+
+| Problema | Solución |
+|---|---|
+| `Network Error` o timeout al iniciar sesión | El backend no está corriendo, la IP es incorrecta o el celular no está en la misma red. Probá abrir `http://TU_IP_LOCAL:3000/api` desde el navegador del celular. En Windows, permití Node.js en el firewall para redes privadas. |
+| `npm install` falla con `ERESOLVE` | Usá `npm install --legacy-peer-deps`. |
+| El mapa se ve en blanco en Android | Falta o es inválida `GOOGLE_MAPS_API_KEY_ANDROID`. |
+| Las imágenes (avatar, fotos del chat) no cargan | Revisá que `EXPO_PUBLIC_SOCKET_URL` apunte a la IP correcta: las imágenes se sirven desde el backend. |
+
+## Estructura del proyecto
+
+```
+app/            # pantallas (Expo Router): (auth), (tabs), chat, pedido, proveedor, proveedor-panel, resena...
+components/     # componentes reutilizables
+constants/      # colores y configuración (URLs de la API)
+hooks/          # hooks propios
+services/       # llamadas a la API por dominio (auth, pedidos, chat, reseñas...)
+store/          # estado global con Zustand
+utils/          # helpers (distancias, armado de FormData para imágenes)
+```
 
 ## Notas
 
