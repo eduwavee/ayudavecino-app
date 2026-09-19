@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, Alert, ActivityIndicator
+  StyleSheet, ScrollView, Alert, ActivityIndicator, Image
 } from 'react-native'
+import * as ImagePicker from 'expo-image-picker'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { CATEGORIAS as CATEGORIAS_SERVICIO, categoriaInfo } from '../../constants/categorias'
 import { serviciosService } from '../../services/servicios.service'
+import { archivoUrl } from '../../constants/config'
+
+const MAX_FOTOS = 6
 
 const CATEGORIAS = CATEGORIAS_SERVICIO.map(c => ({ value: c.value, label: `${c.ico} ${c.nombre}` }))
 
@@ -21,6 +25,58 @@ export default function NuevoServicioScreen() {
   const [categoria, setCategoria]     = useState(params.categoria ?? '')
   const [loading, setLoading]         = useState(false)
   const [focused, setFocused]         = useState<string|null>(null)
+  // Edicion: fotos ya guardadas en el backend. Alta: fotos elegidas que se suben al publicar.
+  const [fotosGuardadas, setFotosGuardadas]   = useState<string[]>([])
+  const [fotosPendientes, setFotosPendientes] = useState<string[]>([])
+  const [subiendoFoto, setSubiendoFoto]       = useState(false)
+
+  useEffect(() => {
+    if (esEdicion) {
+      serviciosService.obtenerServicio(params.id).then(s => setFotosGuardadas(s.fotos ?? [])).catch(() => {})
+    }
+  }, [])
+
+  const cantidadFotos = fotosGuardadas.length + fotosPendientes.length
+
+  async function agregarFoto() {
+    if (cantidadFotos >= MAX_FOTOS) return Alert.alert('Límite de fotos', `Podés subir hasta ${MAX_FOTOS} fotos por servicio`)
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== 'granted') return Alert.alert('Permiso necesario', 'Activá el permiso de galería para elegir fotos')
+
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7,
+    })
+    if (resultado.canceled || !resultado.assets?.[0]) return
+    const uri = resultado.assets[0].uri
+
+    if (!esEdicion) return setFotosPendientes(prev => [...prev, uri])
+
+    setSubiendoFoto(true)
+    try {
+      setFotosGuardadas(await serviciosService.subirFoto(params.id, uri))
+    } catch (err: any) {
+      Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo subir la foto')
+    } finally {
+      setSubiendoFoto(false)
+    }
+  }
+
+  function quitarFoto(indice: number, guardada: boolean) {
+    if (!guardada) return setFotosPendientes(prev => prev.filter((_, i) => i !== indice))
+    Alert.alert('¿Borrar esta foto?', '', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Borrar', style: 'destructive', onPress: async () => {
+        try {
+          setFotosGuardadas(await serviciosService.eliminarFoto(params.id, indice))
+        } catch (err: any) {
+          Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo borrar la foto')
+        }
+      } },
+    ])
+  }
 
   async function handleGuardar() {
     if (!nombre.trim()) return Alert.alert('Error', 'El nombre es requerido')
@@ -42,7 +98,12 @@ export default function NuevoServicioScreen() {
         router.back()
         return
       }
-      await serviciosService.crearServicio(datos)
+      const creado = await serviciosService.crearServicio(datos)
+      let fallidas = 0
+      for (const uri of fotosPendientes) {
+        try { await serviciosService.subirFoto(creado.id, uri) } catch { fallidas++ }
+      }
+      if (fallidas > 0) Alert.alert('Servicio publicado', `No se pudieron subir ${fallidas} foto(s). Podés agregarlas desde Editar.`)
       router.replace({
         pathname: '/proveedor-panel/servicio-publicado',
         params: { nombre: nombre.trim(), precio, categoria }
@@ -128,6 +189,30 @@ export default function NuevoServicioScreen() {
             ))}
           </View>
 
+          <Text style={styles.label}>FOTOS DE TRABAJOS ({cantidadFotos}/{MAX_FOTOS})</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fotosRow}>
+            {fotosGuardadas.map((ruta, i) => (
+              <TouchableOpacity key={ruta} onPress={() => quitarFoto(i, true)}>
+                <Image source={{ uri: archivoUrl(ruta)! }} style={styles.foto} />
+                <View style={styles.fotoQuitar}><Text style={styles.fotoQuitarText}>✕</Text></View>
+              </TouchableOpacity>
+            ))}
+            {fotosPendientes.map((uri, i) => (
+              <TouchableOpacity key={uri} onPress={() => quitarFoto(i, false)}>
+                <Image source={{ uri }} style={styles.foto} />
+                <View style={styles.fotoQuitar}><Text style={styles.fotoQuitarText}>✕</Text></View>
+              </TouchableOpacity>
+            ))}
+            {cantidadFotos < MAX_FOTOS && (
+              <TouchableOpacity style={styles.fotoAgregar} onPress={agregarFoto} disabled={subiendoFoto}>
+                {subiendoFoto
+                  ? <ActivityIndicator color={Colors.primary} />
+                  : <><Text style={styles.fotoAgregarIco}>📷</Text><Text style={styles.fotoAgregarText}>Agregar</Text></>}
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+          <Text style={styles.fotosAyuda}>Mostrá trabajos que hiciste: ayuda a que te elijan.</Text>
+
           {/* Preview */}
           {nombre && precio && categoria && (
             <View style={styles.preview}>
@@ -171,6 +256,14 @@ export default function NuevoServicioScreen() {
 }
 
 const styles = StyleSheet.create({
+  fotosRow:          { gap:10, paddingBottom:4 },
+  foto:              { width:96, height:72, borderRadius:12, backgroundColor:'#eee' },
+  fotoQuitar:        { position:'absolute', top:4, right:4, width:22, height:22, borderRadius:11, backgroundColor:'rgba(0,0,0,.6)', alignItems:'center', justifyContent:'center' },
+  fotoQuitarText:    { color:'white', fontSize:11, fontWeight:'900' },
+  fotoAgregar:       { width:96, height:72, borderRadius:12, borderWidth:1.5, borderStyle:'dashed', borderColor:Colors.primary, alignItems:'center', justifyContent:'center', backgroundColor:'#F0FDF4' },
+  fotoAgregarIco:    { fontSize:20 },
+  fotoAgregarText:   { fontSize:11, fontWeight:'700', color:Colors.primary, marginTop:2 },
+  fotosAyuda:        { fontSize:11, color:'#999', marginTop:6, marginBottom:20 },
   container:         { flex:1, backgroundColor:Colors.cream },
   header:            { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:20 },
   backBtn:           { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Image, Modal, Pressable } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { usuariosService } from '../../services/usuarios.service'
@@ -7,6 +7,7 @@ import { resenasService } from '../../services/resenas.service'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { categoriaInfo } from '../../constants/categorias'
 import { nombreDeLugar } from '../../utils/ubicacion'
+import { archivoUrl } from '../../constants/config'
 
 const TABS = ['Sobre mí', 'Servicios', 'Reseñas']
 
@@ -71,6 +72,7 @@ export default function ProveedorScreen() {
   const [loading, setLoading]     = useState(true)
   const [tabActiva, setTabActiva] = useState('Sobre mí')
   const [lugar, setLugar]         = useState<string | null>(null)
+  const [fotoAbierta, setFotoAbierta] = useState<string | null>(null)
 
   const [resenas, setResenas]         = useState<any[]>([])
   const [promedio, setPromedio]       = useState('0.0')
@@ -190,20 +192,30 @@ export default function ProveedorScreen() {
               <Text style={styles.emptyTab}>Sin servicios publicados</Text>
             )}
             {proveedor?.servicios?.map((s: any) => (
-              <TouchableOpacity
-                key={s.id}
-                style={styles.serviceCard}
-                onPress={() => router.push({ pathname:'/pedido/nuevo', params:{ servicioId:s.id, servicioNombre:s.nombre, precio:s.precio, proveedorId:id } })}
-              >
-                <View style={styles.serviceLeft}>
-                  <View style={styles.serviceIco}><Text style={{fontSize:20}}>🔧</Text></View>
-                  <View>
-                    <Text style={styles.serviceName}>{s.nombre}</Text>
-                    <Text style={styles.serviceDesc}>{s.descripcion}</Text>
+              <View key={s.id} style={styles.serviceBlock}>
+                <TouchableOpacity
+                  style={styles.serviceCard}
+                  onPress={() => router.push({ pathname:'/pedido/nuevo', params:{ servicioId:s.id, servicioNombre:s.nombre, precio:s.precio, proveedorId:id } })}
+                >
+                  <View style={styles.serviceLeft}>
+                    <View style={styles.serviceIco}><Text style={{fontSize:20}}>{categoriaInfo(s.categoria).ico}</Text></View>
+                    <View style={{ flex:1 }}>
+                      <Text style={styles.serviceName}>{s.nombre}</Text>
+                      <Text style={styles.serviceDesc}>{s.descripcion}</Text>
+                    </View>
                   </View>
-                </View>
-                <Text style={styles.servicePrice}>${s.precio?.toLocaleString()}</Text>
-              </TouchableOpacity>
+                  <Text style={styles.servicePrice}>${s.precio?.toLocaleString()}</Text>
+                </TouchableOpacity>
+                {s.fotos?.length > 0 && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fotosRow}>
+                    {s.fotos.map((ruta: string) => (
+                      <TouchableOpacity key={ruta} onPress={() => setFotoAbierta(ruta)}>
+                        <Image source={{ uri: archivoUrl(ruta)! }} style={styles.fotoMini} />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+              </View>
             ))}
           </View>
         )}
@@ -254,6 +266,14 @@ export default function ProveedorScreen() {
 
         <View style={{ height:120 }} />
       </ScrollView>
+
+      {/* Visor de fotos de trabajos */}
+      <Modal visible={!!fotoAbierta} transparent animationType="fade" onRequestClose={() => setFotoAbierta(null)}>
+        <Pressable style={styles.visor} onPress={() => setFotoAbierta(null)}>
+          {fotoAbierta && <Image source={{ uri: archivoUrl(fotoAbierta)! }} style={styles.visorFoto} resizeMode="contain" />}
+          <Text style={styles.visorCerrar}>Tocá para cerrar</Text>
+        </Pressable>
+      </Modal>
 
       {/* CTA fijo */}
       <View style={styles.bottomCta}>
@@ -314,7 +334,13 @@ const styles = StyleSheet.create({
   infoRow:        { flexDirection:'row', alignItems:'center', gap:10 },
   infoIco:        { fontSize:16 },
   infoText:       { fontSize:13, color:'#555' },
-  serviceCard:    { backgroundColor:'white', borderRadius:16, padding:14, flexDirection:'row', alignItems:'center', justifyContent:'space-between', marginBottom:10, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:6, elevation:2 },
+  serviceBlock:   { marginBottom:10 },
+  fotosRow:       { gap:8, paddingTop:8 },
+  fotoMini:       { width:88, height:66, borderRadius:10, backgroundColor:'#eee' },
+  visor:          { flex:1, backgroundColor:'rgba(0,0,0,.92)', alignItems:'center', justifyContent:'center' },
+  visorFoto:      { width:'100%', height:'75%' },
+  visorCerrar:    { color:'rgba(255,255,255,.6)', fontSize:12, marginTop:16 },
+  serviceCard:    { backgroundColor:'white', borderRadius:16, padding:14, flexDirection:'row', alignItems:'center', justifyContent:'space-between', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:6, elevation:2 },
   serviceLeft:    { flexDirection:'row', alignItems:'center', gap:12, flex:1 },
   serviceIco:     { width:42, height:42, borderRadius:12, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
   serviceName:    { fontSize:14, fontWeight:'700', color:Colors.dark, marginBottom:2 },

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native'
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image } from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { categoriaInfo } from '../../constants/categorias'
+import { archivoUrl } from '../../constants/config'
 import { serviciosService } from '../../services/servicios.service'
 import { useAuthStore } from '../../store/authStore'
 
@@ -66,7 +67,9 @@ export default function ServiciosProveedorScreen() {
               <View style={styles.serviceTop}>
                 <View style={styles.serviceLeft}>
                   <View style={styles.serviceIco}>
-                    <Text style={{fontSize:24}}>{categoriaInfo(s.categoria).ico}</Text>
+                    {s.fotos?.[0]
+                      ? <Image source={{ uri: archivoUrl(s.fotos[0])! }} style={styles.serviceFoto} />
+                      : <Text style={{fontSize:24}}>{categoriaInfo(s.categoria).ico}</Text>}
                   </View>
                   <View style={styles.serviceInfo}>
                     <Text style={styles.serviceName}>{s.nombre}</Text>
@@ -115,6 +118,7 @@ const styles = StyleSheet.create({
   serviceTop:    { flexDirection:'row', alignItems:'flex-start', justifyContent:'space-between', marginBottom:14 },
   serviceLeft:   { flexDirection:'row', gap:12, flex:1 },
   serviceIco:    { width:50, height:50, borderRadius:15, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
+  serviceFoto:   { width:'100%', height:'100%', borderRadius:15 },
   serviceInfo:   { flex:1, gap:4 },
   serviceName:   { fontSize:15, fontWeight:'800', color:Colors.dark },
   serviceDesc:   { fontSize:12, color:Colors.gray, lineHeight:18 },

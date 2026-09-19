@@ -1,6 +1,7 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../constants/config'
+import { armarFormDataImagen } from '../utils/imagenFormData'
 
 export const serviciosService = {
   async listarTodos(filtros?: { categoria?: string }) {
@@ -50,5 +51,22 @@ export const serviciosService = {
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
     })
     return response.data.servicio
+  },
+
+  // Fotos del servicio (max 6). Devuelven la lista actualizada de rutas.
+  async subirFoto(id: string, imagenUri: string): Promise<string[]> {
+    const token = await AsyncStorage.getItem('token')
+    const response = await axios.post(`${API_URL}/servicios/${id}/fotos`, armarFormDataImagen('foto', imagenUri), {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data.servicio.fotos
+  },
+
+  async eliminarFoto(id: string, indice: number): Promise<string[]> {
+    const token = await AsyncStorage.getItem('token')
+    const response = await axios.delete(`${API_URL}/servicios/${id}/fotos/${indice}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data.servicio.fotos
   },
 }
