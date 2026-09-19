@@ -10,7 +10,7 @@ import { Colors } from '../../constants/colors'
 import { useTema, TemaTokens } from '../../store/temaStore'
 import { usuariosService } from '../../services/usuarios.service'
 
-// Fallback: San Miguel de Tucumán (misma ubicación que se muestra en Inicio)
+// Fallback si no hay permiso de ubicación: San Miguel de Tucumán
 const REGION_DEFAULT = {
   latitude: -26.8241,
   longitude: -65.2226,

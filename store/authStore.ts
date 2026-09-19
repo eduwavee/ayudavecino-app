@@ -8,6 +8,8 @@ interface Usuario {
   rol:      'CLIENTE' | 'PROVEEDOR'
   telefono?: string
   avatar?:  string
+  bio?:     string | null
+  verificado?: boolean
   rating:   number
   activo?:  boolean
   latitud?:  number | null

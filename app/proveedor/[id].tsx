@@ -5,6 +5,8 @@ import { Colors } from '../../constants/colors'
 import { usuariosService } from '../../services/usuarios.service'
 import { resenasService } from '../../services/resenas.service'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
+import { categoriaInfo } from '../../constants/categorias'
+import { nombreDeLugar } from '../../utils/ubicacion'
 
 const TABS = ['Sobre mí', 'Servicios', 'Reseñas']
 
@@ -68,6 +70,7 @@ export default function ProveedorScreen() {
   const [proveedor, setProveedor] = useState<any>(null)
   const [loading, setLoading]     = useState(true)
   const [tabActiva, setTabActiva] = useState('Sobre mí')
+  const [lugar, setLugar]         = useState<string | null>(null)
 
   const [resenas, setResenas]         = useState<any[]>([])
   const [promedio, setPromedio]       = useState('0.0')
@@ -84,6 +87,9 @@ export default function ProveedorScreen() {
     try {
       const data = await usuariosService.obtenerPerfil(id)
       setProveedor(data)
+      if (typeof data.latitud === 'number' && typeof data.longitud === 'number') {
+        nombreDeLugar({ latitude: data.latitud, longitude: data.longitud }).then(setLugar)
+      }
     } catch {
       router.back()
     } finally {
@@ -123,12 +129,14 @@ export default function ProveedorScreen() {
             </View>
             <View>
               <Text style={styles.heroName}>{proveedor?.nombre}</Text>
-              <Text style={styles.heroCat}>Tucumán</Text>
+              <Text style={styles.heroCat}>
+                {[proveedor?.servicios?.[0] && categoriaInfo(proveedor.servicios[0].categoria).nombre, lugar].filter(Boolean).join(' · ') || 'Proveedor'}
+              </Text>
             </View>
           </View>
           <View style={styles.badgesRow}>
-            <View style={styles.badgeGreen}><Text style={styles.badgeGreenText}>✓ Verificado</Text></View>
-            <View style={styles.badgeYellow}><Text style={styles.badgeYellowText}>⭐ Top rated</Text></View>
+            {proveedor?.verificado && <View style={styles.badgeGreen}><Text style={styles.badgeGreenText}>✓ Verificado</Text></View>}
+            {proveedor?.topRated && <View style={styles.badgeYellow}><Text style={styles.badgeYellowText}>⭐ Top rated</Text></View>}
           </View>
         </View>
 
@@ -160,11 +168,17 @@ export default function ProveedorScreen() {
         {/* Tab: Sobre mí */}
         {tabActiva === 'Sobre mí' && (
           <View style={styles.tabContent}>
-            <Text style={styles.aboutText}>Profesional con experiencia en su área. Trabajo en toda la zona de Tucumán capital y alrededores.</Text>
+            <Text style={styles.aboutText}>
+              {proveedor?.bio || `${proveedor?.nombre ?? 'Este profesional'} todavía no escribió una descripción.`}
+            </Text>
             <View style={styles.infoRows}>
-              <View style={styles.infoRow}><Text style={styles.infoIco}>📍</Text><Text style={styles.infoText}>San Miguel de Tucumán</Text></View>
-              <View style={styles.infoRow}><Text style={styles.infoIco}>⚡</Text><Text style={styles.infoText}>Responde rápido</Text></View>
-              <View style={styles.infoRow}><Text style={styles.infoIco}>🆔</Text><Text style={styles.infoText}>Identidad verificada</Text></View>
+              {!!lugar && <View style={styles.infoRow}><Text style={styles.infoIco}>📍</Text><Text style={styles.infoText}>{lugar}</Text></View>}
+              {proveedor?.respondeRapido && <View style={styles.infoRow}><Text style={styles.infoIco}>⚡</Text><Text style={styles.infoText}>Responde rápido</Text></View>}
+              {proveedor?.verificado && <View style={styles.infoRow}><Text style={styles.infoIco}>🆔</Text><Text style={styles.infoText}>Identidad verificada</Text></View>}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoIco}>📅</Text>
+                <Text style={styles.infoText}>En AyudaVecino desde {new Date(proveedor?.creadoEn).toLocaleDateString('es-AR', { month:'long', year:'numeric' })}</Text>
+              </View>
             </View>
           </View>
         )}

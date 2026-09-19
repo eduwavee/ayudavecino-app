@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet,
   Animated, Dimensions, StatusBar
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
+import { estadisticasService } from '../../services/estadisticas.service'
 
 const { width, height } = Dimensions.get('window')
 
@@ -24,6 +25,11 @@ const CHIPS = [
 
 export default function WelcomeScreen() {
   const router = useRouter()
+  const [vecinos, setVecinos] = useState<number | null>(null)
+
+  useEffect(() => {
+    estadisticasService.obtener().then(e => setVecinos(e.vecinos)).catch(() => {})
+  }, [])
 
   // Animaciones
   const fadeAnim    = useRef(new Animated.Value(0)).current
@@ -104,11 +110,13 @@ export default function WelcomeScreen() {
           </View>
         </Animated.View>
 
-        {/* Badge "En vivo" */}
-        <Animated.View style={[styles.liveBadge, { opacity: fadeAnim }]}>
-          <View style={styles.liveDot} />
-          <Text style={styles.liveText}>+2.400 vecinos activos</Text>
-        </Animated.View>
+        {/* Badge "En vivo" (cantidad real de usuarios; no se muestra si no hay datos) */}
+        {!!vecinos && (
+          <Animated.View style={[styles.liveBadge, { opacity: fadeAnim }]}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>{vecinos.toLocaleString('es-AR')} {vecinos === 1 ? 'vecino' : 'vecinos'} en la app</Text>
+          </Animated.View>
+        )}
 
       </View>
 
@@ -121,7 +129,7 @@ export default function WelcomeScreen() {
         {/* Título */}
         <View style={styles.titleWrap}>
           <View style={styles.titleBadge}>
-            <Text style={styles.titleBadgeText}>🏆 #1 en Tucumán</Text>
+            <Text style={styles.titleBadgeText}>📍 Hecho en Tucumán</Text>
           </View>
           <Text style={styles.title}>
             Tu barrio,{'\n'}

@@ -144,9 +144,11 @@ export default function BuscarScreen() {
                   <Text style={styles.serviceProveedor}>{item.proveedor?.nombre}</Text>
                   <View style={styles.serviceRow}>
                     <Text style={styles.serviceRating}>⭐ {item.proveedor?.rating?.toFixed(1) ?? '0.0'}</Text>
-                    <View style={styles.verifiedBadge}>
-                      <Text style={styles.verifiedText}>✓ Verificado</Text>
-                    </View>
+                    {item.proveedor?.verificado && (
+                      <View style={styles.verifiedBadge}>
+                        <Text style={styles.verifiedText}>✓ Verificado</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               </View>

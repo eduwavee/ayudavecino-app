@@ -10,6 +10,8 @@ import { useTema, TemaTokens } from '../../store/temaStore'
 import { pedidosService } from '../../services/pedidos.service'
 import { notificacionesService } from '../../services/notificaciones.service'
 import { usuariosService } from '../../services/usuarios.service'
+import { estadisticasService, Estadisticas } from '../../services/estadisticas.service'
+import { nombreDeLugar } from '../../utils/ubicacion'
 import { distanciaKm, formatearDistancia } from '../../utils/distancia'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { PressScale } from '../../components/ui/PressScale'
@@ -34,12 +36,15 @@ const { width } = Dimensions.get('window')
 
 const TARJETA_BG = ['#C8F5D0', '#FFF3CC', '#CCE5FF', '#FFE5E5']
 
-
-const STATS = [
-  { num:'2.400+', label:'Vecinos' },
-  { num:'98%',    label:'Satisfacción' },
-  { num:'850+',   label:'Profesionales' },
-]
+// Numeros de la franja de estadisticas (vienen del backend; "—" mientras cargan o si no hay datos)
+function statsDe(e: Estadisticas | null) {
+  const num = (n?: number | null, sufijo = '') => (n == null ? '—' : n.toLocaleString('es-AR') + sufijo)
+  return [
+    { num: num(e?.vecinos),           label:'Vecinos' },
+    { num: num(e?.satisfaccion, '%'), label:'Satisfacción' },
+    { num: num(e?.profesionales),     label:'Profesionales' },
+  ]
+}
 
 export default function HomeScreen() {
   const router  = useRouter()
@@ -52,6 +57,8 @@ export default function HomeScreen() {
 
   const [proveedoresCerca, setProveedoresCerca] = useState<any[]>([])
   const [loadingCerca, setLoadingCerca] = useState(true)
+  const [estadisticas, setEstadisticas] = useState<Estadisticas | null>(null)
+  const [lugar, setLugar] = useState('Buscando tu ubicación…')
   const [refrescando, setRefrescando] = useState(false)
 
   const hora = new Date().getHours()
@@ -59,7 +66,14 @@ export default function HomeScreen() {
 
   useEffect(() => {
     cargarProveedoresCerca()
+    cargarEstadisticas()
   }, [])
+
+  async function cargarEstadisticas() {
+    try {
+      setEstadisticas(await estadisticasService.obtener())
+    } catch {}
+  }
 
   async function cargarProveedoresCerca() {
     try {
@@ -67,6 +81,8 @@ export default function HomeScreen() {
         usuariosService.listarProveedores(),
         obtenerUbicacion(),
       ])
+
+      setLugar(ubicacion ? (await nombreDeLugar(ubicacion)) ?? 'Tu ubicación' : 'Ubicación no disponible')
 
       const conCoords = (proveedores ?? []).filter(
         (p: any) => typeof p.latitud === 'number' && typeof p.longitud === 'number'
@@ -94,7 +110,7 @@ export default function HomeScreen() {
 
   async function alRefrescar() {
     setRefrescando(true)
-    await cargarProveedoresCerca()
+    await Promise.all([cargarProveedoresCerca(), cargarEstadisticas()])
     setRefrescando(false)
   }
 
@@ -190,14 +206,14 @@ export default function HomeScreen() {
         {/* Ubicación */}
         <View style={styles.locationRow}>
           <View style={styles.locDot} />
-          <Text style={styles.locText}>San Miguel de Tucumán, 4000</Text>
+          <Text style={styles.locText}>{lugar}</Text>
           <TouchableOpacity onPress={cargarProveedoresCerca}><Text style={styles.locChange}>Actualizar</Text></TouchableOpacity>
         </View>
       </Animated.View>
 
       {/* ── STATS STRIP ── */}
       <Animated.View style={[styles.statsStrip, { opacity:fadeAnim }]}>
-        {STATS.map((s, i) => (
+        {statsDe(estadisticas).map((s, i) => (
           <View key={i} style={[styles.statItem, i > 0 && styles.statBorder]}>
             <Text style={styles.statNum}>{s.num}</Text>
             <Text style={styles.statLabel}>{s.label}</Text>

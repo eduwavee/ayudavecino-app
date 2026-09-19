@@ -77,7 +77,7 @@ export default function PedidoExitoScreen() {
 
         <Animated.View style={[styles.topTexts, { opacity: fadeContent, transform: [{ translateY: slideUp }] }]}>
           <Text style={styles.exitoTitle}>¡Pedido{'\n'}enviado!</Text>
-          <Text style={styles.exitoSub}>Carlos tiene 30 minutos para aceptarlo</Text>
+          <Text style={styles.exitoSub}>Te avisamos cuando {proveedor ?? 'el proveedor'} lo acepte</Text>
         </Animated.View>
       </View>
 
@@ -95,11 +95,11 @@ export default function PedidoExitoScreen() {
         {/* Detalles */}
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Servicio</Text>
-          <Text style={styles.detailValue}>{servicio ?? 'Reparación de caño'}</Text>
+          <Text style={styles.detailValue}>{servicio ?? '—'}</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Proveedor</Text>
-          <Text style={styles.detailValue}>{proveedor ?? 'Carlos Méndez'}</Text>
+          <Text style={styles.detailValue}>{proveedor ?? 'El proveedor'}</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Total</Text>
@@ -123,7 +123,7 @@ export default function PedidoExitoScreen() {
             <View style={[styles.trackLine, { backgroundColor:'#eee' }]} />
             <View style={styles.trackInfo}>
               <Text style={[styles.trackTitle, { color:Colors.primary }]}>Esperando confirmación</Text>
-              <Text style={styles.trackDesc}>Carlos tiene 30 min para aceptar</Text>
+              <Text style={styles.trackDesc}>{proveedor ?? 'El proveedor'} tiene que aceptarlo</Text>
             </View>
           </View>
           <View style={styles.trackStep}>

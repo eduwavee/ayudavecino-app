@@ -23,6 +23,7 @@ export default function EditarPerfilScreen() {
 
   const [nombre, setNombre]     = useState(usuario?.nombre ?? '')
   const [telefono, setTelefono] = useState(usuario?.telefono ?? '')
+  const [bio, setBio]           = useState(usuario?.bio ?? '')
   const [latitud, setLatitud]   = useState<number | null>(usuario?.latitud ?? null)
   const [longitud, setLongitud] = useState<number | null>(usuario?.longitud ?? null)
   const [ubicando, setUbicando] = useState(false)
@@ -96,6 +97,7 @@ export default function EditarPerfilScreen() {
         {
           nombre: nombre.trim(),
           telefono: telefono.trim(),
+          ...(esProveedor && { bio }),
           ...(latitud  != null && { latitud }),
           ...(longitud != null && { longitud }),
         },
@@ -123,6 +125,7 @@ export default function EditarPerfilScreen() {
 
   const hayCambios = nombre !== usuario?.nombre
     || telefono !== (usuario?.telefono ?? '')
+    || (esProveedor && bio !== (usuario?.bio ?? ''))
     || latitud  !== (usuario?.latitud  ?? null)
     || longitud !== (usuario?.longitud ?? null)
 
@@ -207,6 +210,29 @@ export default function EditarPerfilScreen() {
                   />
                 </View>
               </View>
+
+              {esProveedor && (
+                <>
+                  <View style={styles.fieldDivider} />
+                  <View style={[styles.fieldWrap, focused === 'bio' && styles.fieldFocused]}>
+                    <Text style={styles.fieldIco}>📝</Text>
+                    <View style={styles.fieldContent}>
+                      <Text style={styles.fieldLabel}>Sobre mí ({bio.length}/300)</Text>
+                      <TextInput
+                        style={[styles.fieldInput, { minHeight:60, textAlignVertical:'top' }]}
+                        value={bio}
+                        onChangeText={setBio}
+                        placeholder="Contá tu experiencia, zona de trabajo, horarios..."
+                        placeholderTextColor="#bbb"
+                        multiline
+                        maxLength={300}
+                        onFocus={() => setFocused('bio')}
+                        onBlur={() => setFocused(null)}
+                      />
+                    </View>
+                  </View>
+                </>
+              )}
             </View>
 
             {/* Ubicación (solo proveedores, para aparecer en el mapa) */}
