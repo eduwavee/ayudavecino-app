@@ -16,6 +16,7 @@ import { useAuthStore } from "../store/authStore";
 import { useTemaStore, useTema, TemaTokens } from "../store/temaStore";
 import { authService } from "../services/auth.service";
 import { FUENTES as F } from '../constants/diseno'
+import { PressScale } from '../components/ui/PressScale'
 
 export default function AjustesScreen() {
   const router = useRouter();
@@ -116,9 +117,9 @@ export default function AjustesScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
+        </PressScale>
         <Text style={styles.title}>Ajustes</Text>
       </View>
 
@@ -372,9 +373,9 @@ export default function AjustesScreen() {
 
         {/* Botones de sesión */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <PressScale haptico style={styles.logoutBtn} onPress={handleLogout}>
             <Text style={styles.logoutText}>🚪 Cerrar sesión</Text>
-          </TouchableOpacity>
+          </PressScale>
           <TouchableOpacity
             style={styles.deleteBtn}
             onPress={handleEliminarCuenta}

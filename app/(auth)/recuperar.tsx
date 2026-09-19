@@ -10,6 +10,7 @@ import { authService } from '../../services/auth.service'
 import { EMAIL_REGEX, PASSWORD_REGEX, MENSAJE_PASSWORD } from '../../utils/validaciones'
 import { FUENTES as F } from '../../constants/diseno'
 import { alertaError } from '../../utils/haptica'
+import { PressScale } from '../../components/ui/PressScale'
 
 type Paso = 'email' | 'codigo' | 'listo'
 
@@ -97,9 +98,9 @@ export default function RecuperarScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
         <View style={styles.topSection}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+          </PressScale>
           <View style={styles.bigCircle} />
           <View style={styles.smallCircle} />
           <Text style={styles.mainEmoji}>{CABECERA[paso].emoji}</Text>
@@ -118,9 +119,9 @@ export default function RecuperarScreen() {
 
               {campo('email', '✉️', { placeholder:'Email', value:email, onChangeText:setEmail, keyboardType:'email-address' })}
 
-              <TouchableOpacity style={[styles.btn, loading && { opacity:.7 }]} onPress={handleEnviarCodigo} disabled={loading}>
+              <PressScale haptico style={[styles.btn, loading && { opacity:.7 }]} onPress={handleEnviarCodigo} disabled={loading}>
                 {loading ? <ActivityIndicator color="white" /> : <Text style={styles.btnText}>Enviar código →</Text>}
-              </TouchableOpacity>
+              </PressScale>
             </>
           )}
 
@@ -140,9 +141,9 @@ export default function RecuperarScreen() {
                 <Text style={styles.tipText}>💡 Si no lo ves, revisá la carpeta de spam o correo no deseado.</Text>
               </View>
 
-              <TouchableOpacity style={[styles.btn, loading && { opacity:.7 }]} onPress={handleRestablecer} disabled={loading}>
+              <PressScale haptico style={[styles.btn, loading && { opacity:.7 }]} onPress={handleRestablecer} disabled={loading}>
                 {loading ? <ActivityIndicator color="white" /> : <Text style={styles.btnText}>Cambiar contraseña</Text>}
-              </TouchableOpacity>
+              </PressScale>
 
               <TouchableOpacity style={styles.linkBtn} onPress={handleEnviarCodigo} disabled={loading}>
                 <Text style={styles.linkText}>Reenviar código</Text>
@@ -157,9 +158,9 @@ export default function RecuperarScreen() {
             <>
               <Text style={styles.title}>¡Listo!</Text>
               <Text style={styles.subtitle}>Tu contraseña se cambió. Ya podés iniciar sesión con la nueva.</Text>
-              <TouchableOpacity style={styles.btn} onPress={() => router.replace('/(auth)/login')}>
+              <PressScale haptico style={styles.btn} onPress={() => router.replace('/(auth)/login')}>
                 <Text style={styles.btnText}>Iniciar sesión</Text>
-              </TouchableOpacity>
+              </PressScale>
             </>
           )}
         </Animated.View>

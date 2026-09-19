@@ -19,6 +19,7 @@ import { SkeletonBlock } from "../../components/ui/Skeleton";
 import { authService } from "../../services/auth.service";
 import { pedidosService } from "../../services/pedidos.service";
 import { FUENTES as F } from '../../constants/diseno'
+import { PressScale } from '../../components/ui/PressScale'
 
 function SkeletonPedidoRow({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -315,9 +316,9 @@ export default function PerfilScreen() {
       <Animated.View
         style={[{ opacity: fadeAnim, paddingHorizontal: 22, marginBottom: 40 }]}
       >
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+        <PressScale haptico style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>Cerrar sesión</Text>
-        </TouchableOpacity>
+        </PressScale>
         <Text style={styles.version}>AyudaVecino v1.0.0</Text>
       </Animated.View>
     </ScrollView>

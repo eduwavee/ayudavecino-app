@@ -10,6 +10,7 @@ import { authService } from '../../services/auth.service'
 import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
 import { alertaError, haptica } from '../../utils/haptica'
+import { PressScale } from '../../components/ui/PressScale'
 
 export default function LoginScreen() {
   const router     = useRouter()
@@ -58,9 +59,9 @@ export default function LoginScreen() {
 
         {/* TOP — ilustración */}
         <Animated.View style={[styles.topSection, { opacity: fadeAnim }]}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+          </PressScale>
           <View style={styles.illustrationWrap}>
             <View style={styles.bigCircle} />
             <View style={styles.smallCircle} />
@@ -128,7 +129,7 @@ export default function LoginScreen() {
             <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          <PressScale haptico
             style={[styles.btn, loading && { opacity:.7 }]}
             onPress={handleLogin}
             disabled={loading}
@@ -137,7 +138,7 @@ export default function LoginScreen() {
               ? <ActivityIndicator color="white" />
               : <Text style={styles.btnText}>Ingresar →</Text>
             }
-          </TouchableOpacity>
+          </PressScale>
 
           {/* Divider */}
           <View style={styles.divider}>
@@ -146,13 +147,13 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          <TouchableOpacity
+          <PressScale haptico
             style={styles.googleBtn}
             onPress={() => Alert.alert('Próximamente', 'El ingreso con Google va a estar disponible en una próxima versión de la app.')}
           >
             <Text style={styles.googleIco}>🇬</Text>
             <Text style={styles.googleText}>Continuar con Google</Text>
-          </TouchableOpacity>
+          </PressScale>
 
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>¿No tenés cuenta? </Text>

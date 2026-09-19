@@ -12,9 +12,13 @@ import { useNotifStore } from '../store/notificacionesStore'
 import { useTema, useTemaStore } from '../store/temaStore'
 import { Colors } from '../constants/colors'
 import { ONBOARDING_KEY } from '../constants/config'
-import {
-  useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold,
-} from '@expo-google-fonts/poppins'
+import { useFonts } from 'expo-font'
+// Import por peso: importar desde la raiz del paquete mete los 18 archivos de Poppins en el bundle
+import { Poppins_400Regular } from '@expo-google-fonts/poppins/400Regular'
+import { Poppins_500Medium } from '@expo-google-fonts/poppins/500Medium'
+import { Poppins_600SemiBold } from '@expo-google-fonts/poppins/600SemiBold'
+import { Poppins_700Bold } from '@expo-google-fonts/poppins/700Bold'
+import { Poppins_800ExtraBold } from '@expo-google-fonts/poppins/800ExtraBold'
 
 export default function RootLayout() {
   const router = useRouter()

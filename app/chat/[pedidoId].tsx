@@ -14,6 +14,7 @@ import { pedidosService } from '../../services/pedidos.service'
 import { FUENTES as F, DURACION, CURVA } from '../../constants/diseno'
 import Reanimated, { FadeInDown } from 'react-native-reanimated'
 import { haptica } from '../../utils/haptica'
+import { PressScale } from '../../components/ui/PressScale'
 
 // Entrada de un mensaje nuevo: sube corto y rápido (power3.out)
 const ENTRADA_MENSAJE = FadeInDown.duration(DURACION.base).easing(CURVA.salida)
@@ -193,9 +194,9 @@ export default function ChatScreen() {
 
       {/* ── HEADER ── */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backIco}>‹</Text>
-        </TouchableOpacity>
+        </PressScale>
 
         <View style={styles.headerCenter}>
           <View style={styles.avatarWrap}>
@@ -389,9 +390,9 @@ export default function ChatScreen() {
           </View>
 
           {texto.trim() ? (
-            <TouchableOpacity style={styles.sendBtn} onPress={() => enviar()} activeOpacity={.8}>
+            <PressScale haptico style={styles.sendBtn} onPress={() => enviar()}>
               <Text style={styles.sendIco}>➤</Text>
-            </TouchableOpacity>
+            </PressScale>
           ) : (
             // Abre el teclado; el selector de emojis es el del teclado del telefono
             <TouchableOpacity style={styles.emojiBtn} onPress={() => inputRef.current?.focus()}>

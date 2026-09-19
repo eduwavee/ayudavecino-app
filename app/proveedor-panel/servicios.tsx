@@ -8,6 +8,7 @@ import { serviciosService } from '../../services/servicios.service'
 import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
+import { PressScale } from '../../components/ui/PressScale'
 
 
 export default function ServiciosProveedorScreen() {
@@ -31,16 +32,16 @@ export default function ServiciosProveedorScreen() {
     <View style={styles.container}>
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
+        </PressScale>
         <Text style={styles.title}>Mis Servicios</Text>
-        <TouchableOpacity
+        <PressScale haptico
           style={styles.addBtn}
           onPress={() => router.push('/proveedor-panel/nuevo-servicio')}
         >
           <Text style={styles.addBtnText}>+ Nuevo</Text>
-        </TouchableOpacity>
+        </PressScale>
       </View>
 
       {loading ? (
@@ -56,12 +57,12 @@ export default function ServiciosProveedorScreen() {
               <Text style={styles.emptyIco}>🔧</Text>
               <Text style={styles.emptyTitle}>Sin servicios publicados</Text>
               <Text style={styles.emptySub}>Creá tu primer servicio para empezar a recibir pedidos</Text>
-              <TouchableOpacity
+              <PressScale haptico
                 style={styles.emptyBtn}
                 onPress={() => router.push('/proveedor-panel/nuevo-servicio')}
               >
                 <Text style={styles.emptyBtnText}>+ Crear primer servicio</Text>
-              </TouchableOpacity>
+              </PressScale>
             </View>
           }
           renderItem={conEntrada(({ item: s }) => (
@@ -92,12 +93,12 @@ export default function ServiciosProveedorScreen() {
               </View>
 
               <View style={styles.serviceActions}>
-                <TouchableOpacity
+                <PressScale haptico
                   style={styles.editBtn}
                   onPress={() => router.push({ pathname:'/proveedor-panel/nuevo-servicio', params:{ id:s.id, nombre:s.nombre, descripcion:s.descripcion, precio:s.precio, categoria:s.categoria } })}
                 >
                   <Text style={styles.editBtnText}>✏️ Editar</Text>
-                </TouchableOpacity>
+                </PressScale>
               </View>
             </View>
           ))}

@@ -11,6 +11,7 @@ import { usuariosService } from '../services/usuarios.service'
 import { PASSWORD_REGEX, MENSAJE_PASSWORD } from '../utils/validaciones'
 import { FUENTES as F } from '../constants/diseno'
 import { alertaError } from '../utils/haptica'
+import { PressScale } from '../components/ui/PressScale'
 
 export default function CambiarPasswordScreen() {
   const router = useRouter()
@@ -73,9 +74,9 @@ export default function CambiarPasswordScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
 
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+          </PressScale>
           <Text style={styles.title}>Cambiar contraseña</Text>
         </View>
 
@@ -148,7 +149,7 @@ export default function CambiarPasswordScreen() {
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <TouchableOpacity
+        <PressScale haptico
           style={[
             styles.guardarBtn,
             !hayCambios && styles.guardarBtnDisabled,
@@ -161,7 +162,7 @@ export default function CambiarPasswordScreen() {
             ? <ActivityIndicator color="white" />
             : <Text style={styles.guardarBtnText}>Actualizar contraseña</Text>
           }
-        </TouchableOpacity>
+        </PressScale>
       </View>
 
       <Animated.View style={[styles.successToast, { opacity: successAnim, transform: [{ translateY: successAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }]}>

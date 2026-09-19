@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { FUENTES as F } from '../../constants/diseno'
+import { PressScale } from '../../components/ui/PressScale'
 
 export default function ResenaExitoScreen() {
   const router = useRouter()
@@ -50,18 +51,18 @@ export default function ResenaExitoScreen() {
       </Animated.View>
 
       <Animated.View style={[styles.buttons, { opacity: fadeAnim }]}>
-        <TouchableOpacity
+        <PressScale haptico
           style={styles.btnPrimary}
           onPress={() => router.replace('/(tabs)')}
         >
           <Text style={styles.btnPrimaryText}>Volver al inicio</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </PressScale>
+        <PressScale haptico
           style={styles.btnSecondary}
           onPress={() => router.replace('/(tabs)/pedidos')}
         >
           <Text style={styles.btnSecondaryText}>Ver mis pedidos</Text>
-        </TouchableOpacity>
+        </PressScale>
       </Animated.View>
     </View>
   )

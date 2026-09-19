@@ -9,6 +9,7 @@ import { useNotifStore, Notificacion } from '../store/notificacionesStore'
 import { notificacionesService } from '../services/notificaciones.service'
 import { FUENTES as F } from '../constants/diseno'
 import { conEntrada } from '../components/ui/Aparecer'
+import { PressScale } from '../components/ui/PressScale'
 
 const TIPO_CONFIG: Record<string, { ico: string; color: string; bg: string }> = {
   pedido:  { ico:'📋', color:Colors.primary,  bg:'rgba(26,158,92,.1)' },
@@ -55,9 +56,9 @@ export default function NotificacionesScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
+        </PressScale>
         <Text style={styles.title}>Notificaciones</Text>
       </View>
 

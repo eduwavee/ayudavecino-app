@@ -11,6 +11,7 @@ import { useAuthStore } from '../../store/authStore'
 import { EMAIL_REGEX, USERNAME_REGEX, PASSWORD_REGEX, MENSAJE_USERNAME, MENSAJE_PASSWORD } from '../../utils/validaciones'
 import { FUENTES as F } from '../../constants/diseno'
 import { alertaError, haptica } from '../../utils/haptica'
+import { PressScale } from '../../components/ui/PressScale'
 
 const PASOS = ['Rol', 'Datos', 'Listo']
 
@@ -87,9 +88,9 @@ export default function RegistroScreen() {
 
         {/* HEADER verde */}
         <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => paso > 0 ? setPaso(paso-1) : router.back()}>
+          <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => paso > 0 ? setPaso(paso-1) : router.back()}>
             <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+          </PressScale>
 
           {/* Progress bar */}
           <View style={styles.progressTrack}>
@@ -228,18 +229,18 @@ export default function RegistroScreen() {
                 <View style={styles.dividerLine} />
               </View>
 
-              <TouchableOpacity
+              <PressScale haptico
             style={styles.googleBtn}
             onPress={() => Alert.alert('Próximamente', 'El ingreso con Google va a estar disponible en una próxima versión de la app.')}
           >
                 <Text style={styles.googleIco}>🇬</Text>
                 <Text style={styles.googleText}>Continuar con Google</Text>
-              </TouchableOpacity>
+              </PressScale>
             </View>
           )}
 
           {/* Botón siguiente */}
-          <TouchableOpacity
+          <PressScale haptico
             style={[styles.btn, loading && { opacity:.7 }]}
             onPress={siguientePaso}
             disabled={loading}
@@ -248,7 +249,7 @@ export default function RegistroScreen() {
               ? <ActivityIndicator color="white" />
               : <Text style={styles.btnText}>{paso === 0 ? 'Continuar →' : 'Crear cuenta 🚀'}</Text>
             }
-          </TouchableOpacity>
+          </PressScale>
 
           <View style={styles.loginRow}>
             <Text style={styles.loginText}>¿Ya tenés cuenta? </Text>

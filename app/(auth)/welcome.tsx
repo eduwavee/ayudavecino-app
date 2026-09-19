@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { estadisticasService } from '../../services/estadisticas.service'
 import { FUENTES as F } from '../../constants/diseno'
+import { PressScale } from '../../components/ui/PressScale'
 
 const { width, height } = Dimensions.get('window')
 
@@ -155,21 +156,19 @@ export default function WelcomeScreen() {
 
         {/* Botones */}
         <View style={styles.buttons}>
-          <TouchableOpacity
+          <PressScale haptico
             style={styles.btnPrimary}
             onPress={() => router.push('/(auth)/registro')}
-            activeOpacity={.85}
           >
             <Text style={styles.btnPrimaryText}>Comenzar gratis →</Text>
-          </TouchableOpacity>
+          </PressScale>
 
-          <TouchableOpacity
+          <PressScale haptico
             style={styles.btnSecondary}
             onPress={() => router.push('/(auth)/login')}
-            activeOpacity={.85}
           >
             <Text style={styles.btnSecondaryText}>Ya tengo cuenta</Text>
-          </TouchableOpacity>
+          </PressScale>
         </View>
 
         {/* Terms */}

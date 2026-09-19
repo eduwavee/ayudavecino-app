@@ -9,6 +9,7 @@ import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
 import { alertaError, haptica } from '../../utils/haptica'
+import { PressScale } from '../../components/ui/PressScale'
 
 function SkeletonPedidoCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -143,12 +144,12 @@ export default function PedidosScreen() {
           </Text>
         </View>
         {esProveedor && (
-          <TouchableOpacity
+          <PressScale haptico
             style={styles.panelBtn}
             onPress={() => router.push('/proveedor-panel')}
           >
             <Text style={styles.panelBtnText}>Panel →</Text>
-          </TouchableOpacity>
+          </PressScale>
         )}
       </View>
 
@@ -248,12 +249,12 @@ export default function PedidosScreen() {
                 {/* Acciones rápidas para proveedor */}
                 {esProveedor && item.estado === 'PENDIENTE' && (
                   <View style={styles.accionesRow}>
-                    <TouchableOpacity
+                    <PressScale haptico
                       style={styles.btnAceptar}
                       onPress={() => router.push('/proveedor-panel/pedidos')}
                     >
                       <Text style={styles.btnAceptarText}>✓ Gestionar pedido</Text>
-                    </TouchableOpacity>
+                    </PressScale>
                   </View>
                 )}
 
@@ -263,12 +264,12 @@ export default function PedidosScreen() {
                     {completando === item.id ? (
                       <ActivityIndicator color={Colors.primary} style={{ flex:1 }} />
                     ) : (
-                      <TouchableOpacity
+                      <PressScale haptico
                         style={styles.btnAceptar}
                         onPress={() => pagarPedido(item.id, item.servicio?.nombre, item.montoTotal)}
                       >
                         <Text style={styles.btnAceptarText}>💳 Pagar ${item.montoTotal?.toLocaleString('es-AR')}</Text>
-                      </TouchableOpacity>
+                      </PressScale>
                     )}
                   </View>
                 )}
@@ -286,12 +287,12 @@ export default function PedidosScreen() {
                     {completando === item.id ? (
                       <ActivityIndicator color={Colors.primary} style={{ flex:1 }} />
                     ) : (
-                      <TouchableOpacity
+                      <PressScale haptico
                         style={styles.btnAceptar}
                         onPress={() => confirmarCompletado(item.id, item.servicio?.nombre)}
                       >
                         <Text style={styles.btnAceptarText}>✅ Confirmar trabajo completado</Text>
-                      </TouchableOpacity>
+                      </PressScale>
                     )}
                   </View>
                 )}
@@ -300,7 +301,7 @@ export default function PedidosScreen() {
                   <Text style={styles.pedidoFecha}>📅 {formatFecha(item.fecha)}</Text>
                   <View style={styles.bottomRight}>
                     {item.estado === 'COMPLETADO' && !esProveedor && (
-                      <TouchableOpacity
+                      <PressScale haptico
                         style={styles.calificarBtn}
                         onPress={() => router.push({
                           pathname: '/resena/nueva',
@@ -312,7 +313,7 @@ export default function PedidosScreen() {
                         })}
                       >
                         <Text style={styles.calificarBtnText}>⭐ Calificar</Text>
-                      </TouchableOpacity>
+                      </PressScale>
                     )}
                     <Text style={styles.pedidoMonto}>${item.montoTotal?.toLocaleString()}</Text>
                   </View>

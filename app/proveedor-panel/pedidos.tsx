@@ -9,6 +9,7 @@ import { pedidosService } from '../../services/pedidos.service'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
 import { alertaError, haptica } from '../../utils/haptica'
+import { PressScale } from '../../components/ui/PressScale'
 
 const FILTROS = ['Todos','Pendientes','En curso','Completados','Cancelados']
 
@@ -75,9 +76,9 @@ export default function PedidosProveedorScreen() {
     <View style={styles.container}>
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
+        </PressScale>
         <Text style={styles.title}>Mis Pedidos</Text>
         <Text style={styles.count}>{pedidos.length}</Text>
       </View>
@@ -133,7 +134,7 @@ export default function PedidosProveedorScreen() {
                       <Text style={[styles.estadoText, { color: est.color }]}>{est.label}</Text>
                     </View>
                     {puedeChat && (
-                      <TouchableOpacity
+                      <PressScale haptico
                         style={styles.chatBtn}
                         onPress={() => router.push({
                           pathname: '/chat/'+p.id,
@@ -145,7 +146,7 @@ export default function PedidosProveedorScreen() {
                         })}
                       >
                         <Text style={styles.chatBtnText}>💬 Chat</Text>
-                      </TouchableOpacity>
+                      </PressScale>
                     )}
                   </View>
                 </View>
@@ -176,19 +177,19 @@ export default function PedidosProveedorScreen() {
                   <View style={styles.acciones}>
                     {p.estado === 'PENDIENTE' && (
                       <>
-                        <TouchableOpacity style={styles.btnRechazar} onPress={() => accionarPedido(p.id, 'CANCELADO', p.servicio?.nombre)}>
+                        <PressScale haptico style={styles.btnRechazar} onPress={() => accionarPedido(p.id, 'CANCELADO', p.servicio?.nombre)}>
                           <Text style={styles.btnRechazarText}>✕ Rechazar</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.btnAceptar} onPress={() => accionarPedido(p.id, 'ACEPTADO', p.servicio?.nombre)}>
+                        </PressScale>
+                        <PressScale haptico style={styles.btnAceptar} onPress={() => accionarPedido(p.id, 'ACEPTADO', p.servicio?.nombre)}>
                           <Text style={styles.btnAceptarText}>✓ Aceptar</Text>
-                        </TouchableOpacity>
+                        </PressScale>
                       </>
                     )}
                     {/* Escrow: se puede arrancar recien cuando el cliente pago */}
                     {p.estado === 'ACEPTADO' && p.pago?.estado === 'RETENIDO' && (
-                      <TouchableOpacity style={styles.btnEnCurso} onPress={() => accionarPedido(p.id, 'EN_CURSO', p.servicio?.nombre)}>
+                      <PressScale haptico style={styles.btnEnCurso} onPress={() => accionarPedido(p.id, 'EN_CURSO', p.servicio?.nombre)}>
                         <Text style={styles.btnEnCursoText}>🔧 Marcar en curso</Text>
-                      </TouchableOpacity>
+                      </PressScale>
                     )}
                     {p.estado === 'ACEPTADO' && !p.pago && (
                       <View style={styles.esperandoWrap}>

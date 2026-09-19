@@ -11,6 +11,7 @@ import { serviciosService } from '../../services/servicios.service'
 import { archivoUrl } from '../../constants/config'
 import { FUENTES as F } from '../../constants/diseno'
 import { alertaError } from '../../utils/haptica'
+import { PressScale } from '../../components/ui/PressScale'
 
 const MAX_FOTOS = 6
 
@@ -123,9 +124,9 @@ export default function NuevoServicioScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+          </PressScale>
           <Text style={styles.title}>{esEdicion ? 'Editar servicio' : 'Nuevo servicio'}</Text>
         </View>
 
@@ -240,7 +241,7 @@ export default function NuevoServicioScreen() {
 
       {/* Botón guardar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity
+        <PressScale haptico
           style={[styles.guardarBtn, loading && { opacity:.7 }]}
           onPress={handleGuardar}
           disabled={loading}
@@ -251,7 +252,7 @@ export default function NuevoServicioScreen() {
                 {esEdicion ? '✓ Guardar cambios' : '🚀 Publicar servicio'}
               </Text>
           }
-        </TouchableOpacity>
+        </PressScale>
       </View>
     </View>
   )

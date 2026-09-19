@@ -16,6 +16,7 @@ import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { FUENTES as F } from '../constants/diseno'
 import { alertaError } from '../utils/haptica'
+import { PressScale } from '../components/ui/PressScale'
 
 export default function EditarPerfilScreen() {
   const router  = useRouter()
@@ -137,9 +138,9 @@ export default function EditarPerfilScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+          </PressScale>
           <Text style={styles.title}>Editar perfil</Text>
         </View>
 
@@ -250,7 +251,7 @@ export default function EditarPerfilScreen() {
                         {latitud != null && longitud != null ? '✅ Ubicación guardada' : 'Sin ubicación cargada'}
                       </Text>
                     </View>
-                    <TouchableOpacity
+                    <PressScale haptico
                       style={styles.ubicacionBtn}
                       onPress={handleUsarUbicacionActual}
                       disabled={ubicando}
@@ -259,7 +260,7 @@ export default function EditarPerfilScreen() {
                         ? <ActivityIndicator color={Colors.primary} size="small" />
                         : <Text style={styles.ubicacionBtnText}>Usar actual</Text>
                       }
-                    </TouchableOpacity>
+                    </PressScale>
                   </View>
                 </View>
 
@@ -326,7 +327,7 @@ export default function EditarPerfilScreen() {
 
       {/* Botón guardar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity
+        <PressScale haptico
           style={[
             styles.guardarBtn,
             !hayCambios && styles.guardarBtnDisabled,
@@ -339,7 +340,7 @@ export default function EditarPerfilScreen() {
             ? <ActivityIndicator color="white" />
             : <Text style={styles.guardarBtnText}>Guardar cambios</Text>
           }
-        </TouchableOpacity>
+        </PressScale>
       </View>
 
       {/* Toast de éxito */}

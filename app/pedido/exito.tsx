@@ -6,6 +6,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { FUENTES as F } from '../../constants/diseno'
+import { PressScale } from '../../components/ui/PressScale'
 
 const { width } = Dimensions.get('window')
 
@@ -141,18 +142,18 @@ export default function PedidoExitoScreen() {
 
       {/* Botones */}
       <Animated.View style={[styles.buttons, { opacity: fadeContent }]}>
-        <TouchableOpacity
+        <PressScale haptico
           style={styles.btnPrimary}
           onPress={() => router.replace('/(tabs)/pedidos')}
         >
           <Text style={styles.btnPrimaryText}>Ver mis pedidos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </PressScale>
+        <PressScale haptico
           style={styles.btnSecondary}
           onPress={() => router.replace('/(tabs)')}
         >
           <Text style={styles.btnSecondaryText}>Volver al inicio</Text>
-        </TouchableOpacity>
+        </PressScale>
       </Animated.View>
 
     </View>

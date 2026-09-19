@@ -7,6 +7,7 @@ import { favoritosService } from '../services/favoritos.service'
 import { useTema, TemaTokens } from '../store/temaStore'
 import { FUENTES as F } from '../constants/diseno'
 import { conEntrada } from '../components/ui/Aparecer'
+import { PressScale } from '../components/ui/PressScale'
 
 // Proveedores que el cliente guardó con el corazón en su perfil
 export default function FavoritosScreen() {
@@ -41,9 +42,9 @@ export default function FavoritosScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
+        </PressScale>
         <Text style={styles.title}>Mis favoritos</Text>
       </View>
 

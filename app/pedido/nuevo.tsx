@@ -5,6 +5,7 @@ import { Colors } from '../../constants/colors'
 import { pedidosService } from '../../services/pedidos.service'
 import { FUENTES as F } from '../../constants/diseno'
 import { alertaError, haptica } from '../../utils/haptica'
+import { PressScale } from '../../components/ui/PressScale'
 
 const HORARIOS = ['8:00','9:30','11:00','14:00','15:30','17:00']
 
@@ -51,9 +52,9 @@ export default function NuevoPedidoScreen() {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+          </PressScale>
           <Text style={styles.title}>Nuevo Pedido</Text>
         </View>
 

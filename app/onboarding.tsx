@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Colors } from '../constants/colors'
 import { ONBOARDING_KEY } from '../constants/config'
 import { FUENTES as F } from '../constants/diseno'
+import { PressScale } from '../components/ui/PressScale'
 
 const { width } = Dimensions.get('window')
 
@@ -114,9 +115,9 @@ export default function OnboardingScreen() {
           })}
         </View>
 
-        <TouchableOpacity style={styles.nextBtn} onPress={irASiguiente} activeOpacity={.85}>
+        <PressScale haptico style={styles.nextBtn} onPress={irASiguiente}>
           <Text style={styles.nextText}>{esUltima ? 'Empezar →' : 'Siguiente'}</Text>
-        </TouchableOpacity>
+        </PressScale>
       </View>
     </View>
   )

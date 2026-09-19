@@ -11,6 +11,7 @@ import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { FUENTES as F } from '../../constants/diseno'
 import { haptica } from '../../utils/haptica'
+import { PressScale } from '../../components/ui/PressScale'
 
 const TAGS = [
   '✓ Puntual', '✓ Prolijo', '💰 Precio justo',
@@ -84,9 +85,9 @@ export default function NuevaResenaScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
+        </PressScale>
         <Text style={styles.title}>Calificar servicio</Text>
       </View>
 
@@ -163,7 +164,7 @@ export default function NuevaResenaScreen() {
         </View>
 
         {/* Botón */}
-        <TouchableOpacity
+        <PressScale haptico
           style={[styles.enviarBtn, (puntaje === 0 || loading) && styles.enviarBtnDisabled]}
           onPress={enviarResena}
           disabled={puntaje === 0 || loading}
@@ -172,7 +173,7 @@ export default function NuevaResenaScreen() {
             ? <ActivityIndicator color="white" />
             : <Text style={styles.enviarBtnText}>Publicar reseña ⭐</Text>
           }
-        </TouchableOpacity>
+        </PressScale>
 
         <View style={{ height: 40 }} />
       </Animated.View>

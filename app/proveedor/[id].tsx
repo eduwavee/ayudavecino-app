@@ -12,6 +12,7 @@ import { favoritosService } from '../../services/favoritos.service'
 import { BotonCorazon } from '../../components/ui/BotonCorazon'
 import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
+import { PressScale } from '../../components/ui/PressScale'
 
 const TABS = ['Sobre mí', 'Servicios', 'Reseñas']
 
@@ -146,9 +147,9 @@ export default function ProveedorScreen() {
           {esCliente && (
             <BotonCorazon activo={favorito} onToggle={toggleFavorito} style={styles.favBtn} />
           )}
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
+          </PressScale>
           <View style={styles.avatarWrap}>
             <View style={styles.avatar}>
               <Text style={styles.avatarIco}>🔧</Text>
@@ -301,13 +302,13 @@ export default function ProveedorScreen() {
 
       {/* CTA fijo */}
       <View style={styles.bottomCta}>
-        <TouchableOpacity
+        <PressScale haptico
           style={styles.chatBtn}
           onPress={() => Alert.alert('Chat', 'El chat con el proveedor se habilita cuando te acepta un pedido. Lo vas a encontrar en la pestaña Pedidos.')}
         >
           <Text style={{ fontFamily: F.regular, fontSize:20}}>💬</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </PressScale>
+        <PressScale haptico
           style={styles.contratarBtn}
           onPress={() => {
             if (proveedor?.servicios?.length > 0) {
@@ -319,7 +320,7 @@ export default function ProveedorScreen() {
           <Text style={styles.contratarText}>
             Contratar · desde ${proveedor?.servicios?.[0]?.precio?.toLocaleString() ?? '—'}
           </Text>
-        </TouchableOpacity>
+        </PressScale>
       </View>
     </View>
   )

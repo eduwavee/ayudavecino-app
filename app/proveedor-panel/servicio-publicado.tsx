@@ -6,6 +6,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { categoriaInfo } from '../../constants/categorias'
 import { FUENTES as F } from '../../constants/diseno'
+import { PressScale } from '../../components/ui/PressScale'
 
 const { width } = Dimensions.get('window')
 
@@ -149,18 +150,18 @@ export default function ServicioPublicadoScreen() {
 
       {/* Botones */}
       <Animated.View style={[styles.buttons, { opacity:fadeContent }]}>
-        <TouchableOpacity
+        <PressScale haptico
           style={styles.btnPrimary}
           onPress={() => router.replace('/proveedor-panel/servicios')}
         >
           <Text style={styles.btnPrimaryText}>Ver mis servicios</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </PressScale>
+        <PressScale haptico
           style={styles.btnSecondary}
           onPress={() => router.replace('/proveedor-panel')}
         >
           <Text style={styles.btnSecondaryText}>Ir al dashboard</Text>
-        </TouchableOpacity>
+        </PressScale>
       </Animated.View>
 
     </View>

@@ -13,6 +13,7 @@ import { useTema, TemaTokens } from '../../store/temaStore'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
+import { PressScale } from '../../components/ui/PressScale'
 
 function SkeletonServiceCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -283,12 +284,12 @@ export default function BuscarScreen() {
           </View>
 
           <View style={styles.panelBotones}>
-            <TouchableOpacity style={styles.btnLimpiar} onPress={() => setBorrador(FILTROS_INICIALES)}>
+            <PressScale haptico style={styles.btnLimpiar} onPress={() => setBorrador(FILTROS_INICIALES)}>
               <Text style={styles.btnLimpiarText}>Limpiar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.btnAplicar} onPress={aplicarFiltros}>
+            </PressScale>
+            <PressScale haptico style={styles.btnAplicar} onPress={aplicarFiltros}>
               <Text style={styles.btnAplicarText}>Ver resultados</Text>
-            </TouchableOpacity>
+            </PressScale>
           </View>
         </View>
       </Modal>
