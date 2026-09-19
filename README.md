@@ -4,19 +4,23 @@ App mobile de AyudaVecino, un marketplace que conecta vecinos con oficios y serv
 
 ## Funcionalidades
 
-- Registro e inicio de sesión con dos roles: **cliente** (busca servicios) y **proveedor** (los ofrece)
+- Registro con email, usuario y contraseña; login por usuario con dos roles separados: **cliente** (busca servicios) y **proveedor** (los ofrece)
+- Recuperación de contraseña con código por email
 - Onboarding en el primer arranque y sesión persistente
-- Búsqueda de servicios y mapa de proveedores cercanos
+- 25 categorías de servicio, búsqueda con filtros (precio, calificación, verificados, cercanía) y mapa de proveedores cercanos
+- Servicios con fotos de trabajos anteriores
 - Pedidos entre clientes y proveedores, con panel propio para el proveedor
-- Chat en tiempo real (Socket.io) con historial, fotos y mensajes leídos
-- Reseñas y calificaciones
-- Perfil con foto (avatar), edición de datos y cambio de contraseña
-- Notificaciones de chat globales y notificaciones push
+- Pagos con escrow: el pago queda retenido hasta que el cliente confirma el trabajo (por ahora en modo de prueba, sin dinero real)
+- Chat en tiempo real (Socket.io) con historial, fotos, mensajes leídos y botón para llamar
+- Notificaciones en tiempo real guardadas en el servidor (pedidos, pagos, mensajes, reseñas)
+- Reseñas, calificaciones e insignias de proveedor (verificado, top rated, responde rápido)
+- Proveedores favoritos
+- Perfil con foto (avatar), descripción del proveedor, edición de datos y cambio de contraseña
 - Modo oscuro persistente
 
 ## Stack
 
-- **Expo SDK 57** + React Native 0.81 + React 19
+- **Expo SDK 57** + React Native 0.86 + React 19.2
 - **Expo Router** (navegación por archivos en `app/`)
 - **NativeWind** (Tailwind para React Native), **Zustand** (estado global), **Axios** (API REST), **socket.io-client** (chat)
 - **TypeScript**
@@ -103,11 +107,13 @@ Recorrido sugerido para probar el flujo completo. Lo ideal es usar **dos disposi
 5. **Gestionar el pedido:** en el dispositivo 1, en *Pedidos* del panel de proveedor, aceptá el pedido.
 6. **Chatear:** abrí el chat del pedido desde ambos lados, mandá mensajes y fotos, y verificá que lleguen al instante y se marquen como leídos.
 7. **Reseñar:** cuando el pedido esté completado, dejá una reseña como cliente y verificá que aparezca en el perfil del proveedor.
-8. **Perfil:** probá cambiar la foto de perfil, editar datos y cambiar la contraseña desde *Perfil* / *Ajustes*.
+8. **Pagar:** con el pedido aceptado, el cliente toca *Pagar* (modo de prueba). Recién ahí el proveedor puede marcarlo *en curso*; al confirmar el trabajo, el pago se libera.
+9. **Perfil:** probá cambiar la foto de perfil, editar datos y cambiar la contraseña desde *Perfil* / *Ajustes*.
+10. **Recuperar contraseña:** desde el login, *¿Olvidaste tu contraseña?*. Sin SMTP configurado en el backend, el código aparece en la consola del backend.
 
 ### Chequeo de tipos
 
-El proyecto no tiene tests automatizados todavía. El CI (GitHub Actions, en cada push o PR a `main`) corre el chequeo de TypeScript, que podés correr local con:
+Los tests automatizados están en el backend (reglas de negocio de la API). En la app, el CI (GitHub Actions, en cada push o PR a `main`) corre el chequeo de TypeScript, que podés correr local con:
 
 ```bash
 npx tsc --noEmit
@@ -120,18 +126,17 @@ npx tsc --noEmit
 | `Network Error` o timeout al iniciar sesión | El backend no está corriendo, la IP es incorrecta o el celular no está en la misma red. Probá abrir `http://TU_IP_LOCAL:3000/api` desde el navegador del celular. En Windows, permití Node.js en el firewall para redes privadas. |
 | `npm install` falla con `ERESOLVE` | Usá `npm install --legacy-peer-deps`. |
 | El mapa se ve en blanco en Android | Falta o es inválida `GOOGLE_MAPS_API_KEY_ANDROID`. |
-| Las imágenes (avatar, fotos del chat) no cargan | Revisá que `EXPO_PUBLIC_SOCKET_URL` apunte a la IP correcta: las imágenes se sirven desde el backend. |
+| Las imágenes (avatar, fotos del chat) no cargan | Las imágenes se sirven desde el backend: si usás `EXPO_PUBLIC_SOCKET_URL`, revisá que apunte a la IP correcta. |
 
 ## Estructura del proyecto
 
 ```
 app/            # pantallas (Expo Router): (auth), (tabs), chat, pedido, proveedor, proveedor-panel, resena...
 components/     # componentes reutilizables
-constants/      # colores y configuración (URLs de la API)
-hooks/          # hooks propios
+constants/      # colores, categorías y configuración (URL de la API)
 services/       # llamadas a la API por dominio (auth, pedidos, chat, reseñas...)
 store/          # estado global con Zustand
-utils/          # helpers (distancias, armado de FormData para imágenes)
+utils/          # helpers (distancias, ubicación, validaciones, FormData para imágenes)
 ```
 
 ## Notas
