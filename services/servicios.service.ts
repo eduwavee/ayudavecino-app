@@ -41,4 +41,14 @@ export const serviciosService = {
     })
     return response.data.servicio
   },
+
+  async editarServicio(id: string, datos: {
+    nombre: string; descripcion: string; precio: number; categoria: string
+  }) {
+    const token = await AsyncStorage.getItem('token')
+    const response = await axios.put(`${API_URL}/servicios/${id}`, datos, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+    })
+    return response.data.servicio
+  },
 }

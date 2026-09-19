@@ -28,18 +28,25 @@ export default function NuevoServicioScreen() {
     if (!precio || isNaN(Number(precio))) return Alert.alert('Error', 'El precio debe ser un número')
     if (!categoria) return Alert.alert('Error', 'Seleccioná una categoría')
 
+    const datos = {
+      nombre: nombre.trim(),
+      descripcion: descripcion.trim(),
+      precio: Number(precio),
+      categoria,
+    }
+
     setLoading(true)
     try {
-      await serviciosService.crearServicio({
-        nombre: nombre.trim(),
-        descripcion: descripcion.trim(),
-        precio: Number(precio),
-        categoria,
-      })
+      if (esEdicion) {
+        await serviciosService.editarServicio(params.id, datos)
+        router.back()
+        return
+      }
+      await serviciosService.crearServicio(datos)
       router.replace({
-  pathname: '/proveedor-panel/servicio-publicado',
-  params: { nombre: nombre.trim(), precio, categoria }
-})
+        pathname: '/proveedor-panel/servicio-publicado',
+        params: { nombre: nombre.trim(), precio, categoria }
+      })
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo guardar el servicio')
     } finally {
