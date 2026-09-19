@@ -16,7 +16,7 @@ App mobile de AyudaVecino, un marketplace que conecta vecinos con oficios y serv
 
 ## Stack
 
-- **Expo SDK 54** + React Native 0.81 + React 19
+- **Expo SDK 57** + React Native 0.81 + React 19
 - **Expo Router** (navegación por archivos en `app/`)
 - **NativeWind** (Tailwind para React Native), **Zustand** (estado global), **Axios** (API REST), **socket.io-client** (chat)
 - **TypeScript**
@@ -53,28 +53,24 @@ cd ayudavecino-app
 npm install --legacy-peer-deps
 ```
 
-> `--legacy-peer-deps` es necesario: algunas dependencias opcionales de Expo (herramientas web) piden una versión de React más nueva que la que usa el SDK 54, y sin el flag `npm` corta con un error `ERESOLVE`.
+> `--legacy-peer-deps` es necesario: algunas dependencias opcionales de Expo (herramientas web) piden una versión de React más nueva que la que usa el SDK 57, y sin el flag `npm` corta con un error `ERESOLVE`.
 
 ### 3. Configurar la conexión al backend
 
-El celular no puede usar `localhost` para llegar a tu PC, así que la app apunta a la **IP local** de la PC. Averiguala con `ipconfig` (Windows) o `ifconfig` / `ip a` (macOS / Linux) y elegí una de estas dos opciones:
+No hace falta configurar nada: la app usa como backend la misma IP desde la que Expo la sirve (la de tu PC en la red), en el puerto 3000. Si cambiás de red, sigue funcionando.
 
-- **Opción A (recomendada):** crear un archivo `.env` en la raíz del proyecto:
+Si tu PC tiene varias interfaces (ej. Ethernet y Wi-Fi) y Expo elige la equivocada, forzá la IP al levantarlo:
 
-  ```bash
-  cp .env.example .env
-  ```
+```bash
+REACT_NATIVE_PACKAGER_HOSTNAME=TU_IP_LOCAL npx expo start
+```
 
-  y agregar:
+Para apuntar a otro servidor (ej. uno desplegado), creá un `.env` (`cp .env.example .env`) con:
 
-  ```env
-  EXPO_PUBLIC_API_URL=http://TU_IP_LOCAL:3000/api
-  EXPO_PUBLIC_SOCKET_URL=http://TU_IP_LOCAL:3000
-  ```
-
-- **Opción B:** cambiar la constante `LAN_IP` en `constants/config.ts`.
-
-Si usás el emulador de Android podés usar `10.0.2.2` en lugar de la IP local; en el simulador de iOS o en la web, `localhost`.
+```env
+EXPO_PUBLIC_API_URL=http://TU_SERVIDOR:3000/api
+EXPO_PUBLIC_SOCKET_URL=http://TU_SERVIDOR:3000
+```
 
 ### 4. (Opcional) Key de Google Maps para Android
 
