@@ -7,6 +7,7 @@ import { archivoUrl } from '../../constants/config'
 import { serviciosService } from '../../services/servicios.service'
 import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
+import { conEntrada } from '../../components/ui/Aparecer'
 
 
 export default function ServiciosProveedorScreen() {
@@ -63,7 +64,7 @@ export default function ServiciosProveedorScreen() {
               </TouchableOpacity>
             </View>
           }
-          renderItem={({ item: s }) => (
+          renderItem={conEntrada(({ item: s }) => (
             <View style={styles.serviceCard}>
               <View style={styles.serviceTop}>
                 <View style={styles.serviceLeft}>
@@ -99,7 +100,7 @@ export default function ServiciosProveedorScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          )}
+          ))}
         />
       )}
     </View>

@@ -12,6 +12,7 @@ import { serviciosService } from '../../services/servicios.service'
 import { useTema, TemaTokens } from '../../store/temaStore'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { FUENTES as F } from '../../constants/diseno'
+import { conEntrada } from '../../components/ui/Aparecer'
 
 function SkeletonServiceCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -210,7 +211,7 @@ export default function BuscarScreen() {
               <Text style={styles.emptySub}>{activos > 0 || busqueda ? 'Probá sacando algún filtro' : 'Intentá con otra categoría'}</Text>
             </View>
           }
-          renderItem={({ item }) => (
+          renderItem={conEntrada(({ item }) => (
             <TouchableOpacity
               style={styles.serviceCard}
               onPress={() => router.push(`/proveedor/${item.proveedor?.id}`)}
@@ -237,7 +238,7 @@ export default function BuscarScreen() {
               </View>
               <Text style={styles.servicePrice}>${item.precio?.toLocaleString()}</Text>
             </TouchableOpacity>
-          )}
+          ))}
         />
       )}
 

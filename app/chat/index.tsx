@@ -5,6 +5,7 @@ import { Colors } from '../../constants/colors'
 import { pedidosService } from '../../services/pedidos.service'
 import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
+import { conEntrada } from '../../components/ui/Aparecer'
 
 export default function ChatListScreen() {
   const router  = useRouter()
@@ -49,7 +50,7 @@ export default function ChatListScreen() {
               <Text style={styles.emptySub}>Los chats aparecen cuando un pedido es aceptado</Text>
             </View>
           }
-          renderItem={({ item: p }) => {
+          renderItem={conEntrada(({ item: p }) => {
             const contraparte = esProveedor ? p.cliente : p.proveedor
             const estadoConfig: Record<string,any> = {
               ACEPTADO:   { color:Colors.primary, label:'Aceptado' },
@@ -87,7 +88,7 @@ export default function ChatListScreen() {
                 </View>
               </TouchableOpacity>
             )
-          }}
+          })}
         />
       )}
     </View>

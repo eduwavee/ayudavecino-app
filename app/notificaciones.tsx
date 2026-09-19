@@ -8,6 +8,7 @@ import { Colors } from '../constants/colors'
 import { useNotifStore, Notificacion } from '../store/notificacionesStore'
 import { notificacionesService } from '../services/notificaciones.service'
 import { FUENTES as F } from '../constants/diseno'
+import { conEntrada } from '../components/ui/Aparecer'
 
 const TIPO_CONFIG: Record<string, { ico: string; color: string; bg: string }> = {
   pedido:  { ico:'📋', color:Colors.primary,  bg:'rgba(26,158,92,.1)' },
@@ -83,7 +84,7 @@ export default function NotificacionesScreen() {
             <Text style={styles.emptySub}>Te avisaremos cuando haya novedades</Text>
           </View>
         }
-        renderItem={({ item: n }) => {
+        renderItem={conEntrada(({ item: n }) => {
           const cfg = TIPO_CONFIG[n.tipo] ?? TIPO_CONFIG.sistema
           return (
             <TouchableOpacity
@@ -102,7 +103,7 @@ export default function NotificacionesScreen() {
               </View>
             </TouchableOpacity>
           )
-        }}
+        })}
       />
 
     </View>

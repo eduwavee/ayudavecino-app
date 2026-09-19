@@ -6,6 +6,7 @@ import { categoriaInfo } from '../constants/categorias'
 import { favoritosService } from '../services/favoritos.service'
 import { useTema, TemaTokens } from '../store/temaStore'
 import { FUENTES as F } from '../constants/diseno'
+import { conEntrada } from '../components/ui/Aparecer'
 
 // Proveedores que el cliente guardó con el corazón en su perfil
 export default function FavoritosScreen() {
@@ -60,7 +61,7 @@ export default function FavoritosScreen() {
               <Text style={styles.emptySub}>Tocá el corazón en el perfil de un proveedor para tenerlo a mano acá.</Text>
             </View>
           }
-          renderItem={({ item: p }) => {
+          renderItem={conEntrada(({ item: p }) => {
             const cat = categoriaInfo(p.servicios?.[0]?.categoria)
             const precioMin = p.servicios?.length ? Math.min(...p.servicios.map((s: any) => s.precio)) : null
             return (
@@ -76,7 +77,7 @@ export default function FavoritosScreen() {
                 </TouchableOpacity>
               </TouchableOpacity>
             )
-          }}
+          })}
         />
       )}
     </View>

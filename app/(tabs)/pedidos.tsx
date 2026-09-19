@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useTema, TemaTokens } from '../../store/temaStore'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { FUENTES as F } from '../../constants/diseno'
+import { conEntrada } from '../../components/ui/Aparecer'
 
 function SkeletonPedidoCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -201,7 +202,7 @@ export default function PedidosScreen() {
               <Text style={styles.emptySub}>{esProveedor ? 'Cuando un cliente te contrate aparecerá acá' : 'Tus pedidos aparecerán acá'}</Text>
             </View>
           }
-          renderItem={({ item }) => {
+          renderItem={conEntrada(({ item }) => {
             const est      = ESTADO_CONFIG[item.estado] ?? ESTADO_CONFIG.PENDIENTE
             const tienChat = ['ACEPTADO','EN_CURSO','COMPLETADO'].includes(item.estado)
             const contraparte = esProveedor ? item.cliente : item.proveedor
@@ -315,7 +316,7 @@ export default function PedidosScreen() {
                 </View>
               </TouchableOpacity>
             )
-          }}
+          })}
         />
       )}
     </View>

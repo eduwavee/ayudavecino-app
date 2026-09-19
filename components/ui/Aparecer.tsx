@@ -33,3 +33,10 @@ export function Aparecer({
     </Animated.View>
   )
 }
+
+// Envuelve el renderItem de una FlatList para que cada ítem entre escalonado según su posición
+export function conEntrada<T>(render: (info: { item: T; index: number }) => React.ReactElement | null) {
+  return (info: { item: T; index: number }) => (
+    <Aparecer indice={info.index}>{render(info)}</Aparecer>
+  )
+}

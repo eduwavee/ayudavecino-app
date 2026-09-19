@@ -7,6 +7,7 @@ import { useRouter, useFocusEffect } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { pedidosService } from '../../services/pedidos.service'
 import { FUENTES as F } from '../../constants/diseno'
+import { conEntrada } from '../../components/ui/Aparecer'
 
 const FILTROS = ['Todos','Pendientes','En curso','Completados','Cancelados']
 
@@ -111,7 +112,7 @@ export default function PedidosProveedorScreen() {
               <Text style={styles.emptyText}>Sin pedidos en esta categoría</Text>
             </View>
           }
-          renderItem={({ item: p }) => {
+          renderItem={conEntrada(({ item: p }) => {
             const est       = ESTADO_CONFIG[p.estado] ?? ESTADO_CONFIG.PENDIENTE
             const isLoading = accionando === p.id
             const puedeChat = tienChat(p.estado)
@@ -208,7 +209,7 @@ export default function PedidosProveedorScreen() {
                 )}
               </View>
             )
-          }}
+          })}
         />
       )}
     </View>
