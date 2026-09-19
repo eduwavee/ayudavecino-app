@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Dimensions, RefreshControl } from 'react-native'
+import { useState, useEffect } from 'react'
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, RefreshControl, Image } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as Location from 'expo-location'
 import { Colors } from '../../constants/colors'
@@ -13,7 +13,10 @@ import { nombreDeLugar } from '../../utils/ubicacion'
 import { distanciaKm, formatearDistancia } from '../../utils/distancia'
 import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { PressScale } from '../../components/ui/PressScale'
-import { FUENTES as F } from '../../constants/diseno'
+import { FUENTES as F, HIT_SLOP } from '../../constants/diseno'
+import { Aparecer } from '../../components/ui/Aparecer'
+import { ContadorAnimado } from '../../components/ui/ContadorAnimado'
+import { archivoUrl } from '../../constants/config'
 
 function SkeletonProvCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -35,13 +38,13 @@ const { width } = Dimensions.get('window')
 
 const TARJETA_BG = ['#C8F5D0', '#FFF3CC', '#CCE5FF', '#FFE5E5']
 
-// Numeros de la franja de estadisticas (vienen del backend; "—" mientras cargan o si no hay datos)
+// Franja de estadisticas (vienen del backend; "—" mientras cargan o si no hay datos).
+// Los numeros cuentan desde 0 al aparecer.
 function statsDe(e: Estadisticas | null) {
-  const num = (n?: number | null, sufijo = '') => (n == null ? '—' : n.toLocaleString('es-AR') + sufijo)
   return [
-    { num: num(e?.vecinos),           label:'Vecinos' },
-    { num: num(e?.satisfaccion, '%'), label:'Satisfacción' },
-    { num: num(e?.profesionales),     label:'Profesionales' },
+    { valor: e?.vecinos,       sufijo: '',  label:'Vecinos' },
+    { valor: e?.satisfaccion,  sufijo: '%', label:'Satisfacción' },
+    { valor: e?.profesionales, sufijo: '',  label:'Profesionales' },
   ]
 }
 
@@ -51,8 +54,6 @@ export default function HomeScreen() {
   const noLeidas = useNotifStore(s => s.noLeidas)
   const tema = useTema()
   const styles = getStyles(tema)
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(20)).current
 
   const [proveedoresCerca, setProveedoresCerca] = useState<any[]>([])
   const [loadingCerca, setLoadingCerca] = useState(true)
@@ -124,12 +125,6 @@ export default function HomeScreen() {
     }
   }
 
-  useEffect(() => {
-  Animated.parallel([
-    Animated.timing(fadeAnim,  { toValue:1, duration:600, useNativeDriver:true }),
-    Animated.timing(slideAnim, { toValue:0, duration:600, useNativeDriver:true }),
-  ]).start()
-  }, [])
 
   return (
     <ScrollView
@@ -141,7 +136,7 @@ export default function HomeScreen() {
     >
 
       {/* ── HEADER ── */}
-      <Animated.View style={[styles.header, { opacity:fadeAnim, transform:[{translateY:slideAnim}] }]}>
+      <Aparecer style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.saludo}>{saludo}</Text>
           <Text style={styles.nombre}>
@@ -149,23 +144,32 @@ export default function HomeScreen() {
           </Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.notifBtn} onPress={() => router.push('/notificaciones')}>
+          <PressScale
+            style={styles.notifBtn}
+            onPress={() => router.push('/notificaciones')}
+            hitSlop={HIT_SLOP}
+            accessibilityLabel={noLeidas > 0 ? `Notificaciones, ${noLeidas} sin leer` : 'Notificaciones'}
+          >
             <Text style={styles.notifIco}>🔔</Text>
-            {noLeidas > 0 && <View style={styles.notifDot} />}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.avatarBtn} onPress={() => router.push('/(tabs)/perfil')}>
+            {noLeidas > 0 && (
+              <Aparecer desde="lugar" style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>{noLeidas > 9 ? '9+' : noLeidas}</Text>
+              </Aparecer>
+            )}
+          </PressScale>
+          <PressScale style={styles.avatarBtn} onPress={() => router.push('/(tabs)/perfil')} accessibilityLabel="Mi perfil">
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {usuario?.nombre?.charAt(0).toUpperCase() ?? '?'}
-              </Text>
+              {usuario?.avatar
+                ? <Image source={{ uri: archivoUrl(usuario.avatar)! }} style={styles.avatarImg} />
+                : <Text style={styles.avatarText}>{usuario?.nombre?.charAt(0).toUpperCase() ?? '?'}</Text>}
             </View>
-          </TouchableOpacity>
+          </PressScale>
         </View>
-      </Animated.View>
+      </Aparecer>
 
       {/* ── SEARCH ── */}
-      <Animated.View style={[{ opacity:fadeAnim }]}>
-        <TouchableOpacity style={styles.searchBar} onPress={() => router.push('/(tabs)/buscar')}>
+      <Aparecer indice={1}>
+        <PressScale style={styles.searchBar} scaleTo={0.98} onPress={() => router.push('/(tabs)/buscar')} accessibilityLabel="Buscar servicios">
           <View style={styles.searchLeft}>
             <Text style={styles.searchIcon}>🔍</Text>
             <Text style={styles.searchPlaceholder}>¿Qué servicio necesitás?</Text>
@@ -173,70 +177,76 @@ export default function HomeScreen() {
           <View style={styles.filterBtn}>
             <Text style={styles.filterIco}>⚙️</Text>
           </View>
-        </TouchableOpacity>
+        </PressScale>
 
         {/* Ubicación */}
         <View style={styles.locationRow}>
           <View style={styles.locDot} />
           <Text style={styles.locText}>{lugar}</Text>
-          <TouchableOpacity onPress={cargarProveedoresCerca}><Text style={styles.locChange}>Actualizar</Text></TouchableOpacity>
+          <TouchableOpacity onPress={cargarProveedoresCerca} hitSlop={HIT_SLOP}><Text style={styles.locChange}>Actualizar</Text></TouchableOpacity>
         </View>
-      </Animated.View>
+      </Aparecer>
 
       {/* ── STATS STRIP ── */}
-      <Animated.View style={[styles.statsStrip, { opacity:fadeAnim }]}>
+      <Aparecer indice={2} style={styles.statsStrip}>
         {statsDe(estadisticas).map((s, i) => (
           <View key={i} style={[styles.statItem, i > 0 && styles.statBorder]}>
-            <Text style={styles.statNum}>{s.num}</Text>
+            <ContadorAnimado style={styles.statNum} valor={s.valor} sufijo={s.sufijo} />
             <Text style={styles.statLabel}>{s.label}</Text>
           </View>
         ))}
-      </Animated.View>
+      </Aparecer>
 
       {/* ── CATEGORÍAS ── */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Categorías</Text>
+      <Aparecer indice={3} style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Categorías</Text>
         <TouchableOpacity onPress={() => router.push('/(tabs)/buscar')}>
           <Text style={styles.sectionLink}>Ver todas →</Text>
         </TouchableOpacity>
-      </View>
+      </Aparecer>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catsScroll}>
         {CATEGORIAS.map((cat, i) => (
-          <PressScale
-            key={i}
-            style={styles.catChip}
-            onPress={() => router.push({ pathname: '/(tabs)/buscar', params: { categoria: cat.value } })}
-          >
-            <View style={styles.catIcoWrap}>
-              <Text style={styles.catIco}>{cat.ico}</Text>
-            </View>
-            <Text style={styles.catNombre}>{cat.nombre}</Text>
-          </PressScale>
+          <Aparecer key={cat.value} indice={i} desde="derecha" retraso={200}>
+            <PressScale
+              style={styles.catChip}
+              haptico
+              accessibilityLabel={`Categoría ${cat.nombre}`}
+              onPress={() => router.push({ pathname: '/(tabs)/buscar', params: { categoria: cat.value } })}
+            >
+              <View style={styles.catIcoWrap}>
+                <Text style={styles.catIco}>{cat.ico}</Text>
+              </View>
+              <Text style={styles.catNombre} numberOfLines={2}>{cat.nombre}</Text>
+            </PressScale>
+          </Aparecer>
         ))}
       </ScrollView>
 
       {/* ── BANNER PROMO ── */}
-      <PressScale style={styles.promoBanner} onPress={() => router.push('/(tabs)/buscar')}>
-        <View style={styles.promoBg} />
-        <View style={styles.promoContent}>
-          <View style={styles.promoTag}>
-            <Text style={styles.promoTagText}>🎉 Oferta especial</Text>
+      {/* Lo que la app garantiza de verdad: el pago queda retenido hasta confirmar el trabajo */}
+      <Aparecer indice={4}>
+        <PressScale style={styles.promoBanner} scaleTo={0.98} onPress={() => router.push('/(tabs)/buscar')}>
+          <View style={styles.promoBg} />
+          <View style={styles.promoContent}>
+            <View style={styles.promoTag}>
+              <Text style={styles.promoTagText}>🔒 Pago protegido</Text>
+            </View>
+            <Text style={styles.promoTitle}>Pagás, y el proveedor{'\n'}cobra <Text style={styles.promoVerde}>cuando confirmás</Text></Text>
+            <View style={styles.promoCta}>
+              <Text style={styles.promoCtaText}>Buscar un servicio →</Text>
+            </View>
           </View>
-          <Text style={styles.promoTitle}>Primera consulta{'\n'}<Text style={styles.promoVerde}>sin costo</Text></Text>
-          <View style={styles.promoCta}>
-            <Text style={styles.promoCtaText}>Aprovechar →</Text>
-          </View>
-        </View>
-        <Text style={styles.promoEmoji}>🏘️</Text>
-      </PressScale>
+          <Text style={styles.promoEmoji}>🛡️</Text>
+        </PressScale>
+      </Aparecer>
 
       {/* ── PROVEEDORES CERCA ── */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Cerca tuyo</Text>
+      <Aparecer indice={5} style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Cerca tuyo</Text>
         <TouchableOpacity onPress={() => router.push('/(tabs)/mapa')}>
           <Text style={styles.sectionLink}>Ver mapa →</Text>
         </TouchableOpacity>
-      </View>
+      </Aparecer>
       {loadingCerca ? (
         <View style={[styles.provsScroll, { flexDirection:'row' }]}>
           {[0, 1].map(i => <SkeletonProvCard key={i} styles={styles} />)}
@@ -253,9 +263,11 @@ export default function HomeScreen() {
             ? Math.min(...p.servicios.map((s: any) => s.precio))
             : null
           return (
+          <Aparecer key={p.id} indice={i} desde="derecha">
           <PressScale
-            key={p.id}
             style={styles.provCard}
+            haptico
+            accessibilityLabel={`${p.nombre}, ${cat.nombre}, calificación ${p.rating?.toFixed?.(1) ?? '0.0'}`}
             onPress={() => router.push(`/proveedor/${p.id}`)}
           >
             <View style={[styles.provCardTop, { backgroundColor: TARJETA_BG[i % TARJETA_BG.length] }]}>
@@ -273,10 +285,11 @@ export default function HomeScreen() {
                 <View style={styles.ratingBadge}>
                   <Text style={styles.ratingText}>⭐ {p.rating?.toFixed?.(1) ?? '0.0'}</Text>
                 </View>
-                {precioMin != null && <Text style={styles.provPrecio}>desde ${precioMin}</Text>}
+                {precioMin != null && <Text style={styles.provPrecio}>desde ${precioMin.toLocaleString('es-AR')}</Text>}
               </View>
             </View>
           </PressScale>
+          </Aparecer>
           )
         })}
       </ScrollView>
@@ -284,18 +297,23 @@ export default function HomeScreen() {
 
       {/* ── BANNER PROVEEDOR ── */}
       {usuario?.rol === 'CLIENTE' && (
-        <TouchableOpacity style={styles.proveedorBanner} onPress={() => router.push('/(auth)/registro')}>
+        <Aparecer indice={6}>
+        <PressScale style={styles.proveedorBanner} scaleTo={0.98} onPress={() => router.push('/(auth)/registro')}>
           <View>
             <Text style={styles.proveedorBannerTitle}>¿Ofrecés servicios?</Text>
             <Text style={styles.proveedorBannerSub}>Unite como proveedor y conseguí clientes</Text>
           </View>
           <Text style={styles.proveedorBannerIco}>→</Text>
-        </TouchableOpacity>
+        </PressScale>
+        </Aparecer>
       )}
 
       {usuario?.rol === 'PROVEEDOR' && (
-  <TouchableOpacity
+  <Aparecer indice={6}>
+  <PressScale
     style={styles.proveedorPanelBtn}
+    haptico
+    scaleTo={0.98}
     onPress={() => router.push('/proveedor-panel')}
   >
     <View style={styles.proveedorPanelLeft}>
@@ -306,7 +324,8 @@ export default function HomeScreen() {
       </View>
     </View>
     <Text style={styles.proveedorPanelArrow}>→</Text>
-  </TouchableOpacity>
+  </PressScale>
+  </Aparecer>
 )}
 <View style={{ height:100 }} />
     </ScrollView>
@@ -323,7 +342,9 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   headerRight:         { flexDirection:'row', gap:10, alignItems:'center' },
   notifBtn:            { width:42, height:42, borderRadius:13, backgroundColor:tema.card, alignItems:'center', justifyContent:'center', position:'relative', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:6, elevation:2 },
   notifIco:            { fontFamily: F.regular, fontSize:18 },
-  notifDot:            { position:'absolute', top:8, right:8, width:9, height:9, borderRadius:5, backgroundColor:'#FF4757', borderWidth:2, borderColor:tema.bg },
+  notifBadge:          { position:'absolute', top:-4, right:-4, minWidth:18, height:18, borderRadius:9, paddingHorizontal:4, backgroundColor:'#FF4757', alignItems:'center', justifyContent:'center', borderWidth:2, borderColor:tema.bg },
+  notifBadgeText:      { color:'white', fontSize:9, fontFamily: F.bold, lineHeight:12 },
+  avatarImg:           { width:'100%', height:'100%', borderRadius:13 },
   avatarBtn:           { shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:6, elevation:3 },
   avatar:              { width:42, height:42, borderRadius:13, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center' },
   avatarText:          { color:'white', fontSize:18, fontFamily: F.extrabold },
