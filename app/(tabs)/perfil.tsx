@@ -272,6 +272,19 @@ export default function PerfilScreen() {
           <Text style={styles.optionArrow}>›</Text>
         </TouchableOpacity>
         <View style={styles.optionDivider} />
+        {!esProveedor && (
+          <>
+            <TouchableOpacity
+              style={styles.optionRow}
+              onPress={() => router.push("/favoritos")}
+            >
+              <Text style={styles.optionIco}>❤️</Text>
+              <Text style={styles.optionText}>Mis favoritos</Text>
+              <Text style={styles.optionArrow}>›</Text>
+            </TouchableOpacity>
+            <View style={styles.optionDivider} />
+          </>
+        )}
         <TouchableOpacity
           style={styles.optionRow}
           onPress={() => router.push("/notificaciones")}

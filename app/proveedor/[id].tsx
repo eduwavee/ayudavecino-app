@@ -8,6 +8,8 @@ import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { categoriaInfo } from '../../constants/categorias'
 import { nombreDeLugar } from '../../utils/ubicacion'
 import { archivoUrl } from '../../constants/config'
+import { favoritosService } from '../../services/favoritos.service'
+import { useAuthStore } from '../../store/authStore'
 
 const TABS = ['Sobre mí', 'Servicios', 'Reseñas']
 
@@ -73,6 +75,8 @@ export default function ProveedorScreen() {
   const [tabActiva, setTabActiva] = useState('Sobre mí')
   const [lugar, setLugar]         = useState<string | null>(null)
   const [fotoAbierta, setFotoAbierta] = useState<string | null>(null)
+  const esCliente = useAuthStore(s => s.usuario?.rol) === 'CLIENTE'
+  const [favorito, setFavorito]   = useState(false)
 
   const [resenas, setResenas]         = useState<any[]>([])
   const [promedio, setPromedio]       = useState('0.0')
@@ -82,6 +86,9 @@ export default function ProveedorScreen() {
     if (id) {
       cargarProveedor()
       cargarResenas()
+      if (esCliente) {
+        favoritosService.listar().then(lista => setFavorito(lista.some(p => p.id === id))).catch(() => {})
+      }
     }
   }, [id])
 
@@ -96,6 +103,18 @@ export default function ProveedorScreen() {
       router.back()
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function toggleFavorito() {
+    const nuevo = !favorito
+    setFavorito(nuevo) // optimista: se revierte si falla
+    try {
+      if (nuevo) await favoritosService.agregar(id)
+      else await favoritosService.quitar(id)
+    } catch {
+      setFavorito(!nuevo)
+      Alert.alert('Error', 'No se pudo actualizar tus favoritos')
     }
   }
 
@@ -122,6 +141,11 @@ export default function ProveedorScreen() {
         {/* Hero */}
         <View style={styles.hero}>
           <View style={styles.heroPattern} />
+          {esCliente && (
+            <TouchableOpacity style={styles.favBtn} onPress={toggleFavorito}>
+              <Text style={styles.favIco}>{favorito ? '❤️' : '🤍'}</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
@@ -305,6 +329,8 @@ const styles = StyleSheet.create({
   container:      { flex:1, backgroundColor:Colors.cream },
   loadingWrap:    { flex:1, alignItems:'center', justifyContent:'center', backgroundColor:Colors.cream },
   hero:           { height:200, backgroundColor:'#1a1a1a', justifyContent:'flex-end', padding:20, overflow:'hidden' },
+  favBtn:         { position:'absolute', top:52, right:20, width:36, height:36, borderRadius:10, backgroundColor:'rgba(255,255,255,.12)', alignItems:'center', justifyContent:'center', zIndex:10 },
+  favIco:         { fontSize:17 },
   heroPattern:    { position:'absolute', inset:0, opacity:.15 },
   backBtn:        { position:'absolute', top:52, left:20, width:36, height:36, borderRadius:10, backgroundColor:'rgba(255,255,255,.12)', alignItems:'center', justifyContent:'center' },
   backText:       { color:'white', fontSize:16 },
