@@ -22,6 +22,15 @@ export const authService = {
     return response.data
   },
 
+  // Recuperar contraseña: 1) pide un código por email, 2) lo usa para poner una nueva
+  async solicitarRecuperacion(email: string) {
+    await axios.post(API_URL + '/auth/recuperar', { email }, { timeout: 10000 })
+  },
+
+  async restablecerPassword(email: string, codigo: string, password: string, confirmarPassword: string) {
+    await axios.post(API_URL + '/auth/restablecer', { email, codigo, password, confirmarPassword }, { timeout: 10000 })
+  },
+
   async logout() {
     await AsyncStorage.removeItem('token')
   },

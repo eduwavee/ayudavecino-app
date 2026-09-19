@@ -6,16 +6,28 @@ import {
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
-import { EMAIL_REGEX } from '../../utils/validaciones'
+import { authService } from '../../services/auth.service'
+import { EMAIL_REGEX, PASSWORD_REGEX, MENSAJE_PASSWORD } from '../../utils/validaciones'
 
-// Landing de recuperacion de contraseña. Todavia no hay endpoint en el backend:
-// simula el envio y muestra la confirmacion.
+type Paso = 'email' | 'codigo' | 'listo'
+
+const CABECERA: Record<Paso, { emoji: string; chip: string }> = {
+  email:  { emoji:'🔑', chip:'Recuperar acceso' },
+  codigo: { emoji:'📬', chip:'✓ Revisá tu correo' },
+  listo:  { emoji:'✅', chip:'Contraseña actualizada' },
+}
+
+// Recuperacion de contraseña en dos pasos: pedir un codigo por email y usarlo
+// para crear una contraseña nueva (POST /auth/recuperar y /auth/restablecer).
 export default function RecuperarScreen() {
   const router = useRouter()
+  const [paso, setPaso]         = useState<Paso>('email')
   const [email, setEmail]       = useState('')
-  const [enviado, setEnviado]   = useState(false)
+  const [codigo, setCodigo]     = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmar, setConfirmar] = useState('')
   const [loading, setLoading]   = useState(false)
-  const [focused, setFocused]   = useState(false)
+  const [focused, setFocused]   = useState<string | null>(null)
 
   const fadeAnim  = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(40)).current
@@ -27,20 +39,60 @@ export default function RecuperarScreen() {
       Animated.timing(fadeAnim,  { toValue:1, duration:500, useNativeDriver:true }),
       Animated.timing(slideAnim, { toValue:0, duration:500, useNativeDriver:true }),
     ]).start()
-  }, [enviado])
+  }, [paso])
 
-  function handleEnviar() {
+  function mensajeDeError(err: any, porDefecto: string) {
+    return err.response?.data?.mensaje || err.response?.data?.errores?.[0]?.msg || porDefecto
+  }
+
+  async function handleEnviarCodigo() {
     if (!EMAIL_REGEX.test(email.trim())) return Alert.alert('Error', 'Ingresá un email válido')
     setLoading(true)
-    setTimeout(() => {
+    try {
+      await authService.solicitarRecuperacion(email.trim())
+      setPaso('codigo')
+    } catch (err: any) {
+      Alert.alert('Error', mensajeDeError(err, 'No se pudo enviar el código'))
+    } finally {
       setLoading(false)
-      setEnviado(true)
-    }, 900)
+    }
+  }
+
+  async function handleRestablecer() {
+    if (!/^\d{6}$/.test(codigo.trim())) return Alert.alert('Error', 'El código tiene 6 números')
+    if (!PASSWORD_REGEX.test(password)) return Alert.alert('Error', MENSAJE_PASSWORD)
+    if (password !== confirmar) return Alert.alert('Error', 'Las contraseñas no coinciden')
+    setLoading(true)
+    try {
+      await authService.restablecerPassword(email.trim(), codigo.trim(), password, confirmar)
+      setPaso('listo')
+    } catch (err: any) {
+      Alert.alert('Error', mensajeDeError(err, 'No se pudo cambiar la contraseña'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function campo(key: string, ico: string, props: React.ComponentProps<typeof TextInput>) {
+    return (
+      <View style={[styles.inputWrap, focused === key && styles.inputWrapFocused]}>
+        <Text style={styles.inputIco}>{ico}</Text>
+        <TextInput
+          style={styles.input}
+          placeholderTextColor="#aaa"
+          autoCapitalize="none"
+          autoCorrect={false}
+          onFocus={() => setFocused(key)}
+          onBlur={() => setFocused(null)}
+          {...props}
+        />
+      </View>
+    )
   }
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
         <View style={styles.topSection}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -48,65 +100,63 @@ export default function RecuperarScreen() {
           </TouchableOpacity>
           <View style={styles.bigCircle} />
           <View style={styles.smallCircle} />
-          <Text style={styles.mainEmoji}>{enviado ? '📬' : '🔑'}</Text>
+          <Text style={styles.mainEmoji}>{CABECERA[paso].emoji}</Text>
           <View style={styles.chip}>
-            <Text style={styles.chipText}>{enviado ? '✓ Revisá tu correo' : 'Recuperar acceso'}</Text>
+            <Text style={styles.chipText}>{CABECERA[paso].chip}</Text>
           </View>
         </View>
 
         <Animated.View style={[styles.formSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-          {!enviado ? (
+          {paso === 'email' && (
             <>
               <Text style={styles.title}>¿Olvidaste tu{'\n'}contraseña?</Text>
               <Text style={styles.subtitle}>
-                Ingresá el email de tu cuenta y te mandamos un enlace para crear una contraseña nueva.
+                Ingresá el email de tu cuenta y te mandamos un código para crear una contraseña nueva.
               </Text>
 
-              <View style={[styles.inputWrap, focused && styles.inputWrapFocused]}>
-                <Text style={styles.inputIco}>✉️</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor="#aaa"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  onFocus={() => setFocused(true)}
-                  onBlur={() => setFocused(false)}
-                />
-              </View>
+              {campo('email', '✉️', { placeholder:'Email', value:email, onChangeText:setEmail, keyboardType:'email-address' })}
 
-              <TouchableOpacity
-                style={[styles.btn, loading && { opacity:.7 }]}
-                onPress={handleEnviar}
-                disabled={loading}
-              >
-                {loading
-                  ? <ActivityIndicator color="white" />
-                  : <Text style={styles.btnText}>Enviar enlace →</Text>
-                }
+              <TouchableOpacity style={[styles.btn, loading && { opacity:.7 }]} onPress={handleEnviarCodigo} disabled={loading}>
+                {loading ? <ActivityIndicator color="white" /> : <Text style={styles.btnText}>Enviar código →</Text>}
               </TouchableOpacity>
             </>
-          ) : (
+          )}
+
+          {paso === 'codigo' && (
             <>
-              <Text style={styles.title}>¡Listo!</Text>
+              <Text style={styles.title}>Ingresá el{'\n'}código</Text>
               <Text style={styles.subtitle}>
-                Si <Text style={styles.emailDestacado}>{email.trim()}</Text> está registrado, en unos minutos
-                vas a recibir un email con los pasos para restablecer tu contraseña.
+                Si <Text style={styles.emailDestacado}>{email.trim()}</Text> está registrado, te enviamos un código
+                de 6 números. Vence en 15 minutos.
               </Text>
+
+              {campo('codigo', '🔢', { placeholder:'Código de 6 números', value:codigo, onChangeText:setCodigo, keyboardType:'number-pad', maxLength:6 })}
+              {campo('pass', '🔒', { placeholder:'Contraseña nueva (mín. 8, letras y números)', value:password, onChangeText:setPassword, secureTextEntry:true })}
+              {campo('confirmar', '🔒', { placeholder:'Confirmar contraseña nueva', value:confirmar, onChangeText:setConfirmar, secureTextEntry:true })}
 
               <View style={styles.tipBox}>
                 <Text style={styles.tipText}>💡 Si no lo ves, revisá la carpeta de spam o correo no deseado.</Text>
               </View>
 
-              <TouchableOpacity style={styles.btn} onPress={() => router.replace('/(auth)/login')}>
-                <Text style={styles.btnText}>Volver a iniciar sesión</Text>
+              <TouchableOpacity style={[styles.btn, loading && { opacity:.7 }]} onPress={handleRestablecer} disabled={loading}>
+                {loading ? <ActivityIndicator color="white" /> : <Text style={styles.btnText}>Cambiar contraseña</Text>}
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.linkBtn} onPress={() => setEnviado(false)}>
+              <TouchableOpacity style={styles.linkBtn} onPress={handleEnviarCodigo} disabled={loading}>
+                <Text style={styles.linkText}>Reenviar código</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.linkBtn} onPress={() => { setPaso('email'); setCodigo('') }}>
                 <Text style={styles.linkText}>Usar otro email</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {paso === 'listo' && (
+            <>
+              <Text style={styles.title}>¡Listo!</Text>
+              <Text style={styles.subtitle}>Tu contraseña se cambió. Ya podés iniciar sesión con la nueva.</Text>
+              <TouchableOpacity style={styles.btn} onPress={() => router.replace('/(auth)/login')}>
+                <Text style={styles.btnText}>Iniciar sesión</Text>
               </TouchableOpacity>
             </>
           )}
@@ -131,13 +181,13 @@ const styles = StyleSheet.create({
   title:            { fontSize:30, fontWeight:'900', color:'#1a1a1a', lineHeight:36, marginBottom:8 },
   subtitle:         { fontSize:13, color:'#888', lineHeight:20, marginBottom:24 },
   emailDestacado:   { color:'#1a1a1a', fontWeight:'700' },
-  inputWrap:        { flexDirection:'row', alignItems:'center', backgroundColor:'#f7f7f7', borderRadius:14, paddingHorizontal:14, marginBottom:20, borderWidth:1.5, borderColor:'transparent' },
+  inputWrap:        { flexDirection:'row', alignItems:'center', backgroundColor:'#f7f7f7', borderRadius:14, paddingHorizontal:14, marginBottom:12, borderWidth:1.5, borderColor:'transparent' },
   inputWrapFocused: { borderColor:Colors.primary, backgroundColor:'#F0FDF4' },
   inputIco:         { fontSize:16, marginRight:10 },
   input:            { flex:1, paddingVertical:14, fontSize:14, color:'#1a1a1a' },
-  tipBox:           { backgroundColor:'#F0FDF4', borderRadius:14, padding:14, marginBottom:20 },
+  tipBox:           { backgroundColor:'#F0FDF4', borderRadius:14, padding:14, marginBottom:20, marginTop:8 },
   tipText:          { fontSize:12, color:'#555', lineHeight:18 },
-  btn:              { backgroundColor:'#1a1a1a', borderRadius:16, paddingVertical:16, alignItems:'center', marginBottom:16 },
+  btn:              { backgroundColor:'#1a1a1a', borderRadius:16, paddingVertical:16, alignItems:'center', marginBottom:16, marginTop:8 },
   btnText:          { color:'white', fontSize:15, fontWeight:'700', letterSpacing:.3 },
   linkBtn:          { alignSelf:'center', padding:6 },
   linkText:         { fontSize:13, color:Colors.primary, fontWeight:'700' },
