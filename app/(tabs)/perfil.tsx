@@ -136,7 +136,9 @@ export default function PerfilScreen() {
             </View>
           </View>
           <Text style={styles.heroName}>{usuario?.nombre}</Text>
-          <Text style={styles.heroEmail}>{usuario?.email}</Text>
+          <Text style={styles.heroEmail}>
+            {usuario?.username ? `@${usuario.username} · ` : ''}{usuario?.email}
+          </Text>
 
           {esProveedor && (
             <View style={styles.ratingRow}>

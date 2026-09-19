@@ -3,6 +3,7 @@ import { create } from 'zustand'
 interface Usuario {
   id:       string
   nombre:   string
+  username: string
   email:    string
   rol:      'CLIENTE' | 'PROVEEDOR'
   telefono?: string

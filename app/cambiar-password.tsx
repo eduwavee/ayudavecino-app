@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router'
 import { Colors } from '../constants/colors'
 import { useAuthStore } from '../store/authStore'
 import { usuariosService } from '../services/usuarios.service'
+import { PASSWORD_REGEX, MENSAJE_PASSWORD } from '../utils/validaciones'
 
 export default function CambiarPasswordScreen() {
   const router = useRouter()
@@ -35,8 +36,8 @@ export default function CambiarPasswordScreen() {
     if (!passwordActual || !passwordNueva || !passwordConfirmar) {
       return Alert.alert('Error', 'Completá los tres campos')
     }
-    if (passwordNueva.length < 6) {
-      return Alert.alert('Error', 'La nueva contraseña debe tener al menos 6 caracteres')
+    if (!PASSWORD_REGEX.test(passwordNueva)) {
+      return Alert.alert('Error', MENSAJE_PASSWORD)
     }
     if (passwordNueva !== passwordConfirmar) {
       return Alert.alert('Error', 'La confirmación no coincide con la nueva contraseña')
@@ -107,7 +108,7 @@ export default function CambiarPasswordScreen() {
                   style={styles.fieldInput}
                   value={passwordNueva}
                   onChangeText={setPasswordNueva}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 8, letras y números"
                   placeholderTextColor="#bbb"
                   secureTextEntry
                   onFocus={() => setFocused('nueva')}

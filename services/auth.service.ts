@@ -3,30 +3,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../constants/config'
 
 export const authService = {
-  async registro(nombre: string, email: string, password: string, rol: string) {
-    console.log('=== REGISTRO ===')
-    console.log('URL:', API_URL + '/auth/registro')
-    console.log('Body:', { nombre, email, password, rol })
-    
-    try {
-      const response = await axios.post(API_URL + '/auth/registro', 
-        { nombre, email, password, rol },
-        { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
-      )
-      console.log('RESPUESTA OK:', response.data)
-      await AsyncStorage.setItem('token', response.data.token)
-      return response.data
-    } catch (err: any) {
-      console.log('ERROR STATUS:', err.response?.status)
-      console.log('ERROR DATA:', JSON.stringify(err.response?.data))
-      console.log('ERROR MSG:', err.message)
-      throw err
-    }
+  async registro(email: string, username: string, password: string, confirmarPassword: string, rol: string) {
+    const response = await axios.post(API_URL + '/auth/registro',
+      { email, username, password, confirmarPassword, rol },
+      { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
+    )
+    await AsyncStorage.setItem('token', response.data.token)
+    return response.data
   },
 
-  async login(email: string, password: string) {
+  // El rol viaja al backend: una cuenta de proveedor no entra como cliente ni al reves
+  async login(username: string, password: string, rol: string) {
     const response = await axios.post(API_URL + '/auth/login',
-      { email, password },
+      { username, password, rol },
       { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
     )
     await AsyncStorage.setItem('token', response.data.token)

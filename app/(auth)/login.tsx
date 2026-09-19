@@ -12,7 +12,7 @@ import { useAuthStore } from '../../store/authStore'
 export default function LoginScreen() {
   const router     = useRouter()
   const setUsuario = useAuthStore(s => s.setUsuario)
-  const [email, setEmail]       = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [rol, setRol]           = useState<'CLIENTE'|'PROVEEDOR'>('CLIENTE')
   const [loading, setLoading]   = useState(false)
@@ -32,14 +32,17 @@ export default function LoginScreen() {
   }, [])
 
   async function handleLogin() {
-    if (!email || !password) return Alert.alert('Error', 'Completá todos los campos')
+    if (!username || !password) return Alert.alert('Error', 'Completá todos los campos')
     setLoading(true)
     try {
-      const data = await authService.login(email, password)
+      const data = await authService.login(username.trim(), password, rol)
       setUsuario(data.usuario, data.token)
       router.replace('/(tabs)')
     } catch (err: any) {
-      const msg = err.response?.data?.mensaje || err.message || 'Error al iniciar sesión'
+      // 401 = usuario/contraseña incorrectos o cuenta del otro rol; recordamos el tab elegido
+      const msg = err.response?.status === 401
+        ? `Usuario o contraseña incorrectos para una cuenta de ${rol === 'CLIENTE' ? 'cliente' : 'proveedor'}`
+        : err.response?.data?.mensaje || err.response?.data?.errores?.[0]?.msg || err.message || 'Error al iniciar sesión'
       Alert.alert('Error', msg)
     } finally {
       setLoading(false)
@@ -87,18 +90,18 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Email */}
-          <View style={[styles.inputWrap, focusedField === 'email' && styles.inputWrapFocused]}>
-            <Text style={styles.inputIco}>✉️</Text>
+          {/* Usuario */}
+          <View style={[styles.inputWrap, focusedField === 'usuario' && styles.inputWrapFocused]}>
+            <Text style={styles.inputIco}>👤</Text>
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder="Usuario"
               placeholderTextColor="#aaa"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
+              value={username}
+              onChangeText={setUsername}
               autoCapitalize="none"
-              onFocus={() => setFocusedField('email')}
+              autoCorrect={false}
+              onFocus={() => setFocusedField('usuario')}
               onBlur={() => setFocusedField(null)}
             />
           </View>
@@ -118,7 +121,7 @@ export default function LoginScreen() {
             />
           </View>
 
-          <TouchableOpacity style={styles.forgotBtn}>
+          <TouchableOpacity style={styles.forgotBtn} onPress={() => router.push('/(auth)/recuperar')}>
             <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 

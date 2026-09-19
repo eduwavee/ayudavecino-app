@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { authService } from '../../services/auth.service'
 import { useAuthStore } from '../../store/authStore'
+import { EMAIL_REGEX, USERNAME_REGEX, PASSWORD_REGEX, MENSAJE_USERNAME, MENSAJE_PASSWORD } from '../../utils/validaciones'
 
 const PASOS = ['Rol', 'Datos', 'Listo']
 
@@ -15,9 +16,10 @@ export default function RegistroScreen() {
   const router     = useRouter()
   const setUsuario = useAuthStore(s => s.setUsuario)
   const [paso, setPaso]         = useState(0)
-  const [nombre, setNombre]     = useState('')
   const [email, setEmail]       = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmarPassword, setConfirmarPassword] = useState('')
   const [rol, setRol]           = useState<'CLIENTE'|'PROVEEDOR'>('CLIENTE')
   const [loading, setLoading]   = useState(false)
   const [focusedField, setFocusedField] = useState<string|null>(null)
@@ -45,8 +47,11 @@ export default function RegistroScreen() {
     if (paso === 0) {
       setPaso(1)
     } else if (paso === 1) {
-      if (!nombre || !email || !password) return Alert.alert('Error', 'Completá todos los campos')
-      if (password.length < 6) return Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres')
+      if (!email || !username || !password || !confirmarPassword) return Alert.alert('Error', 'Completá todos los campos')
+      if (!EMAIL_REGEX.test(email.trim())) return Alert.alert('Error', 'Ingresá un email válido')
+      if (!USERNAME_REGEX.test(username.trim().toLowerCase())) return Alert.alert('Error', MENSAJE_USERNAME)
+      if (!PASSWORD_REGEX.test(password)) return Alert.alert('Error', MENSAJE_PASSWORD)
+      if (password !== confirmarPassword) return Alert.alert('Error', 'Las contraseñas no coinciden')
       handleRegistro()
     }
   }
@@ -54,7 +59,7 @@ export default function RegistroScreen() {
   async function handleRegistro() {
     setLoading(true)
     try {
-      const data = await authService.registro(nombre, email, password, rol)
+      const data = await authService.registro(email.trim(), username.trim().toLowerCase(), password, confirmarPassword, rol)
       setUsuario(data.usuario, data.token)
       router.replace('/(tabs)')
     } catch (err: any) {
@@ -154,19 +159,6 @@ export default function RegistroScreen() {
           {/* PASO 1 — Datos */}
           {paso === 1 && (
             <View>
-              <View style={[styles.inputWrap, focusedField === 'nombre' && styles.inputWrapFocused]}>
-                <Text style={styles.inputIco}>👤</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Nombre completo"
-                  placeholderTextColor="#aaa"
-                  value={nombre}
-                  onChangeText={setNombre}
-                  onFocus={() => setFocusedField('nombre')}
-                  onBlur={() => setFocusedField(null)}
-                />
-              </View>
-
               <View style={[styles.inputWrap, focusedField === 'email' && styles.inputWrapFocused]}>
                 <Text style={styles.inputIco}>✉️</Text>
                 <TextInput
@@ -177,7 +169,23 @@ export default function RegistroScreen() {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  autoCorrect={false}
                   onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
+                />
+              </View>
+
+              <View style={[styles.inputWrap, focusedField === 'usuario' && styles.inputWrapFocused]}>
+                <Text style={styles.inputIco}>👤</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Usuario (6 a 20 caracteres)"
+                  placeholderTextColor="#aaa"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onFocus={() => setFocusedField('usuario')}
                   onBlur={() => setFocusedField(null)}
                 />
               </View>
@@ -186,12 +194,26 @@ export default function RegistroScreen() {
                 <Text style={styles.inputIco}>🔒</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Contraseña (mín. 6 caracteres)"
+                  placeholder="Contraseña (mín. 8, letras y números)"
                   placeholderTextColor="#aaa"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
                   onFocus={() => setFocusedField('pass')}
+                  onBlur={() => setFocusedField(null)}
+                />
+              </View>
+
+              <View style={[styles.inputWrap, focusedField === 'confirmar' && styles.inputWrapFocused]}>
+                <Text style={styles.inputIco}>🔒</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirmar contraseña"
+                  placeholderTextColor="#aaa"
+                  value={confirmarPassword}
+                  onChangeText={setConfirmarPassword}
+                  secureTextEntry
+                  onFocus={() => setFocusedField('confirmar')}
                   onBlur={() => setFocusedField(null)}
                 />
               </View>
