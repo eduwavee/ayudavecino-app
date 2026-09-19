@@ -30,6 +30,15 @@ export const pedidosService = {
     return response.data.pedido
   },
 
+  // Pago del cliente (escrow): el dinero queda retenido hasta que confirme el trabajo
+  async pagar(id: string) {
+    const token = await AsyncStorage.getItem('token')
+    const response = await axios.post(`${API_URL}/pedidos/${id}/pago`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data.pago
+  },
+
   async cambiarEstado(id: string, estado: string) {
     const token = await AsyncStorage.getItem('token')
     const response = await axios.patch(`${API_URL}/pedidos/${id}/estado`, { estado }, {

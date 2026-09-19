@@ -26,6 +26,13 @@ function SkeletonPedidoCard({ styles }: { styles: ReturnType<typeof getStyles> }
   )
 }
 
+// Estado del pago del pedido (escrow)
+const PAGO_ESTADO: Record<string, { texto: string; color: string }> = {
+  RETENIDO: { texto:'🔒 Pago retenido hasta que confirmes el trabajo', color:'#D4A017' },
+  LIBERADO: { texto:'✅ Pago liberado al proveedor', color:Colors.primary },
+  DEVUELTO: { texto:'↩️ Pago devuelto', color:'#888' },
+}
+
 const ESTADO_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
   PENDIENTE:   { color:'#D4A017', bg:'rgba(255,210,63,.15)', label:'⏳ Pendiente' },
   ACEPTADO:    { color:Colors.primary, bg:'rgba(26,158,92,.12)', label:'✓ Aceptado' },
@@ -59,6 +66,32 @@ export default function PedidosScreen() {
       setLoading(false)
       setRefreshing(false)
     }
+  }
+
+  function pagarPedido(id: string, servicioNombre: string, monto: number) {
+    Alert.alert(
+      `¿Pagar $${monto?.toLocaleString('es-AR')}?`,
+      `${servicioNombre} — el pago queda retenido y se le libera al proveedor recién cuando confirmes que el trabajo está hecho.
+
+(Modo de prueba: no se cobra dinero real.)`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Pagar',
+          onPress: async () => {
+            setCompletando(id)
+            try {
+              await pedidosService.pagar(id)
+              await cargarPedidos()
+            } catch (err: any) {
+              Alert.alert('Error', err.response?.data?.mensaje || 'No se pudo procesar el pago')
+            } finally {
+              setCompletando(null)
+            }
+          },
+        },
+      ]
+    )
   }
 
   function confirmarCompletado(id: string, servicioNombre: string) {
@@ -219,6 +252,29 @@ export default function PedidosScreen() {
                   </View>
                 )}
 
+                {/* Pagar (solo cliente, pedido aceptado todavia sin pagar) */}
+                {!esProveedor && item.estado === 'ACEPTADO' && !item.pago && (
+                  <View style={styles.accionesRow}>
+                    {completando === item.id ? (
+                      <ActivityIndicator color={Colors.primary} style={{ flex:1 }} />
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.btnAceptar}
+                        onPress={() => pagarPedido(item.id, item.servicio?.nombre, item.montoTotal)}
+                      >
+                        <Text style={styles.btnAceptarText}>💳 Pagar ${item.montoTotal?.toLocaleString('es-AR')}</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+
+                {/* Estado del pago */}
+                {item.pago && (
+                  <Text style={[styles.pagoEstado, { color: PAGO_ESTADO[item.pago.estado]?.color }]}>
+                    {PAGO_ESTADO[item.pago.estado]?.texto}
+                  </Text>
+                )}
+
                 {/* Confirmar completado (solo cliente, pedido en curso) */}
                 {!esProveedor && item.estado === 'EN_CURSO' && (
                   <View style={styles.accionesRow}>
@@ -294,6 +350,7 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   estadoText:         { fontSize:10, fontWeight:'700' },
   chatHint:           { fontSize:10, color:Colors.primary, fontWeight:'600' },
   accionesRow:        { flexDirection:'row', gap:8, marginBottom:12 },
+  pagoEstado:         { fontSize:11, fontWeight:'700', marginBottom:10 },
   btnRechazar:        { flex:1, paddingVertical:10, borderRadius:12, borderWidth:1.5, borderColor:tema.border, alignItems:'center' },
   btnRechazarText:    { color:tema.texto, fontWeight:'600', fontSize:13 },
   btnAceptar:         { flex:2, paddingVertical:10, borderRadius:12, backgroundColor:Colors.primary, alignItems:'center' },

@@ -180,10 +180,16 @@ export default function PedidosProveedorScreen() {
                         </TouchableOpacity>
                       </>
                     )}
-                    {p.estado === 'ACEPTADO' && (
+                    {/* Escrow: se puede arrancar recien cuando el cliente pago */}
+                    {p.estado === 'ACEPTADO' && p.pago?.estado === 'RETENIDO' && (
                       <TouchableOpacity style={styles.btnEnCurso} onPress={() => accionarPedido(p.id, 'EN_CURSO', p.servicio?.nombre)}>
                         <Text style={styles.btnEnCursoText}>🔧 Marcar en curso</Text>
                       </TouchableOpacity>
+                    )}
+                    {p.estado === 'ACEPTADO' && !p.pago && (
+                      <View style={styles.esperandoWrap}>
+                        <Text style={styles.esperandoText}>⏳ Esperando el pago del cliente</Text>
+                      </View>
                     )}
                     {p.estado === 'EN_CURSO' && (
                       <View style={styles.esperandoWrap}>
@@ -192,7 +198,9 @@ export default function PedidosProveedorScreen() {
                     )}
                     {p.estado === 'COMPLETADO' && (
                       <View style={[styles.esperandoWrap, { backgroundColor:'rgba(26,158,92,.08)' }]}>
-                        <Text style={[styles.esperandoText, { color:Colors.primary }]}>✅ Trabajo completado</Text>
+                        <Text style={[styles.esperandoText, { color:Colors.primary }]}>
+                          ✅ Trabajo completado{p.pago?.estado === 'LIBERADO' ? ` · cobraste $${(p.pago.monto - p.pago.comision).toLocaleString('es-AR')}` : ''}
+                        </Text>
                       </View>
                     )}
                   </View>
