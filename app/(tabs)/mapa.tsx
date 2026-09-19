@@ -95,7 +95,7 @@ export default function MapaScreen() {
       <View style={styles.mapWrap}>
         <MapView
           ref={mapRef}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
           initialRegion={region}
           showsUserLocation={permiso === 'concedido'}
@@ -145,7 +145,7 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   contadorChip:    { backgroundColor:Colors.greenLight, paddingHorizontal:12, paddingVertical:6, borderRadius:100 },
   contadorText:    { fontSize:12, fontWeight:'700', color:Colors.primary },
   mapWrap:         { flex:1, position:'relative' },
-  loadingOverlay:  { ...StyleSheet.absoluteFillObject, alignItems:'center', justifyContent:'center', backgroundColor:tema.bg + 'CC' },
+  loadingOverlay:  { ...StyleSheet.absoluteFill, alignItems:'center', justifyContent:'center', backgroundColor:tema.bg + 'CC' },
   permisoBanner:   { position:'absolute', top:14, left:16, right:16, backgroundColor:tema.card, borderRadius:14, padding:14, flexDirection:'row', alignItems:'center', justifyContent:'space-between', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:8, elevation:4 },
   permisoText:     { flex:1, fontSize:12, color:tema.texto, fontWeight:'600', marginRight:8 },
   permisoBtn:      { fontSize:12, fontWeight:'800', color:Colors.primary },

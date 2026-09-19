@@ -238,7 +238,7 @@ export default function EditarPerfilScreen() {
                 {latitud != null && longitud != null && (
                   <View style={styles.previewMapWrap}>
                     <MapView
-                      style={StyleSheet.absoluteFillObject}
+                      style={StyleSheet.absoluteFill}
                       region={{ latitude: latitud, longitude: longitud, latitudeDelta: 0.01, longitudeDelta: 0.01 }}
                     >
                       <Marker
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   avatarWrap:         { position:'relative', marginBottom:8 },
   avatar:             { width:90, height:90, borderRadius:28, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', overflow:'hidden', shadowColor:Colors.primary, shadowOffset:{width:0,height:6}, shadowOpacity:.3, shadowRadius:12, elevation:6 },
   avatarImg:          { width:'100%', height:'100%' },
-  avatarLoading:       { ...StyleSheet.absoluteFillObject, backgroundColor:'rgba(0,0,0,.4)', alignItems:'center', justifyContent:'center' },
+  avatarLoading:       { ...StyleSheet.absoluteFill, backgroundColor:'rgba(0,0,0,.4)', alignItems:'center', justifyContent:'center' },
   avatarText:         { color:'white', fontSize:36, fontWeight:'900' },
   avatarEdit:         { position:'absolute', bottom:-4, right:-4, width:32, height:32, borderRadius:10, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:4, elevation:3 },
   avatarEditText:     { fontSize:16 },
