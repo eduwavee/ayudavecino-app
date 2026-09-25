@@ -14,6 +14,7 @@ import { SkeletonBlock } from '../../components/ui/Skeleton'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
 import { PressScale } from '../../components/ui/PressScale'
+import { PlanBadge } from '../../components/ui/PlanBadge'
 
 function SkeletonServiceCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -49,7 +50,8 @@ interface Filtros {
 const FILTROS_INICIALES: Filtros = { orden:'rating', ratingMin:null, precioMin:'', precioMax:'', verificados:false }
 
 const ORDENES: { value: Orden; label: string }[] = [
-  { value:'rating',      label:'⭐ Mejor valorados' },
+  // Por defecto: primero los planes Premium y Pro, y dentro de cada grupo los mejor valorados
+  { value:'rating',      label:'⭐ Recomendados' },
   { value:'cercanos',    label:'📍 Más cercanos' },
   { value:'precio_asc',  label:'💲 Menor precio' },
   { value:'precio_desc', label:'💰 Mayor precio' },
@@ -140,6 +142,10 @@ export default function BuscarScreen() {
     return da - db
   })
   const activos = cantidadFiltrosActivos(filtros)
+  // Proveedores Premium: carrusel arriba de todo (solo con el orden por defecto)
+  const recomendados = filtros.orden === 'rating'
+    ? filtrados.filter(s => s.proveedor?.plan === 'PREMIUM').slice(0, 6)
+    : []
 
   return (
     <View style={styles.container}>
@@ -208,6 +214,29 @@ export default function BuscarScreen() {
           keyExtractor={i => i.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={recomendados.length > 0 ? (
+            <View style={styles.recoWrap}>
+              <Text style={styles.recoTitulo}>👑 Recomendados</Text>
+              <FlatList
+                data={recomendados}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={s => 'reco-' + s.id}
+                contentContainerStyle={{ gap: 10 }}
+                renderItem={({ item: s }) => (
+                  <PressScale style={styles.recoCard} onPress={() => router.push(`/proveedor/${s.proveedor?.id}`)}>
+                    <Text style={styles.recoIco}>{categoriaInfo(s.categoria).ico}</Text>
+                    <Text style={styles.recoNombre} numberOfLines={1}>{s.nombre}</Text>
+                    <Text style={styles.recoProveedor} numberOfLines={1}>{s.proveedor?.nombre}</Text>
+                    <View style={styles.recoFila}>
+                      <Text style={styles.serviceRating}>⭐ {s.proveedor?.rating?.toFixed(1) ?? '0.0'}</Text>
+                      <Text style={styles.recoPrecio}>${s.precio?.toLocaleString()}</Text>
+                    </View>
+                  </PressScale>
+                )}
+              />
+            </View>
+          ) : null}
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyIco}>🔍</Text>
@@ -217,7 +246,7 @@ export default function BuscarScreen() {
           }
           renderItem={conEntrada(({ item }) => (
             <TouchableOpacity
-              style={styles.serviceCard}
+              style={[styles.serviceCard, item.proveedor?.plan === 'PREMIUM' && styles.serviceCardPremium]}
               onPress={() => router.push(`/proveedor/${item.proveedor?.id}`)}
             >
               <View style={styles.serviceLeft}>
@@ -234,6 +263,7 @@ export default function BuscarScreen() {
                         <Text style={styles.verifiedText}>✓ Verificado</Text>
                       </View>
                     )}
+                    <PlanBadge plan={item.proveedor?.plan} rol="PROVEEDOR" />
                     {distanciaDe(item) != null && (
                       <Text style={styles.serviceDist}>📍 {formatearDistancia(distanciaDe(item)!)}</Text>
                     )}
@@ -344,6 +374,15 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   contadorNum:      { color:tema.texto, fontFamily: F.bold },
   listContainer:    { paddingHorizontal:22, gap:12, paddingBottom:100 },
   serviceCard:      { backgroundColor:tema.card, borderRadius:18, padding:16, flexDirection:'row', alignItems:'center', justifyContent:'space-between', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
+  serviceCardPremium: { borderWidth:1.5, borderColor:'rgba(255,210,63,.6)' },
+  recoWrap:         { marginBottom:6 },
+  recoTitulo:       { fontSize:15, fontFamily: F.extrabold, color:tema.texto, marginBottom:10 },
+  recoCard:         { width:170, backgroundColor:tema.card, borderRadius:18, padding:14, gap:2, borderWidth:2, borderColor:'#FFD23F' },
+  recoIco:          { fontFamily: F.regular, fontSize:22, marginBottom:4 },
+  recoNombre:       { fontSize:14, fontFamily: F.bold, color:tema.texto },
+  recoProveedor:    { fontFamily: F.regular, fontSize:11, color:tema.subTexto },
+  recoFila:         { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginTop:6 },
+  recoPrecio:       { fontSize:14, fontFamily: F.extrabold, color:tema.texto },
   serviceLeft:      { flexDirection:'row', alignItems:'center', gap:12, flex:1 },
   serviceIco:       { width:48, height:48, borderRadius:14, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
   serviceIcoText:   { fontFamily: F.regular, fontSize:22 },

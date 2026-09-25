@@ -1,11 +1,17 @@
 import { create } from 'zustand'
 
-interface Usuario {
+export type Rol  = 'CLIENTE' | 'PROVEEDOR'
+// PRO es solo de proveedores y PLUS solo de clientes; PREMIUM existe para los dos
+export type Plan = 'GRATIS' | 'PRO' | 'PLUS' | 'PREMIUM'
+
+export interface Usuario {
   id:       string
   nombre:   string
   username: string
   email:    string
-  rol:      'CLIENTE' | 'PROVEEDOR'
+  rol:      Rol
+  plan?:        Plan
+  planVenceEn?: string | null
   telefono?: string
   avatar?:  string
   bio?:     string | null

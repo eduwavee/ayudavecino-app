@@ -11,6 +11,8 @@ import { pedidosService } from '../../services/pedidos.service'
 import { usuariosService } from '../../services/usuarios.service'
 import { PressScale } from '../../components/ui/PressScale'
 import { FUENTES as F } from '../../constants/diseno'
+import { PlanBadge } from '../../components/ui/PlanBadge'
+import { usePlan } from '../../hooks/usePlan'
 
 const { width } = Dimensions.get('window')
 
@@ -22,6 +24,7 @@ export default function ProveedorDashboard() {
   const [disponible, setDisponible] = useState(usuario?.activo ?? true)
   const [guardandoDisp, setGuardandoDisp] = useState(false)
   const [refrescando, setRefrescando] = useState(false)
+  const plan = usePlan()
 
   // Animaciones
   const fadeAnim    = useRef(new Animated.Value(0)).current
@@ -139,6 +142,7 @@ export default function ProveedorDashboard() {
             <View>
               <Text style={styles.heroGreeting}>Panel de trabajo</Text>
               <Text style={styles.heroNombre}>Hola, {usuario?.nombre?.split(' ')[0]} 👋</Text>
+              <PlanBadge plan={plan.plan} rol="PROVEEDOR" oscuro style={{ marginTop: 6 }} />
             </View>
             <TouchableOpacity
               style={styles.heroAvatar}
@@ -192,6 +196,21 @@ export default function ProveedorDashboard() {
               thumbColor={disponible ? Colors.primaryLight : '#666'}
             />
           </View>
+
+          {/* Plan */}
+          <PressScale
+            style={styles.planStrip}
+            onPress={() => router.push('/planes')}
+            accessibilityLabel={plan.plan === 'GRATIS' ? 'Ver planes' : 'Ver mi plan'}
+          >
+            <Text style={styles.planStripIco}>{plan.plan === 'GRATIS' ? '🚀' : plan.info.ico}</Text>
+            <Text style={styles.planStripText} numberOfLines={1}>
+              {plan.plan === 'GRATIS'
+                ? 'Plan Gratis · Pasate a Pro y aparecé primero'
+                : `Plan ${plan.info.nombre}${plan.venceEn ? ` · hasta el ${plan.venceEn.toLocaleDateString('es-AR')}` : ''}`}
+            </Text>
+            <Text style={styles.planStripCta}>{plan.plan === 'GRATIS' ? 'Mejorar' : 'Ver'} ›</Text>
+          </PressScale>
         </Animated.View>
 
         {/* ── MÉTRICAS ── */}
@@ -258,6 +277,23 @@ export default function ProveedorDashboard() {
             >
               <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>👤</Text></View>
               <Text style={styles.accionLabel}>Mi perfil</Text>
+            </PressScale>
+
+            <PressScale
+              style={[styles.accionCard, styles.accionCardBlue]}
+              onPress={() => router.push('/proveedor-panel/estadisticas')}
+            >
+              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>📊</Text></View>
+              <Text style={styles.accionLabel}>Estadísticas</Text>
+              {plan.nivel < 1 && <Text style={styles.accionLock}>🔒</Text>}
+            </PressScale>
+
+            <PressScale
+              style={[styles.accionCard, styles.accionCardGold]}
+              onPress={() => router.push('/planes')}
+            >
+              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>💎</Text></View>
+              <Text style={styles.accionLabel}>Planes</Text>
             </PressScale>
           </View>
         </View>
@@ -373,6 +409,14 @@ const styles = StyleSheet.create({
   accionCardBlue:     { backgroundColor:'rgba(116,185,255,.1)', borderColor:'rgba(116,185,255,.2)' },
   accionCardYellow:   { backgroundColor:'rgba(255,210,63,.1)', borderColor:'rgba(255,210,63,.2)' },
   accionCardPurple:   { backgroundColor:'rgba(162,155,254,.1)', borderColor:'rgba(162,155,254,.2)' },
+  accionCardGold:     { backgroundColor:'rgba(255,210,63,.08)', borderColor:'rgba(255,210,63,.25)' },
+  accionLock:         { position:'absolute', top:14, right:14, fontFamily: F.regular, fontSize:14 },
+
+  // Plan
+  planStrip:          { flexDirection:'row', alignItems:'center', gap:10, marginTop:10, backgroundColor:'rgba(255,210,63,.08)', borderRadius:16, paddingVertical:12, paddingHorizontal:14, borderWidth:1, borderColor:'rgba(255,210,63,.2)' },
+  planStripIco:       { fontFamily: F.regular, fontSize:18 },
+  planStripText:      { flex:1, fontSize:12, fontFamily: F.bold, color:'rgba(255,255,255,.8)' },
+  planStripCta:       { fontSize:12, fontFamily: F.extrabold, color:'#FFD23F' },
   accionIco:          { width:48, height:48, borderRadius:14, backgroundColor:'rgba(255,255,255,.08)', alignItems:'center', justifyContent:'center' },
   accionLabel:        { fontSize:13, fontFamily: F.bold, color:'white' },
   accionBadge:        { position:'absolute', top:12, right:12, width:20, height:20, borderRadius:10, backgroundColor:'#FF4757', alignItems:'center', justifyContent:'center' },
