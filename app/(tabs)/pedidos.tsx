@@ -11,6 +11,8 @@ import { conEntrada } from '../../components/ui/Aparecer'
 import { alertaError, haptica } from '../../utils/haptica'
 import { ProgresoPedido } from '../../components/ui/ProgresoPedido'
 import { PressScale } from '../../components/ui/PressScale'
+import { PlanBadge } from '../../components/ui/PlanBadge'
+import { usePlan } from '../../hooks/usePlan'
 
 function SkeletonPedidoCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -58,8 +60,33 @@ export default function PedidosScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [filtro, setFiltro]         = useState('todos')
   const [completando, setCompletando] = useState<string|null>(null)
+  const { nivel, pedirMejora } = usePlan()
 
   useFocusEffect(useCallback(() => { cargarPedidos() }, []))
+
+  // Vecino Plus / Premium: volver a pedir el mismo servicio con un toque
+  function repetirPedido(p: any) {
+    if (nivel < 1) {
+      pedirMejora('Repetir un pedido con un toque es parte de Vecino Plus y Vecino Premium.')
+      return
+    }
+    if (p.servicio?.activo === false) {
+      alertaError('Ese servicio ya no está publicado. Buscá otro parecido en la pestaña Buscar.')
+      return
+    }
+    router.push({
+      pathname: '/pedido/nuevo',
+      params: {
+        servicioId:      p.servicioId,
+        servicioNombre:  p.servicio?.nombre,
+        precio:          p.servicio?.precio,
+        categoria:       p.servicio?.categoria,
+        proveedorId:     p.proveedorId,
+        proveedorNombre: p.proveedor?.nombre,
+        descripcion:     p.descripcion ?? '',
+      },
+    })
+  }
 
   async function cargarPedidos() {
     try {
@@ -238,6 +265,14 @@ export default function PedidosScreen() {
                     <Text style={styles.pedidoContraparte}>
                       {esProveedor ? '👤 Cliente: ' : '🔧 Proveedor: '}{contraparte?.nombre}
                     </Text>
+                    {(item.urgente || (contraparte?.plan && contraparte.plan !== 'GRATIS')) && (
+                      <View style={styles.badgesRow}>
+                        {item.urgente && (
+                          <View style={styles.urgenteBadge}><Text style={styles.urgenteText}>⚡ Urgente</Text></View>
+                        )}
+                        <PlanBadge plan={contraparte?.plan} rol={esProveedor ? 'CLIENTE' : 'PROVEEDOR'} />
+                      </View>
+                    )}
                   </View>
                   <View style={styles.pedidoRight}>
                     <View style={[styles.estadoBadge, { backgroundColor: est.bg }]}>
@@ -318,6 +353,15 @@ export default function PedidosScreen() {
                         <Text style={styles.calificarBtnText}>⭐ Calificar</Text>
                       </PressScale>
                     )}
+                    {!esProveedor && ['COMPLETADO', 'CANCELADO'].includes(item.estado) && (
+                      <PressScale
+                        style={styles.repetirBtn}
+                        onPress={() => repetirPedido(item)}
+                        accessibilityLabel="Repetir pedido"
+                      >
+                        <Text style={styles.repetirBtnText}>🔁 Repetir{nivel < 1 ? ' ✨' : ''}</Text>
+                      </PressScale>
+                    )}
                     <Text style={styles.pedidoMonto}>${item.montoTotal?.toLocaleString()}</Text>
                   </View>
                 </View>
@@ -370,6 +414,11 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   pedidoMonto:        { fontSize:16, fontFamily: F.extrabold, color:tema.texto },
   calificarBtn:       { backgroundColor:'rgba(255,210,63,.15)', paddingHorizontal:12, paddingVertical:6, borderRadius:100 },
   calificarBtnText:   { fontSize:11, fontFamily: F.bold, color:'#D4A017' },
+  repetirBtn:         { backgroundColor:'rgba(26,158,92,.1)', paddingHorizontal:12, paddingVertical:6, borderRadius:100 },
+  repetirBtnText:     { fontSize:11, fontFamily: F.bold, color:Colors.primary },
+  badgesRow:          { flexDirection:'row', alignItems:'center', gap:6, marginTop:5 },
+  urgenteBadge:       { backgroundColor:'rgba(255,210,63,.25)', paddingHorizontal:8, paddingVertical:2, borderRadius:100 },
+  urgenteText:        { fontSize:9, fontFamily: F.extrabold, color:'#A87C00' },
   empty:              { alignItems:'center', paddingTop:60 },
   emptyIco:           { fontFamily: F.regular, fontSize:48, marginBottom:12, opacity:.3 },
   emptyText:          { fontSize:16, fontFamily: F.bold, color:tema.subTexto },

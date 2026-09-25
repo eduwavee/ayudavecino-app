@@ -18,8 +18,15 @@ import Reanimated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Aparecer } from '../../components/ui/Aparecer'
 import { PressScale } from '../../components/ui/PressScale'
+import { PlanBadge } from '../../components/ui/PlanBadge'
 
 const TABS = ['Sobre mí', 'Servicios', 'Reseñas']
+
+// Params de "Nuevo pedido": la categoría la usa "presupuesto a varios" (Vecino Premium)
+const paramsPedido = (s: any, proveedorId: string, proveedorNombre?: string) => ({
+  servicioId: s.id, servicioNombre: s.nombre, precio: s.precio,
+  categoria: s.categoria, proveedorId, proveedorNombre,
+})
 
 function SkeletonPerfilProveedor() {
   return (
@@ -193,6 +200,7 @@ export default function ProveedorScreen() {
             </View>
           </View>
           <View style={styles.badgesRow}>
+            <PlanBadge plan={proveedor?.plan} rol="PROVEEDOR" oscuro grande />
             {proveedor?.verificado && <View style={styles.badgeGreen}><Text style={styles.badgeGreenText}>✓ Verificado</Text></View>}
             {proveedor?.topRated && <View style={styles.badgeYellow}><Text style={styles.badgeYellowText}>⭐ Top rated</Text></View>}
           </View>
@@ -265,7 +273,7 @@ export default function ProveedorScreen() {
               <View key={s.id} style={styles.serviceBlock}>
                 <TouchableOpacity
                   style={styles.serviceCard}
-                  onPress={() => router.push({ pathname:'/pedido/nuevo', params:{ servicioId:s.id, servicioNombre:s.nombre, precio:s.precio, proveedorId:id } })}
+                  onPress={() => router.push({ pathname:'/pedido/nuevo', params: paramsPedido(s, id, proveedor?.nombre) })}
                 >
                   <View style={styles.serviceLeft}>
                     <View style={styles.serviceIco}><Text style={{ fontFamily: F.regular, fontSize:20}}>{categoriaInfo(s.categoria).ico}</Text></View>
@@ -369,8 +377,7 @@ export default function ProveedorScreen() {
           style={styles.contratarBtn}
           onPress={() => {
             if (proveedor?.servicios?.length > 0) {
-              const s = proveedor.servicios[0]
-              router.push({ pathname:'/pedido/nuevo', params:{ servicioId:s.id, servicioNombre:s.nombre, precio:s.precio, proveedorId:id } })
+              router.push({ pathname:'/pedido/nuevo', params: paramsPedido(proveedor.servicios[0], id, proveedor?.nombre) })
             }
           }}
         >

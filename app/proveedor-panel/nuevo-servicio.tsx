@@ -12,6 +12,7 @@ import { archivoUrl } from '../../constants/config'
 import { FUENTES as F } from '../../constants/diseno'
 import { alertaError } from '../../utils/haptica'
 import { PressScale } from '../../components/ui/PressScale'
+import { usePlan } from '../../hooks/usePlan'
 
 const MAX_FOTOS = 6
 
@@ -21,6 +22,7 @@ export default function NuevoServicioScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<any>()
   const esEdicion = !!params.id
+  const { pedirMejora } = usePlan()
 
   const [nombre, setNombre]           = useState(params.nombre ?? '')
   const [descripcion, setDescripcion] = useState(params.descripcion ?? '')
@@ -112,7 +114,10 @@ export default function NuevoServicioScreen() {
         params: { nombre: nombre.trim(), precio, categoria }
       })
     } catch (err: any) {
-      alertaError(err.response?.data?.mensaje || 'No se pudo guardar el servicio')
+      // Llegó al límite de servicios de su plan: se le ofrece mejorar en vez de un error seco
+      const data = err.response?.data
+      if (data?.codigo === 'PLAN_REQUERIDO') pedirMejora(data.mensaje)
+      else alertaError(data?.mensaje || 'No se pudo guardar el servicio')
     } finally {
       setLoading(false)
     }

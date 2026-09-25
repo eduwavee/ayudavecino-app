@@ -103,11 +103,20 @@ export default function MapaScreen() {
           showsMyLocationButton={false}
         >
           {proveedoresConUbicacion.map(({ p, coords }) => (
-            <Marker key={p.id} coordinate={coords} pinColor={Colors.primary}>
+            // Proveedores Premium: pin dorado y por encima del resto
+            <Marker
+              key={p.id}
+              coordinate={coords}
+              pinColor={p.plan === 'PREMIUM' ? '#FFD23F' : Colors.primary}
+              zIndex={p.plan === 'PREMIUM' ? 10 : 1}
+            >
               <Callout onPress={() => router.push(`/proveedor/${p.id}`)}>
                 <View style={styles.callout}>
                   <Text style={styles.calloutNombre}>{p.nombre}</Text>
-                  <Text style={styles.calloutRating}>⭐ {p.rating?.toFixed?.(1) ?? '0.0'}</Text>
+                  <Text style={styles.calloutRating}>
+                    ⭐ {p.rating?.toFixed?.(1) ?? '0.0'}
+                    {p.plan === 'PREMIUM' ? ' · 👑 Premium' : p.plan === 'PRO' ? ' · 🚀 Pro' : ''}
+                  </Text>
                   <Text style={styles.calloutLink}>Ver perfil →</Text>
                 </View>
               </Callout>

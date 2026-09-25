@@ -11,6 +11,7 @@ import { conEntrada } from '../../components/ui/Aparecer'
 import { alertaError, haptica } from '../../utils/haptica'
 import { ProgresoPedido } from '../../components/ui/ProgresoPedido'
 import { PressScale } from '../../components/ui/PressScale'
+import { PlanBadge } from '../../components/ui/PlanBadge'
 
 const FILTROS = ['Todos','Pendientes','En curso','Completados','Cancelados']
 
@@ -120,15 +121,32 @@ export default function PedidosProveedorScreen() {
             const est       = ESTADO_CONFIG[p.estado] ?? ESTADO_CONFIG.PENDIENTE
             const isLoading = accionando === p.id
             const puedeChat = tienChat(p.estado)
+            // El backend ya los ordena: urgentes primero, después clientes Vecino Premium
+            const abierto   = ['PENDIENTE', 'ACEPTADO', 'EN_CURSO'].includes(p.estado)
+            const urgente   = p.urgente && abierto
 
             return (
-              <View style={styles.pedidoCard}>
+              <View style={[styles.pedidoCard, urgente && styles.pedidoCardUrgente]}>
+
+                {urgente && (
+                  <View style={styles.urgenteBanner}>
+                    <Text style={styles.urgenteBannerText}>⚡ URGENTE · el cliente lo necesita cuanto antes</Text>
+                  </View>
+                )}
 
                 <View style={styles.pedidoTop}>
                   <View style={styles.pedidoIco}><Text style={{ fontFamily: F.regular, fontSize:22}}>🔧</Text></View>
                   <View style={styles.pedidoInfo}>
                     <Text style={styles.pedidoServicio}>{p.servicio?.nombre}</Text>
                     <Text style={styles.pedidoCliente}>👤 {p.cliente?.nombre}</Text>
+                    {p.cliente?.plan && p.cliente.plan !== 'GRATIS' && (
+                      <View style={styles.clienteBadges}>
+                        <PlanBadge plan={p.cliente.plan} rol="CLIENTE" />
+                        {p.cliente.plan === 'PREMIUM' && abierto && !urgente && (
+                          <Text style={styles.prioridadText}>Prioridad</Text>
+                        )}
+                      </View>
+                    )}
                   </View>
                   <View style={styles.pedidoTopRight}>
                     <View style={[styles.estadoBadge, { backgroundColor: est.bg }]}>
@@ -237,6 +255,11 @@ const styles = StyleSheet.create({
   filtroBtnTextActive:{ color:'white' },
   listContainer:      { paddingHorizontal:22, gap:14, paddingBottom:100 },
   pedidoCard:         { backgroundColor:'white', borderRadius:20, padding:18, shadowColor:'#000', shadowOffset:{width:0,height:3}, shadowOpacity:.07, shadowRadius:10, elevation:3 },
+  pedidoCardUrgente:  { borderWidth:2, borderColor:'#FFD23F', shadowColor:'#D4A017', shadowOpacity:.2 },
+  urgenteBanner:      { backgroundColor:'rgba(255,210,63,.2)', borderRadius:10, paddingVertical:6, paddingHorizontal:10, marginBottom:12 },
+  urgenteBannerText:  { fontSize:11, fontFamily: F.extrabold, color:'#A87C00' },
+  clienteBadges:      { flexDirection:'row', alignItems:'center', gap:6, marginTop:5 },
+  prioridadText:      { fontSize:10, fontFamily: F.bold, color:'#A87C00' },
   pedidoTop:          { flexDirection:'row', alignItems:'flex-start', gap:12, marginBottom:12 },
   pedidoIco:          { width:46, height:46, borderRadius:14, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
   pedidoInfo:         { flex:1 },

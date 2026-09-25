@@ -20,6 +20,8 @@ import { authService } from "../../services/auth.service";
 import { pedidosService } from "../../services/pedidos.service";
 import { FUENTES as F } from '../../constants/diseno'
 import { PressScale } from '../../components/ui/PressScale'
+import { PlanBadge } from '../../components/ui/PlanBadge'
+import { usePlan } from '../../hooks/usePlan'
 
 function SkeletonPedidoRow({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -85,21 +87,29 @@ export default function PerfilScreen() {
   ).length;
   const pendientes = pedidos.filter((p) => p.estado === "PENDIENTE").length;
 
+  const esProveedor = usuario?.rol === "PROVEEDOR";
+  const plan = usePlan();
+
   function handleAyuda() {
+    // Los dos Premium tienen soporte prioritario
     Alert.alert(
-      "Ayuda y soporte",
-      "¿Tenés algún problema o consulta? Escribinos a soporte@ayudavecino.com y te respondemos a la brevedad.",
+      plan.esPremium ? "Soporte prioritario 👑" : "Ayuda y soporte",
+      plan.esPremium
+        ? "Como sos Premium, tu consulta pasa primero en la fila: te respondemos en menos de 2 horas hábiles."
+        : "¿Tenés algún problema o consulta? Escribinos a soporte@ayudavecino.com y te respondemos a la brevedad.",
       [
         { text: "Cerrar", style: "cancel" },
         {
           text: "Enviar email",
-          onPress: () => Linking.openURL("mailto:soporte@ayudavecino.com"),
+          onPress: () => Linking.openURL(
+            plan.esPremium
+              ? "mailto:soporte@ayudavecino.com?subject=%5BPRIORITARIO%5D%20Consulta"
+              : "mailto:soporte@ayudavecino.com",
+          ),
         },
       ],
     );
   }
-
-  const esProveedor = usuario?.rol === "PROVEEDOR";
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -144,6 +154,13 @@ export default function PerfilScreen() {
           <Text style={styles.heroEmail}>
             {usuario?.username ? `@${usuario.username} · ` : ''}{usuario?.email}
           </Text>
+          <PlanBadge
+            plan={plan.plan}
+            rol={plan.rol}
+            oscuro
+            grande
+            style={{ alignSelf: "center", marginBottom: 12 }}
+          />
 
           {esProveedor && (
             <View style={styles.ratingRow}>
@@ -182,6 +199,34 @@ export default function PerfilScreen() {
           </Text>
           <Text style={styles.statLabel}>Completados</Text>
         </View>
+      </Animated.View>
+
+      {/* ── PLAN ── */}
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <PressScale
+          style={[styles.planCard, plan.plan !== "GRATIS" && styles.planCardActivo]}
+          onPress={() => router.push("/planes")}
+          accessibilityLabel={plan.plan === "GRATIS" ? "Ver planes" : "Administrar mi plan"}
+        >
+          <Text style={styles.planIco}>{plan.plan === "GRATIS" ? "💎" : plan.info.ico}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.planTitulo}>
+              {plan.plan === "GRATIS"
+                ? (esProveedor ? "Conseguí más clientes" : "Pedí con prioridad")
+                : `Plan ${plan.info.nombre}`}
+            </Text>
+            <Text style={styles.planSub}>
+              {plan.plan === "GRATIS"
+                ? (esProveedor
+                    ? "Aparecé primero en la búsqueda con Pro o Premium"
+                    : "Pedidos urgentes y más con Vecino Plus o Premium")
+                : plan.venceEn
+                  ? `Activo hasta el ${plan.venceEn.toLocaleDateString("es-AR")}`
+                  : "Activo"}
+            </Text>
+          </View>
+          <Text style={styles.planCta}>{plan.plan === "GRATIS" ? "Ver planes" : "Administrar"} ›</Text>
+        </PressScale>
       </Animated.View>
 
       {/* ── PEDIDOS RECIENTES ── */}
@@ -268,6 +313,29 @@ export default function PerfilScreen() {
 
       {/* ── OPCIONES ── */}
       <Animated.View style={[styles.optionsCard, { opacity: fadeAnim }]}>
+        <TouchableOpacity
+          style={styles.optionRow}
+          onPress={() => router.push("/planes")}
+        >
+          <Text style={styles.optionIco}>💎</Text>
+          <Text style={styles.optionText}>Planes y beneficios</Text>
+          <Text style={styles.optionArrow}>›</Text>
+        </TouchableOpacity>
+        <View style={styles.optionDivider} />
+        {esProveedor && (
+          <>
+            <TouchableOpacity
+              style={styles.optionRow}
+              onPress={() => router.push("/respuestas-rapidas")}
+            >
+              <Text style={styles.optionIco}>💬</Text>
+              <Text style={styles.optionText}>Respuestas rápidas</Text>
+              {!plan.esPremium && <Text style={styles.optionLock}>👑</Text>}
+              <Text style={styles.optionArrow}>›</Text>
+            </TouchableOpacity>
+            <View style={styles.optionDivider} />
+          </>
+        )}
         <TouchableOpacity
           style={styles.optionRow}
           onPress={() => router.push("/editar-perfil")}
@@ -518,6 +586,24 @@ const getStyles = (tema: TemaTokens) =>
     optionIco: { fontFamily: F.regular, fontSize: 20, width: 28, textAlign: "center" },
     optionText: { flex: 1, fontSize: 14, fontFamily: F.medium, color: tema.texto },
     optionArrow: { fontFamily: F.regular, fontSize: 20, color: tema.subTexto },
+    optionLock: { fontFamily: F.regular, fontSize: 13 },
+    planCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: tema.card,
+      marginHorizontal: 22,
+      marginBottom: 24,
+      borderRadius: 18,
+      padding: 16,
+      borderWidth: 1.5,
+      borderColor: "#FFD23F",
+    },
+    planCardActivo: { borderColor: Colors.primary },
+    planIco: { fontFamily: F.regular, fontSize: 26 },
+    planTitulo: { fontSize: 14, fontFamily: F.extrabold, color: tema.texto, marginBottom: 2 },
+    planSub: { fontSize: 11, fontFamily: F.regular, color: tema.subTexto, lineHeight: 15 },
+    planCta: { fontSize: 12, fontFamily: F.bold, color: Colors.primary },
     optionDivider: { height: 1, backgroundColor: tema.border, marginLeft: 56 },
     logoutBtn: {
       backgroundColor: tema.card,

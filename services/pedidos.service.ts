@@ -20,7 +20,11 @@ export const pedidosService = {
     return response.data.pedido
   },
 
-  async crearPedido(datos: { servicioId: string; fecha: string; descripcion?: string }) {
+  // urgente y serviciosAdicionales (presupuesto a varios proveedores) son de Vecino Premium
+  async crearPedido(datos: {
+    servicioId: string; fecha: string; descripcion?: string
+    urgente?: boolean; serviciosAdicionales?: string[]
+  }) {
     const token = await AsyncStorage.getItem('token')
     console.log('POST pedido:', datos)
     const response = await axios.post(`${API_URL}/pedidos`, datos, {

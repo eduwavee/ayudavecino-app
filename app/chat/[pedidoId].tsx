@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View, Text, FlatList, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, Animated,
   Dimensions, StatusBar, Image, Alert, ActivityIndicator, Linking
 } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import { Colors } from '../../constants/colors'
 import { archivoUrl } from '../../constants/config'
@@ -15,13 +15,17 @@ import { FUENTES as F, DURACION, CURVA } from '../../constants/diseno'
 import Reanimated, { FadeInDown } from 'react-native-reanimated'
 import { haptica } from '../../utils/haptica'
 import { PressScale } from '../../components/ui/PressScale'
+import { usePlan } from '../../hooks/usePlan'
+import { leerRespuestas } from '../../utils/respuestasRapidas'
 
 // Entrada de un mensaje nuevo: sube corto y rápido (power3.out)
 const ENTRADA_MENSAJE = FadeInDown.duration(DURACION.base).easing(CURVA.salida)
 
 const { width } = Dimensions.get('window')
 
-const QUICK_REPLIES = [
+type ChipRespuesta = { ico: string; txt: string; propia?: boolean; gestionar?: boolean }
+
+const QUICK_REPLIES: ChipRespuesta[] = [
   { ico:'👍', txt:'Perfecto' },
   { ico:'🕐', txt:'¿A qué hora llegás?' },
   { ico:'🙏', txt:'Muchas gracias' },
@@ -41,6 +45,25 @@ export default function ChatScreen() {
   const [inputAlto, setInputAlto]     = useState(false)
   const [cargandoHistorial, setCargandoHistorial] = useState(true)
   const [subiendoImagen, setSubiendoImagen] = useState(false)
+  const [misRespuestas, setMisRespuestas] = useState<string[]>([])
+  const { esPremium } = usePlan()
+  const esProveedor = usuario?.rol === 'PROVEEDOR'
+
+  // Respuestas rápidas propias (proveedor Premium). Se recargan al volver de la
+  // pantalla donde se editan.
+  useFocusEffect(useCallback(() => {
+    if (esProveedor && esPremium && usuario?.id) leerRespuestas(usuario.id).then(setMisRespuestas)
+  }, [esProveedor, esPremium, usuario?.id]))
+
+  const chipsRespuestas: ChipRespuesta[] = esProveedor
+    ? [
+        esPremium
+          ? { ico: '✏️', txt: 'Mis respuestas', gestionar: true }
+          : { ico: '👑', txt: 'Tus respuestas', gestionar: true },
+        ...(esPremium ? misRespuestas.map(txt => ({ ico: '⭐', txt, propia: true })) : []),
+        ...QUICK_REPLIES,
+      ]
+    : QUICK_REPLIES
 
   const flatListRef   = useRef<FlatList>(null)
   const inputRef      = useRef<TextInput>(null)
@@ -350,16 +373,19 @@ export default function ChatScreen() {
 
         {/* ── QUICK REPLIES ── */}
         <FlatList
-          data={QUICK_REPLIES}
+          data={chipsRespuestas}
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={i => i.txt}
+          keyExtractor={i => (i.propia ? 'propia:' : i.gestionar ? 'gestionar:' : '') + i.txt}
           style={styles.quickList}
           contentContainerStyle={styles.quickContent}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.quickBtn}
-              onPress={() => enviar(item.ico + ' ' + item.txt)}
+              style={[styles.quickBtn, item.propia && styles.quickBtnPropia, item.gestionar && styles.quickBtnGestionar]}
+              onPress={() => {
+                if (item.gestionar) router.push('/respuestas-rapidas')
+                else enviar(item.propia ? item.txt : item.ico + ' ' + item.txt)
+              }}
               activeOpacity={.7}
             >
               <Text style={styles.quickIco}>{item.ico}</Text>
@@ -482,6 +508,8 @@ const styles = StyleSheet.create({
   quickList:         { maxHeight:44, backgroundColor:'white', borderTopWidth:1, borderTopColor:'#f0f0f0' },
   quickContent:      { paddingHorizontal:14, gap:8, alignItems:'center', paddingVertical:8 },
   quickBtn:          { flexDirection:'row', alignItems:'center', gap:5, paddingHorizontal:14, paddingVertical:6, borderRadius:100, backgroundColor:Colors.cream, borderWidth:1, borderColor:'#e8e8e8' },
+  quickBtnPropia:    { backgroundColor:'rgba(255,210,63,.15)', borderColor:'rgba(212,160,23,.35)' },
+  quickBtnGestionar: { backgroundColor:'white', borderStyle:'dashed', borderColor:'#D4A017' },
   quickIco:          { fontFamily: F.regular, fontSize:13 },
   quickTxt:          { fontSize:12, fontFamily: F.semibold, color:Colors.dark },
 

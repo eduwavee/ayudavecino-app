@@ -15,6 +15,7 @@ App mobile de AyudaVecino, un marketplace que conecta vecinos con oficios y serv
 - Notificaciones en tiempo real guardadas en el servidor (pedidos, pagos, mensajes, reseñas)
 - Reseñas, calificaciones e insignias de proveedor (verificado, top rated, responde rápido)
 - Proveedores favoritos
+- Planes de pago: **Pro** y **Premium** para proveedores (más servicios, mejor posición, estadísticas, respuestas rápidas propias), **Vecino Plus** y **Vecino Premium** para clientes (repetir pedidos, aviso de favoritos, pedidos urgentes, prioridad y presupuesto a varios). Lo gratis sigue gratis; el detalle de cada plan está en `constants/planes.ts` y en el README del backend
 - Perfil con foto (avatar), descripción del proveedor, edición de datos y cambio de contraseña
 - Modo oscuro persistente
 
@@ -110,6 +111,7 @@ Recorrido sugerido para probar el flujo completo. Lo ideal es usar **dos disposi
 8. **Pagar:** con el pedido aceptado, el cliente toca *Pagar* (modo de prueba). Recién ahí el proveedor puede marcarlo *en curso*; al confirmar el trabajo, el pago se libera.
 9. **Perfil:** probá cambiar la foto de perfil, editar datos y cambiar la contraseña desde *Perfil* / *Ajustes*.
 10. **Recuperar contraseña:** desde el login, *¿Olvidaste tu contraseña?*. Sin SMTP configurado en el backend, el código aparece en la consola del backend.
+11. **Planes:** desde *Perfil → Planes y beneficios* activá un plan (pago de prueba: cualquier tarjeta de 16 dígitos). Como proveedor Premium probá el pin dorado en el *Mapa*, "Recomendados" en *Buscar*, las *Estadísticas* del panel y tus respuestas rápidas en el chat; como Vecino Premium, un pedido urgente o con presupuesto a varios proveedores.
 
 ### Chequeo de tipos
 
