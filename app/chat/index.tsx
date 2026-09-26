@@ -6,9 +6,15 @@ import { pedidosService } from '../../services/pedidos.service'
 import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
+import { Icono } from '../../components/ui/Icono'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { FotoPerfil } from '../../components/ui/FotoPerfil'
+import { useTema, TemaTokens } from '../../store/temaStore'
 
 export default function ChatListScreen() {
   const router  = useRouter()
+  const tema    = useTema()
+  const styles  = getStyles(tema)
   const usuario = useAuthStore(s => s.usuario)
   const [pedidos, setPedidos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,7 +51,7 @@ export default function ChatListScreen() {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyIco}>💬</Text>
+              <Icono nombre="chatbubbles-outline" tamano={56} color={tema.subTexto} style={styles.emptyIco} />
               <Text style={styles.emptyTitle}>Sin conversaciones</Text>
               <Text style={styles.emptySub}>Los chats aparecen cuando un pedido es aceptado</Text>
             </View>
@@ -54,8 +60,8 @@ export default function ChatListScreen() {
             const contraparte = esProveedor ? p.cliente : p.proveedor
             const estadoConfig: Record<string,any> = {
               ACEPTADO:   { color:Colors.primary, label:'Aceptado' },
-              EN_CURSO:   { color:'#74B9FF',       label:'En curso' },
-              COMPLETADO: { color:'#888',           label:'Completado' },
+              EN_CURSO:   { color:tema.esOscuro ? '#74B9FF' : '#1F6FD1',       label:'En curso' },
+              COMPLETADO: { color:tema.subTexto,           label:'Completado' },
             }
             const est = estadoConfig[p.estado] ?? estadoConfig.ACEPTADO
             return (
@@ -71,9 +77,7 @@ export default function ChatListScreen() {
                 })}
               >
                 <View style={styles.chatAvatar}>
-                  <Text style={styles.chatAvatarText}>
-                    {contraparte?.nombre?.charAt(0).toUpperCase() ?? '?'}
-                  </Text>
+                  <FotoPerfil ruta={contraparte?.avatar} nombre={contraparte?.nombre} radio={16} estiloTexto={styles.chatAvatarText} />
                   <View style={[styles.onlineDot, { backgroundColor: est.color }]} />
                 </View>
                 <View style={styles.chatInfo}>
@@ -91,28 +95,29 @@ export default function ChatListScreen() {
           })}
         />
       )}
+      <FondoBarraEstado color={tema.bg} />
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  container:    { flex:1, backgroundColor:Colors.cream },
+const getStyles = (tema: TemaTokens) => StyleSheet.create({
+  container:    { flex:1, backgroundColor:tema.bg },
   header:       { paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
-  title:        { fontSize:26, fontFamily: F.extrabold, color:Colors.dark },
-  count:        { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', marginTop:2 },
+  title:        { fontSize:26, fontFamily: F.extrabold, color:tema.texto },
+  count:        { fontFamily: F.regular, fontSize:13, color:tema.subTexto, marginTop:2 },
   list:         { paddingHorizontal:22, gap:10, paddingBottom:100 },
-  chatItem:     { backgroundColor:'white', borderRadius:18, padding:16, flexDirection:'row', alignItems:'center', gap:14, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
+  chatItem:     { backgroundColor:tema.card, borderRadius:18, padding:16, flexDirection:'row', alignItems:'center', gap:14, shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
   chatAvatar:   { width:52, height:52, borderRadius:16, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', position:'relative' },
   chatAvatarText:{ color:'white', fontSize:20, fontFamily: F.extrabold },
-  onlineDot:    { position:'absolute', bottom:2, right:2, width:12, height:12, borderRadius:6, borderWidth:2, borderColor:'white' },
+  onlineDot:    { position:'absolute', bottom:2, right:2, width:12, height:12, borderRadius:6, borderWidth:2, borderColor:tema.card },
   chatInfo:     { flex:1, gap:3 },
   chatTop:      { flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
-  chatNombre:   { fontSize:15, fontFamily: F.extrabold, color:Colors.dark },
-  chatFecha:    { fontFamily: F.regular, fontSize:11, color:'#6B6B6B' },
-  chatServicio: { fontFamily: F.regular, fontSize:12, color:'#6B6B6B' },
+  chatNombre:   { fontSize:15, fontFamily: F.extrabold, color:tema.texto },
+  chatFecha:    { fontFamily: F.regular, fontSize:11, color:tema.subTexto },
+  chatServicio: { fontFamily: F.regular, fontSize:12, color:tema.subTexto },
   chatEstado:   { fontSize:11, fontFamily: F.bold },
   empty:        { alignItems:'center', paddingTop:80 },
-  emptyIco:     { fontFamily: F.regular, fontSize:56, marginBottom:16, opacity:.3 },
-  emptyTitle:   { fontSize:18, fontFamily: F.extrabold, color:Colors.dark, marginBottom:6 },
-  emptySub:     { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', textAlign:'center', paddingHorizontal:32 },
+  emptyIco:     { marginBottom:16, opacity:.5 },
+  emptyTitle:   { fontSize:18, fontFamily: F.extrabold, color:tema.texto, marginBottom:6 },
+  emptySub:     { fontFamily: F.regular, fontSize:13, color:tema.subTexto, textAlign:'center', paddingHorizontal:32 },
 })

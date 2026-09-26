@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Linking,
   Image,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { Colors } from "../../constants/colors";
 import { avatarUrl } from "../../constants/config";
 import { useAuthStore } from "../../store/authStore";
@@ -22,6 +22,12 @@ import { FUENTES as F } from '../../constants/diseno'
 import { PressScale } from '../../components/ui/PressScale'
 import { PlanBadge } from '../../components/ui/PlanBadge'
 import { usePlan } from '../../hooks/usePlan'
+import { Icono } from '../../components/ui/Icono'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { EstadoBadge } from '../../components/ui/EstadoBadge'
+import { FilaMenu, DivisorMenu } from '../../components/ui/FilaMenu'
+import { categoriaInfo } from '../../constants/categorias'
+import { textoRating } from '../../utils/rating'
 
 function SkeletonPedidoRow({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -48,8 +54,11 @@ export default function PerfilScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
+  // Al volver a la pestaña: las pestañas quedan montadas y los contadores y
+  // "Pedidos recientes" seguían mostrando lo de la primera vez
+  useFocusEffect(useCallback(() => { cargarPedidos(); }, []));
+
   useEffect(() => {
-    cargarPedidos();
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -75,10 +84,21 @@ export default function PerfilScreen() {
     }
   }
 
-  async function handleLogout() {
-    await authService.logout();
-    logout();
-    router.replace("/(auth)/welcome");
+  // Igual que en Ajustes: se confirma antes de salir (el botón está al final de la
+  // lista y es fácil tocarlo sin querer al scrollear)
+  function handleLogout() {
+    Alert.alert("Cerrar sesión", "¿Estás seguro que querés salir?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Salir",
+        style: "destructive",
+        onPress: async () => {
+          await authService.logout();
+          logout();
+          router.replace("/(auth)/welcome");
+        },
+      },
+    ]);
   }
 
   const completados = pedidos.filter((p) => p.estado === "COMPLETADO").length;
@@ -93,7 +113,7 @@ export default function PerfilScreen() {
   function handleAyuda() {
     // Los dos Premium tienen soporte prioritario
     Alert.alert(
-      plan.esPremium ? "Soporte prioritario 👑" : "Ayuda y soporte",
+      plan.esPremium ? "Soporte prioritario" : "Ayuda y soporte",
       plan.esPremium
         ? "Como sos Premium, tu consulta pasa primero en la fila: te respondemos en menos de 2 horas hábiles."
         : "¿Tenés algún problema o consulta? Escribinos a soporte@ayudavecino.com y te respondemos a la brevedad.",
@@ -112,6 +132,7 @@ export default function PerfilScreen() {
   }
 
   return (
+    <View style={styles.container}>
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* ── HERO ── */}
       <Animated.View style={[styles.hero, { opacity: fadeAnim }]}>
@@ -127,7 +148,7 @@ export default function PerfilScreen() {
             accessibilityLabel="Ajustes"
             hitSlop={10}
           >
-            <Text style={styles.settingsIco}>⚙️</Text>
+            <Icono nombre="settings-outline" tamano={20} color="white" />
           </TouchableOpacity>
         </View>
 
@@ -145,8 +166,9 @@ export default function PerfilScreen() {
               </View>
             </View>
             <View style={[styles.rolBadge, esProveedor && styles.rolBadgeProv]}>
+              <Icono nombre={esProveedor ? "hammer" : "person"} tamano={11} color="#1a1a1a" />
               <Text style={styles.rolBadgeText}>
-                {esProveedor ? "🔨 Proveedor" : "🙋 Cliente"}
+                {esProveedor ? "Proveedor" : "Cliente"}
               </Text>
             </View>
           </View>
@@ -164,11 +186,15 @@ export default function PerfilScreen() {
 
           {esProveedor && (
             <View style={styles.ratingRow}>
-              <Text style={styles.ratingStar}>⭐</Text>
-              <Text style={styles.ratingNum}>
-                {usuario?.rating?.toFixed(1) ?? "0.0"}
-              </Text>
-              <Text style={styles.ratingLabel}>rating</Text>
+              <Icono nombre="star" tamano={16} color="#FFD23F" />
+              {usuario?.rating ? (
+                <>
+                  <Text style={styles.ratingNum}>{textoRating(usuario.rating)}</Text>
+                  <Text style={styles.ratingLabel}>rating</Text>
+                </>
+              ) : (
+                <Text style={styles.ratingLabel}>Sin reseñas todavía</Text>
+              )}
             </View>
           )}
         </View>
@@ -189,7 +215,7 @@ export default function PerfilScreen() {
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={[styles.statNum, { color: "#FFD23F" }]}>{enCurso}</Text>
+          <Text style={[styles.statNum, { color: tema.dorado }]}>{enCurso}</Text>
           <Text style={styles.statLabel}>En curso</Text>
         </View>
         <View style={styles.statDivider} />
@@ -208,7 +234,13 @@ export default function PerfilScreen() {
           onPress={() => router.push("/planes")}
           accessibilityLabel={plan.plan === "GRATIS" ? "Ver planes" : "Administrar mi plan"}
         >
-          <Text style={styles.planIco}>{plan.plan === "GRATIS" ? "💎" : plan.info.ico}</Text>
+          <View style={[styles.planIcoWrap, plan.plan !== "GRATIS" && styles.planIcoWrapActivo]}>
+            <Icono
+              nombre={plan.plan === "GRATIS" ? "diamond-outline" : plan.info.icono}
+              tamano={22}
+              color={plan.plan === "GRATIS" ? tema.dorado : Colors.primary}
+            />
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.planTitulo}>
               {plan.plan === "GRATIS"
@@ -225,7 +257,7 @@ export default function PerfilScreen() {
                   : "Activo"}
             </Text>
           </View>
-          <Text style={styles.planCta}>{plan.plan === "GRATIS" ? "Ver planes" : "Administrar"} ›</Text>
+          <Icono nombre="chevron-forward" tamano={18} color={Colors.primary} />
         </PressScale>
       </Animated.View>
 
@@ -238,7 +270,7 @@ export default function PerfilScreen() {
             {esProveedor ? "Trabajos recientes" : "Pedidos recientes"}
           </Text>
           <TouchableOpacity onPress={() => router.push("/(tabs)/pedidos")}>
-            <Text style={styles.sectionLink}>Ver todos →</Text>
+            <Text style={styles.sectionLink}>Ver todos</Text>
           </TouchableOpacity>
         </View>
 
@@ -249,62 +281,27 @@ export default function PerfilScreen() {
           </>
         ) : pedidos.length === 0 ? (
           <View style={styles.emptyPedidos}>
-            <Text style={styles.emptyIco}>📋</Text>
+            <Icono nombre="receipt-outline" tamano={36} color={tema.subTexto} style={styles.emptyIco} />
             <Text style={styles.emptyText}>Sin pedidos todavía</Text>
           </View>
         ) : (
           pedidos.slice(0, 3).map((p) => {
-            const estadoConfig: Record<
-              string,
-              { color: string; bg: string; label: string }
-            > = {
-              PENDIENTE: {
-                color: "#D4A017",
-                bg: "rgba(255,210,63,.12)",
-                label: "⏳ Pendiente",
-              },
-              ACEPTADO: {
-                color: Colors.primary,
-                bg: "rgba(26,158,92,.1)",
-                label: "✓ Aceptado",
-              },
-              EN_CURSO: {
-                color: "#74B9FF",
-                bg: "rgba(116,185,255,.12)",
-                label: "🔧 En curso",
-              },
-              COMPLETADO: {
-                color: Colors.primary,
-                bg: "rgba(26,158,92,.1)",
-                label: "✅ Completado",
-              },
-              CANCELADO: {
-                color: "#FF7675",
-                bg: "rgba(255,118,117,.12)",
-                label: "✕ Cancelado",
-              },
-            };
-            const est = estadoConfig[p.estado] ?? estadoConfig.PENDIENTE;
             return (
               <View key={p.id} style={styles.pedidoCard}>
                 <View style={styles.pedidoLeft}>
                   <View style={styles.pedidoIco}>
-                    <Text style={{ fontFamily: F.regular, fontSize: 18 }}>🔧</Text>
+                    <Icono nombre={categoriaInfo(p.servicio?.categoria).icono} tamano={19} color={Colors.primary} />
                   </View>
-                  <View>
-                    <Text style={styles.pedidoNombre}>
+                  <View style={styles.pedidoTextos}>
+                    <Text style={styles.pedidoNombre} numberOfLines={1}>
                       {p.servicio?.nombre}
                     </Text>
-                    <Text style={styles.pedidoSub}>
+                    <Text style={styles.pedidoSub} numberOfLines={1}>
                       {esProveedor ? p.cliente?.nombre : p.proveedor?.nombre}
                     </Text>
                   </View>
                 </View>
-                <View style={[styles.estadoBadge, { backgroundColor: est.bg }]}>
-                  <Text style={[styles.estadoText, { color: est.color }]}>
-                    {est.label}
-                  </Text>
-                </View>
+                <EstadoBadge estado={p.estado} oscuro={tema.esOscuro} />
               </View>
             );
           })
@@ -313,74 +310,42 @@ export default function PerfilScreen() {
 
       {/* ── OPCIONES ── */}
       <Animated.View style={[styles.optionsCard, { opacity: fadeAnim }]}>
-        <TouchableOpacity
-          style={styles.optionRow}
-          onPress={() => router.push("/planes")}
-        >
-          <Text style={styles.optionIco}>💎</Text>
-          <Text style={styles.optionText}>Planes y beneficios</Text>
-          <Text style={styles.optionArrow}>›</Text>
-        </TouchableOpacity>
-        <View style={styles.optionDivider} />
+        {/* Para el proveedor, su área de trabajo tiene que estar a mano (antes solo
+            se llegaba desde un banner al final de Inicio) */}
         {esProveedor && (
           <>
-            <TouchableOpacity
-              style={styles.optionRow}
-              onPress={() => router.push("/respuestas-rapidas")}
-            >
-              <Text style={styles.optionIco}>💬</Text>
-              <Text style={styles.optionText}>Respuestas rápidas</Text>
-              {!plan.esPremium && <Text style={styles.optionLock}>👑</Text>}
-              <Text style={styles.optionArrow}>›</Text>
-            </TouchableOpacity>
-            <View style={styles.optionDivider} />
+            <FilaMenu icono="briefcase-outline" texto="Panel de trabajo" onPress={() => router.push("/proveedor-panel")} />
+            <DivisorMenu />
+            <FilaMenu icono="construct-outline" texto="Mis servicios" onPress={() => router.push("/proveedor-panel/servicios")} />
+            <DivisorMenu />
           </>
         )}
-        <TouchableOpacity
-          style={styles.optionRow}
-          onPress={() => router.push("/editar-perfil")}
-        >
-          <Text style={styles.optionIco}>👤</Text>
-          <Text style={styles.optionText}>Editar perfil</Text>
-          <Text style={styles.optionArrow}>›</Text>
-        </TouchableOpacity>
-        <View style={styles.optionDivider} />
+        <FilaMenu icono="diamond-outline" tinte="#B8860B" texto="Planes y beneficios" onPress={() => router.push("/planes")} />
+        <DivisorMenu />
+        {esProveedor && (
+          <>
+            <FilaMenu
+              icono="chatbubbles-outline"
+              texto="Respuestas rápidas"
+              onPress={() => router.push("/respuestas-rapidas")}
+              extra={!plan.esPremium && <Icono nombre="lock-closed" tamano={14} color={tema.subTexto} />}
+            />
+            <DivisorMenu />
+          </>
+        )}
+        <FilaMenu icono="person-outline" texto="Editar perfil" onPress={() => router.push("/editar-perfil")} />
+        <DivisorMenu />
         {!esProveedor && (
           <>
-            <TouchableOpacity
-              style={styles.optionRow}
-              onPress={() => router.push("/favoritos")}
-            >
-              <Text style={styles.optionIco}>❤️</Text>
-              <Text style={styles.optionText}>Mis favoritos</Text>
-              <Text style={styles.optionArrow}>›</Text>
-            </TouchableOpacity>
-            <View style={styles.optionDivider} />
+            <FilaMenu icono="heart-outline" tinte="#E0475B" texto="Mis favoritos" onPress={() => router.push("/favoritos")} />
+            <DivisorMenu />
           </>
         )}
-        <TouchableOpacity
-          style={styles.optionRow}
-          onPress={() => router.push("/notificaciones")}
-        >
-          <Text style={styles.optionIco}>🔔</Text>
-          <Text style={styles.optionText}>Notificaciones</Text>
-          <Text style={styles.optionArrow}>›</Text>
-        </TouchableOpacity>
-        <View style={styles.optionDivider} />
-        <TouchableOpacity
-          style={styles.optionRow}
-          onPress={() => router.push("/ajustes")}
-        >
-          <Text style={styles.optionIco}>🔒</Text>
-          <Text style={styles.optionText}>Privacidad y seguridad</Text>
-          <Text style={styles.optionArrow}>›</Text>
-        </TouchableOpacity>
-        <View style={styles.optionDivider} />
-        <TouchableOpacity style={styles.optionRow} onPress={handleAyuda}>
-          <Text style={styles.optionIco}>❓</Text>
-          <Text style={styles.optionText}>Ayuda y soporte</Text>
-          <Text style={styles.optionArrow}>›</Text>
-        </TouchableOpacity>
+        <FilaMenu icono="notifications-outline" tinte="#1F6FD1" texto="Notificaciones" onPress={() => router.push("/notificaciones")} />
+        <DivisorMenu />
+        <FilaMenu icono="shield-checkmark-outline" tinte="#6C5CE7" texto="Privacidad y seguridad" onPress={() => router.push("/ajustes")} />
+        <DivisorMenu />
+        <FilaMenu icono="help-buoy-outline" tinte={tema.subTexto} texto="Ayuda y soporte" onPress={handleAyuda} />
       </Animated.View>
 
       {/* ── LOGOUT ── */}
@@ -393,6 +358,8 @@ export default function PerfilScreen() {
         <Text style={styles.version}>AyudaVecino v1.0.0</Text>
       </Animated.View>
     </ScrollView>
+    <FondoBarraEstado color="#1a1a1a" />
+    </View>
   );
 }
 
@@ -442,7 +409,6 @@ const getStyles = (tema: TemaTokens) =>
       alignItems: "center",
       justifyContent: "center",
     },
-    settingsIco: { fontFamily: F.regular, fontSize: 16 },
     avatarSection: { alignItems: "center", paddingHorizontal: 22 },
     avatarWrap: { position: "relative", marginBottom: 14 },
     avatarRing: {
@@ -475,6 +441,9 @@ const getStyles = (tema: TemaTokens) =>
       borderRadius: 100,
       borderWidth: 2,
       borderColor: "#1a1a1a",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
     },
     rolBadgeProv: { backgroundColor: Colors.primaryLight },
     rolBadgeText: { fontSize: 10, fontFamily: F.extrabold, color: "#1a1a1a" },
@@ -494,7 +463,6 @@ const getStyles = (tema: TemaTokens) =>
       paddingVertical: 8,
       borderRadius: 100,
     },
-    ratingStar: { fontFamily: F.regular, fontSize: 16 },
     ratingNum: { fontSize: 18, fontFamily: F.extrabold, color: "white" },
     ratingLabel: { fontFamily: F.regular, fontSize: 12, color: "rgba(255,255,255,.6)" },
     statsCard: {
@@ -530,7 +498,7 @@ const getStyles = (tema: TemaTokens) =>
     sectionTitle: { fontSize: 17, fontFamily: F.extrabold, color: tema.texto },
     sectionLink: { fontSize: 12, color: Colors.primary, fontFamily: F.bold },
     emptyPedidos: { alignItems: "center", paddingVertical: 24 },
-    emptyIco: { fontFamily: F.regular, fontSize: 36, marginBottom: 8, opacity: 0.3 },
+    emptyIco: { marginBottom: 8, opacity: 0.5 },
     emptyText: { fontFamily: F.regular, fontSize: 14, color: tema.subTexto },
     pedidoCard: {
       flexDirection: "row",
@@ -547,7 +515,9 @@ const getStyles = (tema: TemaTokens) =>
       shadowRadius: 6,
       elevation: 2,
     },
-    pedidoLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+    pedidoLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1, marginRight: 8 },
+    // Sin flex el nombre largo se metía debajo de la etiqueta de estado
+    pedidoTextos: { flex: 1 },
     pedidoIco: {
       width: 40,
       height: 40,
@@ -563,8 +533,6 @@ const getStyles = (tema: TemaTokens) =>
       marginBottom: 2,
     },
     pedidoSub: { fontFamily: F.regular, fontSize: 11, color: tema.subTexto },
-    estadoBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
-    estadoText: { fontSize: 10, fontFamily: F.bold },
     optionsCard: {
       backgroundColor: tema.card,
       marginHorizontal: 22,
@@ -577,16 +545,6 @@ const getStyles = (tema: TemaTokens) =>
       elevation: 2,
       overflow: "hidden",
     },
-    optionRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      padding: 16,
-      gap: 12,
-    },
-    optionIco: { fontFamily: F.regular, fontSize: 20, width: 28, textAlign: "center" },
-    optionText: { flex: 1, fontSize: 14, fontFamily: F.medium, color: tema.texto },
-    optionArrow: { fontFamily: F.regular, fontSize: 20, color: tema.subTexto },
-    optionLock: { fontFamily: F.regular, fontSize: 13 },
     planCard: {
       flexDirection: "row",
       alignItems: "center",
@@ -600,11 +558,10 @@ const getStyles = (tema: TemaTokens) =>
       borderColor: "#FFD23F",
     },
     planCardActivo: { borderColor: Colors.primary },
-    planIco: { fontFamily: F.regular, fontSize: 26 },
+    planIcoWrap: { width: 44, height: 44, borderRadius: 13, backgroundColor: "rgba(255,210,63,.18)", alignItems: "center", justifyContent: "center" },
+    planIcoWrapActivo: { backgroundColor: Colors.greenLight },
     planTitulo: { fontSize: 14, fontFamily: F.extrabold, color: tema.texto, marginBottom: 2 },
     planSub: { fontSize: 11, fontFamily: F.regular, color: tema.subTexto, lineHeight: 15 },
-    planCta: { fontSize: 12, fontFamily: F.bold, color: Colors.primary },
-    optionDivider: { height: 1, backgroundColor: tema.border, marginLeft: 56 },
     logoutBtn: {
       backgroundColor: tema.card,
       borderRadius: 16,
@@ -614,6 +571,6 @@ const getStyles = (tema: TemaTokens) =>
       borderWidth: 1.5,
       borderColor: "#FF7675",
     },
-    logoutText: { color: "#FF7675", fontSize: 15, fontFamily: F.bold },
+    logoutText: { color: tema.peligro, fontSize: 15, fontFamily: F.bold },
     version: { fontFamily: F.regular, textAlign: "center", fontSize: 11, color: tema.subTexto },
   });

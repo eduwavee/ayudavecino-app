@@ -10,6 +10,9 @@ import { usePlan } from '../../hooks/usePlan'
 import { FUENTES as F, HIT_SLOP } from '../../constants/diseno'
 import { PressScale } from '../../components/ui/PressScale'
 import { Aparecer } from '../../components/ui/Aparecer'
+import { Icono } from '../../components/ui/Icono'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated'
 
 export default function PlanesScreen() {
   const router = useRouter()
@@ -19,6 +22,18 @@ export default function PlanesScreen() {
   const { plan: planActual, rol, info: infoActual, venceEn } = usePlan()
   const [periodo, setPeriodo] = useState<Periodo>('MENSUAL')
   const [cancelando, setCancelando] = useState(false)
+
+  // Pastilla del selector mensual/anual: se desliza a la opción elegida (estado, no decoración)
+  const [anchoToggle, setAnchoToggle] = useState(0)
+  const posPastilla = useSharedValue(0)
+  const pastilla = useAnimatedStyle(() => ({
+    width: (anchoToggle - 8) / 2,
+    transform: [{ translateX: posPastilla.value * ((anchoToggle - 8) / 2) }],
+  }))
+  function elegirPeriodo(p: Periodo) {
+    setPeriodo(p)
+    posPastilla.value = withTiming(p === 'ANUAL' ? 1 : 0, { duration: 200, easing: Easing.bezier(0.23, 1, 0.32, 1) })
+  }
 
   const planes = PLANES[rol]
   const esProveedor = rol === 'PROVEEDOR'
@@ -47,6 +62,7 @@ export default function PlanesScreen() {
   }
 
   return (
+    <View style={styles.container}>
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* ── HERO ── */}
       <View style={[styles.hero, { paddingTop: 56 }]}>
@@ -58,9 +74,8 @@ export default function PlanesScreen() {
           accessibilityRole="button"
           accessibilityLabel="Volver"
         >
-          <Text style={styles.backText}>←</Text>
+          <Icono nombre="arrow-back" tamano={20} color="white" />
         </TouchableOpacity>
-        <Text style={styles.heroKicker}>{esProveedor ? 'Planes para proveedores' : 'Planes para vecinos'}</Text>
         <Text style={styles.heroTitle}>
           {esProveedor ? 'Conseguí más clientes' : 'Resolvé todo más rápido'}
         </Text>
@@ -72,7 +87,9 @@ export default function PlanesScreen() {
 
         {planActual !== 'GRATIS' && (
           <View style={styles.actualCard}>
-            <Text style={styles.actualIco}>{infoActual.ico}</Text>
+            <View style={styles.actualIco}>
+              <Icono nombre={infoActual.icono} tamano={22} color="#FFD23F" />
+            </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.actualLabel}>Tu plan actual</Text>
               <Text style={styles.actualNombre}>{infoActual.nombre}</Text>
@@ -87,12 +104,15 @@ export default function PlanesScreen() {
       </View>
 
       {/* ── MENSUAL / ANUAL ── */}
-      <View style={styles.toggle}>
+      <View style={styles.toggle} onLayout={e => setAnchoToggle(e.nativeEvent.layout.width)}>
+        {anchoToggle > 0 && <Animated.View style={[styles.togglePastilla, pastilla]} />}
         {(['MENSUAL', 'ANUAL'] as Periodo[]).map(p => (
           <TouchableOpacity
             key={p}
-            style={[styles.toggleBtn, periodo === p && styles.toggleBtnActivo]}
-            onPress={() => setPeriodo(p)}
+            style={styles.toggleBtn}
+            onPress={() => elegirPeriodo(p)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: periodo === p }}
           >
             <Text style={[styles.toggleText, periodo === p && styles.toggleTextActivo]}>
               {p === 'MENSUAL' ? 'Mensual' : 'Anual'}
@@ -112,12 +132,16 @@ export default function PlanesScreen() {
         return (
           <Aparecer key={p.id} indice={i} style={[styles.card, p.destacado && styles.cardDestacada, esActual && styles.cardActual]}>
             {p.destacado && (
-              <View style={styles.destacadoChip}><Text style={styles.destacadoText}>⭐ Más elegido</Text></View>
+              <View style={styles.destacadoChip}>
+                <Icono nombre="star" tamano={11} color={Colors.dark} />
+                {/* "Recomendado" y no "Más elegido": no hay datos de ventas que lo respalden */}
+                <Text style={styles.destacadoText}>Recomendado</Text>
+              </View>
             )}
 
             <View style={styles.cardTop}>
               <View style={[styles.cardIco, p.destacado && styles.cardIcoDestacado]}>
-                <Text style={{ fontFamily: F.regular, fontSize: 24 }}>{p.ico}</Text>
+                <Icono nombre={p.icono} tamano={24} color={p.destacado ? '#B8860B' : Colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardNombre}>{p.nombre}</Text>
@@ -138,7 +162,7 @@ export default function PlanesScreen() {
             <View style={styles.beneficios}>
               {p.beneficios.map(b => (
                 <View key={b} style={styles.beneficioRow}>
-                  <Text style={[styles.beneficioCheck, p.destacado && { color: '#D4A017' }]}>✓</Text>
+                  <Icono nombre="checkmark-circle" tamano={17} color={p.destacado ? '#B8860B' : Colors.primary} />
                   <Text style={styles.beneficioText}>{b}</Text>
                 </View>
               ))}
@@ -146,7 +170,8 @@ export default function PlanesScreen() {
 
             {esActual ? (
               <View style={styles.btnActual}>
-                <Text style={styles.btnActualText}>✓ Tu plan actual</Text>
+                <Icono nombre="checkmark-circle" tamano={17} color={Colors.primary} />
+                <Text style={styles.btnActualText}>Tu plan actual</Text>
               </View>
             ) : p.id === 'GRATIS' ? (
               <TouchableOpacity style={styles.btnSecundario} onPress={confirmarCancelacion} disabled={cancelando}>
@@ -170,7 +195,7 @@ export default function PlanesScreen() {
       })}
 
       <View style={styles.nota}>
-        <Text style={styles.notaIco}>🧪</Text>
+        <Icono nombre="flask-outline" tamano={18} color={tema.dorado} />
         <Text style={styles.notaText}>
           Los pagos están en modo de prueba: podés activar cualquier plan sin que se cobre nada.
         </Text>
@@ -178,6 +203,8 @@ export default function PlanesScreen() {
 
       <View style={{ height: 40 }} />
     </ScrollView>
+    <FondoBarraEstado color="#1a1a1a" />
+    </View>
   )
 }
 
@@ -186,19 +213,17 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   hero:               { backgroundColor: '#1a1a1a', paddingHorizontal: 22, paddingBottom: 26, overflow: 'hidden' },
   heroBg:             { position: 'absolute', width: 280, height: 280, borderRadius: 140, backgroundColor: '#FFD23F', opacity: .08, top: -90, right: -90 },
   backBtn:            { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
-  backText:           { fontFamily: F.regular, fontSize: 16, color: 'white' },
-  heroKicker:         { fontSize: 11, color: '#FFD23F', fontFamily: F.extrabold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 },
   heroTitle:          { fontSize: 26, fontFamily: F.extrabold, color: 'white', marginBottom: 6 },
   heroSub:            { fontFamily: F.regular, fontSize: 13, color: 'rgba(255,255,255,.6)', lineHeight: 19 },
   actualCard:         { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 18, backgroundColor: 'rgba(255,255,255,.07)', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,.1)' },
-  actualIco:          { fontFamily: F.regular, fontSize: 28 },
-  actualLabel:        { fontSize: 10, color: 'rgba(255,255,255,.45)', fontFamily: F.bold, letterSpacing: 1, textTransform: 'uppercase' },
+  actualIco:          { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(255,210,63,.14)', alignItems: 'center', justifyContent: 'center' },
+  actualLabel:        { fontSize: 10, color: 'rgba(255,255,255,.6)', fontFamily: F.bold, letterSpacing: 1, textTransform: 'uppercase' },
   actualNombre:       { fontSize: 16, color: 'white', fontFamily: F.extrabold, marginTop: 2 },
   actualVence:        { fontFamily: F.regular, fontSize: 11, color: 'rgba(255,255,255,.5)', marginTop: 2 },
 
   toggle:             { flexDirection: 'row', backgroundColor: tema.card, marginHorizontal: 22, marginTop: -14, borderRadius: 16, padding: 4, gap: 4, shadowColor: tema.sombra, shadowOffset: { width: 0, height: 4 }, shadowOpacity: .08, shadowRadius: 10, elevation: 4, marginBottom: 18 },
   toggleBtn:          { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: 12 },
-  toggleBtnActivo:    { backgroundColor: Colors.dark },
+  togglePastilla:     { position: 'absolute', top: 4, bottom: 4, left: 4, borderRadius: 12, backgroundColor: tema.seleccion },
   toggleText:         { fontSize: 13, fontFamily: F.bold, color: tema.subTexto },
   toggleTextActivo:   { color: 'white' },
   ahorroChip:         { backgroundColor: 'rgba(61,214,140,.2)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 100 },
@@ -207,7 +232,7 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   card:               { backgroundColor: tema.card, marginHorizontal: 22, borderRadius: 22, padding: 20, marginBottom: 14, borderWidth: 1.5, borderColor: tema.border, shadowColor: tema.sombra, shadowOffset: { width: 0, height: 2 }, shadowOpacity: .05, shadowRadius: 8, elevation: 2 },
   cardDestacada:      { borderColor: '#FFD23F', borderWidth: 2, shadowColor: '#D4A017', shadowOpacity: .18, shadowRadius: 14, elevation: 5 },
   cardActual:         { borderColor: Colors.primary },
-  destacadoChip:      { position: 'absolute', top: -11, right: 18, backgroundColor: '#FFD23F', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
+  destacadoChip:      { position: 'absolute', top: -11, right: 18, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFD23F', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
   destacadoText:      { fontSize: 10, fontFamily: F.extrabold, color: Colors.dark },
   cardTop:            { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   cardIco:            { width: 48, height: 48, borderRadius: 14, backgroundColor: tema.inputBg, alignItems: 'center', justifyContent: 'center' },
@@ -220,17 +245,15 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   precioEquivalente:  { fontSize: 11, color: Colors.primary, fontFamily: F.bold, marginTop: 2 },
   beneficios:         { gap: 9, marginTop: 16, marginBottom: 18 },
   beneficioRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  beneficioCheck:     { fontSize: 13, fontFamily: F.extrabold, color: Colors.primary, width: 14 },
   beneficioText:      { fontFamily: F.regular, flex: 1, fontSize: 13, color: tema.texto, lineHeight: 18 },
-  btnElegir:          { backgroundColor: Colors.dark, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  btnElegir:          { backgroundColor: tema.seleccion, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   btnElegirDestacado: { backgroundColor: '#FFD23F' },
   btnElegirText:      { color: 'white', fontSize: 14, fontFamily: F.extrabold },
-  btnActual:          { borderRadius: 14, paddingVertical: 14, alignItems: 'center', backgroundColor: 'rgba(26,158,92,.1)' },
+  btnActual:          { flexDirection: 'row', justifyContent: 'center', gap: 7, borderRadius: 14, paddingVertical: 14, alignItems: 'center', backgroundColor: 'rgba(26,158,92,.1)' },
   btnActualText:      { color: Colors.primary, fontSize: 14, fontFamily: F.extrabold },
   btnSecundario:      { borderRadius: 14, paddingVertical: 13, alignItems: 'center', borderWidth: 1.5, borderColor: tema.border },
   btnSecundarioText:  { color: tema.texto, fontSize: 14, fontFamily: F.bold },
 
   nota:               { flexDirection: 'row', gap: 10, marginHorizontal: 22, marginTop: 4, padding: 14, borderRadius: 14, backgroundColor: 'rgba(255,210,63,.12)' },
-  notaIco:            { fontFamily: F.regular, fontSize: 16 },
   notaText:           { fontFamily: F.regular, flex: 1, fontSize: 12, color: tema.texto, lineHeight: 18 },
 })

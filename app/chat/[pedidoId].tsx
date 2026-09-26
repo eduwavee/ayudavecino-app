@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View, Text, FlatList, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, Animated,
-  Dimensions, StatusBar, Image, Alert, ActivityIndicator, Linking
+  Dimensions, Image, Alert, ActivityIndicator, Linking
 } from 'react-native'
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
@@ -17,24 +17,44 @@ import { haptica } from '../../utils/haptica'
 import { PressScale } from '../../components/ui/PressScale'
 import { usePlan } from '../../hooks/usePlan'
 import { leerRespuestas } from '../../utils/respuestasRapidas'
+import { Icono, NombreIcono } from '../../components/ui/Icono'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { FotoPerfil } from '../../components/ui/FotoPerfil'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTema, TemaTokens } from '../../store/temaStore'
 
 // Entrada de un mensaje nuevo: sube corto y rápido (power3.out)
 const ENTRADA_MENSAJE = FadeInDown.duration(DURACION.base).easing(CURVA.salida)
 
 const { width } = Dimensions.get('window')
 
-type ChipRespuesta = { ico: string; txt: string; propia?: boolean; gestionar?: boolean }
+type ChipRespuesta = { icono: NombreIcono; txt: string; propia?: boolean; gestionar?: boolean }
 
+// Cada rol tiene sus frases: antes el proveedor veía "¿A qué hora llegás?" y
+// "Te mando la dirección", que son preguntas del cliente
 const QUICK_REPLIES: ChipRespuesta[] = [
-  { ico:'👍', txt:'Perfecto' },
-  { ico:'🕐', txt:'¿A qué hora llegás?' },
-  { ico:'🙏', txt:'Muchas gracias' },
-  { ico:'⏱️', txt:'¿Cuánto tardás?' },
-  { ico:'📍', txt:'Te mando la dirección' },
+  { icono:'thumbs-up-outline',  txt:'Perfecto' },
+  { icono:'time-outline',       txt:'¿A qué hora llegás?' },
+  { icono:'heart-outline',      txt:'Muchas gracias' },
+  { icono:'hourglass-outline',  txt:'¿Cuánto tardás?' },
+  { icono:'location-outline',   txt:'Te mando la dirección' },
+]
+
+const QUICK_REPLIES_PROVEEDOR: ChipRespuesta[] = [
+  { icono:'thumbs-up-outline',  txt:'Perfecto' },
+  { icono:'car-outline',        txt:'Voy en camino' },
+  { icono:'time-outline',       txt:'Llego en 15 minutos' },
+  { icono:'camera-outline',     txt:'¿Me mandás una foto del problema?' },
+  { icono:'location-outline',   txt:'¿Me pasás la dirección?' },
+  { icono:'heart-outline',      txt:'Muchas gracias' },
 ]
 
 export default function ChatScreen() {
   const router  = useRouter()
+  const tema    = useTema()
+  const styles  = getStyles(tema)
+  // La barra de escritura no queda tapada por la navegación del sistema (3 botones)
+  const insets  = useSafeAreaInsets()
   const usuario = useAuthStore(s => s.usuario)
   const { pedidoId, nombreContraparte, servicioNombre } = useLocalSearchParams<any>()
 
@@ -46,6 +66,17 @@ export default function ChatScreen() {
   const [cargandoHistorial, setCargandoHistorial] = useState(true)
   const [subiendoImagen, setSubiendoImagen] = useState(false)
   const [misRespuestas, setMisRespuestas] = useState<string[]>([])
+  // Foto de la otra persona (encabezado, mensajes y "escribiendo"): viene del detalle del pedido
+  const [avatarContraparte, setAvatarContraparte] = useState<string | null>(null)
+
+  useEffect(() => {
+    pedidosService.obtenerPedido(pedidoId)
+      .then((p: any) => {
+        const otra = p.clienteId === usuario?.id ? p.proveedor : p.cliente
+        setAvatarContraparte(otra?.avatar ?? null)
+      })
+      .catch(() => {})
+  }, [pedidoId, usuario?.id])
   const { esPremium } = usePlan()
   const esProveedor = usuario?.rol === 'PROVEEDOR'
 
@@ -58,10 +89,10 @@ export default function ChatScreen() {
   const chipsRespuestas: ChipRespuesta[] = esProveedor
     ? [
         esPremium
-          ? { ico: '✏️', txt: 'Mis respuestas', gestionar: true }
-          : { ico: '👑', txt: 'Tus respuestas', gestionar: true },
-        ...(esPremium ? misRespuestas.map(txt => ({ ico: '⭐', txt, propia: true })) : []),
-        ...QUICK_REPLIES,
+          ? { icono: 'create-outline' as NombreIcono, txt: 'Mis respuestas', gestionar: true }
+          : { icono: 'lock-closed-outline' as NombreIcono, txt: 'Tus respuestas', gestionar: true },
+        ...(esPremium ? misRespuestas.map(txt => ({ icono: 'star' as NombreIcono, txt, propia: true })) : []),
+        ...QUICK_REPLIES_PROVEEDOR,
       ]
     : QUICK_REPLIES
 
@@ -164,7 +195,7 @@ export default function ChatScreen() {
       return
     }
     const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.7,
     })
     if (resultado.canceled || !resultado.assets?.[0]) return
@@ -213,40 +244,38 @@ export default function ChatScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
 
       {/* ── HEADER ── */}
       <View style={styles.header}>
         <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backIco}>‹</Text>
+          <Icono nombre="chevron-back" tamano={26} color={tema.texto} />
         </PressScale>
 
         <View style={styles.headerCenter}>
           <View style={styles.avatarWrap}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {nombreContraparte?.charAt(0).toUpperCase()}
-              </Text>
+              <FotoPerfil ruta={avatarContraparte} nombre={nombreContraparte} radio={21} estiloTexto={styles.avatarText} />
             </View>
-            {conectado && <View style={styles.onlineDot} />}
           </View>
           <View style={styles.headerTexts}>
             <Text style={styles.headerNombre} numberOfLines={1}>{nombreContraparte}</Text>
             <Text style={styles.headerStatus}>
-              {escribiendo ? '✍️ escribiendo...' : conectado ? '● En línea' : '○ Desconectado'}
+              {/* `conectado` es la conexión propia al chat, no la presencia de la otra persona:
+                  antes decía "En línea" aunque el otro no tuviera la app abierta */}
+              {escribiendo ? 'escribiendo...' : conectado ? 'Mensajes en tiempo real' : 'Reconectando…'}
             </Text>
           </View>
         </View>
 
         <TouchableOpacity style={styles.headerAction} onPress={llamarContraparte} accessibilityRole="button" accessibilityLabel={`Llamar a ${nombreContraparte ?? 'tu contacto'}`} hitSlop={10}>
-          <Text style={styles.headerActionIco}>📞</Text>
+          <Icono nombre="call-outline" tamano={19} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
       {/* ── PEDIDO CHIP ── */}
       <View style={styles.pedidoChip}>
         <View style={styles.pedidoChipLeft}>
-          <Text style={styles.pedidoChipIco}>🔧</Text>
+          <Icono nombre="receipt-outline" tamano={16} color={Colors.primary} />
           <Text style={styles.pedidoChipText} numberOfLines={1}>{servicioNombre}</Text>
         </View>
         <View style={styles.pedidoChipBadge}>
@@ -257,7 +286,7 @@ export default function ChatScreen() {
       {/* ── MENSAJES ── */}
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         keyboardVerticalOffset={0}
       >
         <Animated.View style={[styles.flex, { opacity:fadeAnim, transform:[{translateY:slideAnim}] }]}>
@@ -271,7 +300,9 @@ export default function ChatScreen() {
             ListEmptyComponent={
               <View style={styles.emptyChat}>
                 <View style={styles.emptyChatBubble}>
-                  <Text style={styles.emptyChatIco}>💬</Text>
+                  <View style={styles.emptyChatIco}>
+                    <Icono nombre="chatbubbles-outline" tamano={30} color={Colors.primary} />
+                  </View>
                   <Text style={styles.emptyChatTitle}>
                     {cargandoHistorial ? 'Cargando...' : conectado ? 'Iniciá la conversación' : 'Conectando...'}
                   </Text>
@@ -312,9 +343,7 @@ export default function ChatScreen() {
                   >
                     {!mio && !mismoAutor && (
                       <View style={styles.msgAvatar}>
-                        <Text style={styles.msgAvatarText}>
-                          {msg.autorNombre?.charAt(0).toUpperCase()}
-                        </Text>
+                        <FotoPerfil ruta={avatarContraparte} nombre={msg.autorNombre} radio={14} estiloTexto={styles.msgAvatarText} />
                       </View>
                     )}
                     {!mio && mismoAutor && <View style={styles.msgAvatarSpacer} />}
@@ -328,7 +357,12 @@ export default function ChatScreen() {
                         <Text style={styles.bubbleAutor}>{msg.autorNombre}</Text>
                       )}
                       {msg.imagen && (
-                        <Image source={{ uri: archivoUrl(msg.imagen)! }} style={styles.bubbleImagen} />
+                        // El spinner queda detrás: mientras la foto baja se ve la carga y no
+                        // un bloque liso del color de la burbuja
+                        <View style={styles.bubbleImagenWrap}>
+                          <ActivityIndicator color={mio ? 'white' : Colors.primary} />
+                          <Image source={{ uri: archivoUrl(msg.imagen)! }} style={[StyleSheet.absoluteFill, { borderRadius: 14 }]} />
+                        </View>
                       )}
                       {!!msg.texto && (
                         <Text style={[styles.bubbleText, mio && styles.bubbleTextMio]}>
@@ -340,9 +374,11 @@ export default function ChatScreen() {
                           {new Date(msg.fecha).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' })}
                         </Text>
                         {mio && (
-                          <Text style={[styles.bubbleTick, msg.leido && styles.bubbleTickLeido]}>
-                            {msg.leido ? '✓✓' : '✓'}
-                          </Text>
+                          <Icono
+                            nombre={msg.leido ? 'checkmark-done' : 'checkmark'}
+                            tamano={14}
+                            color={msg.leido ? '#8ED6FF' : 'rgba(255,255,255,.7)'}
+                          />
                         )}
                       </View>
                     </View>
@@ -356,9 +392,7 @@ export default function ChatScreen() {
           {escribiendo && (
             <Animated.View style={[styles.typingRow, { opacity: fadeAnim }]}>
               <View style={styles.typingAvatar}>
-                <Text style={styles.typingAvatarText}>
-                  {nombreContraparte?.charAt(0).toUpperCase()}
-                </Text>
+                <FotoPerfil ruta={avatarContraparte} nombre={nombreContraparte} radio={14} estiloTexto={styles.typingAvatarText} />
               </View>
               <View style={styles.typingBubble}>
                 <View style={styles.typingDots}>
@@ -384,22 +418,22 @@ export default function ChatScreen() {
               style={[styles.quickBtn, item.propia && styles.quickBtnPropia, item.gestionar && styles.quickBtnGestionar]}
               onPress={() => {
                 if (item.gestionar) router.push('/respuestas-rapidas')
-                else enviar(item.propia ? item.txt : item.ico + ' ' + item.txt)
+                else enviar(item.txt)
               }}
               activeOpacity={.7}
             >
-              <Text style={styles.quickIco}>{item.ico}</Text>
+              <Icono nombre={item.icono} tamano={14} color={item.propia || item.gestionar ? tema.dorado : Colors.primary} />
               <Text style={styles.quickTxt}>{item.txt}</Text>
             </TouchableOpacity>
           )}
         />
 
         {/* ── INPUT ── */}
-        <View style={styles.inputArea}>
+        <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom + 8, 28) }]}>
           <TouchableOpacity style={styles.attachBtn} onPress={handleAdjuntarImagen} disabled={subiendoImagen} accessibilityRole="button" accessibilityLabel="Adjuntar una foto" hitSlop={8}>
             {subiendoImagen
               ? <ActivityIndicator size="small" color={Colors.primary} />
-              : <Text style={styles.attachIco}>📎</Text>}
+              : <Icono nombre="attach" tamano={21} color={tema.texto} />}
           </TouchableOpacity>
 
           <View style={[styles.inputWrap, inputAlto && styles.inputWrapTall]}>
@@ -407,7 +441,7 @@ export default function ChatScreen() {
               ref={inputRef}
               style={styles.input}
               placeholder="Mensaje..."
-              placeholderTextColor="#767676"
+              placeholderTextColor={tema.subTexto}
               value={texto}
               onChangeText={handleTexto}
               multiline
@@ -417,60 +451,62 @@ export default function ChatScreen() {
 
           {texto.trim() ? (
             <PressScale haptico style={styles.sendBtn} onPress={() => enviar()} accessibilityLabel="Enviar mensaje">
-              <Text style={styles.sendIco}>➤</Text>
+              <Icono nombre="send" tamano={18} color="white" style={{ marginLeft: 2 }} />
             </PressScale>
           ) : (
             // Abre el teclado; el selector de emojis es el del teclado del telefono
             <TouchableOpacity style={styles.emojiBtn} onPress={() => inputRef.current?.focus()} accessibilityRole="button" accessibilityLabel="Abrir el teclado para escribir">
-              <Text style={styles.emojiIco}>😊</Text>
+              <Icono nombre="happy-outline" tamano={22} color={tema.texto} />
             </TouchableOpacity>
           )}
         </View>
 
       </KeyboardAvoidingView>
+      <FondoBarraEstado color={tema.card} />
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  container:         { flex:1, backgroundColor:'#F0EDE8' },
+const getStyles = (tema: TemaTokens) => StyleSheet.create({
+  // Fondo del chat: beige en claro (se distingue de las burbujas blancas), el fondo del tema en oscuro
+  container:         { flex:1, backgroundColor:tema.esOscuro ? tema.bg : '#F0EDE8' },
   flex:              { flex:1 },
 
   // Header
-  header:            { backgroundColor:'white', flexDirection:'row', alignItems:'center', paddingHorizontal:14, paddingTop:52, paddingBottom:12, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:4 },
+  header:            { backgroundColor:tema.card, flexDirection:'row', alignItems:'center', paddingHorizontal:14, paddingTop:52, paddingBottom:12, shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:4 },
   backBtn:           { width:36, height:36, alignItems:'center', justifyContent:'center', marginRight:4 },
-  backIco:           { fontSize:30, color:Colors.dark, fontFamily: F.regular, lineHeight:36 },
+  backIco:           { fontSize:30, color:tema.texto, fontFamily: F.regular, lineHeight:36 },
   headerCenter:      { flex:1, flexDirection:'row', alignItems:'center', gap:10 },
   avatarWrap:        { position:'relative' },
   avatar:            { width:42, height:42, borderRadius:21, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center' },
   avatarText:        { color:'white', fontSize:17, fontFamily: F.extrabold },
-  onlineDot:         { position:'absolute', bottom:1, right:1, width:11, height:11, borderRadius:6, backgroundColor:'#2ecc71', borderWidth:2, borderColor:'white' },
+  onlineDot:         { position:'absolute', bottom:1, right:1, width:11, height:11, borderRadius:6, backgroundColor:'#2ecc71', borderWidth:2, borderColor:tema.card },
   headerTexts:       { flex:1 },
-  headerNombre:      { fontSize:16, fontFamily: F.extrabold, color:Colors.dark },
+  headerNombre:      { fontSize:16, fontFamily: F.extrabold, color:tema.texto },
   headerStatus:      { fontSize:11, color:Colors.primary, fontFamily: F.medium, marginTop:1 },
-  headerAction:      { width:38, height:38, borderRadius:19, backgroundColor:Colors.cream, alignItems:'center', justifyContent:'center' },
+  headerAction:      { width:38, height:38, borderRadius:19, backgroundColor:tema.bg, alignItems:'center', justifyContent:'center' },
   headerActionIco:   { fontFamily: F.regular, fontSize:18 },
 
   // Pedido chip
-  pedidoChip:        { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'white', marginHorizontal:16, marginVertical:8, borderRadius:14, padding:10, paddingHorizontal:14, shadowColor:'#000', shadowOffset:{width:0,height:1}, shadowOpacity:.04, shadowRadius:4, elevation:1 },
+  pedidoChip:        { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:tema.card, marginHorizontal:16, marginVertical:8, borderRadius:14, padding:10, paddingHorizontal:14, shadowColor:tema.sombra, shadowOffset:{width:0,height:1}, shadowOpacity:.04, shadowRadius:4, elevation:1 },
   pedidoChipLeft:    { flexDirection:'row', alignItems:'center', gap:8, flex:1 },
   pedidoChipIco:     { fontFamily: F.regular, fontSize:16 },
-  pedidoChipText:    { fontSize:13, fontFamily: F.semibold, color:Colors.dark, flex:1 },
-  pedidoChipBadge:   { backgroundColor:Colors.cream, paddingHorizontal:10, paddingVertical:3, borderRadius:100 },
-  pedidoChipId:      { fontSize:10, fontFamily: F.extrabold, color:'#6B6B6B', fontVariant:['tabular-nums'] },
+  pedidoChipText:    { fontSize:13, fontFamily: F.semibold, color:tema.texto, flex:1 },
+  pedidoChipBadge:   { backgroundColor:tema.bg, paddingHorizontal:10, paddingVertical:3, borderRadius:100 },
+  pedidoChipId:      { fontSize:10, fontFamily: F.extrabold, color:tema.subTexto, fontVariant:['tabular-nums'] },
 
   // Mensajes
   messagesList:      { padding:16, paddingBottom:8, gap:2 },
   emptyChat:         { alignItems:'center', paddingTop:40, paddingHorizontal:32 },
-  emptyChatBubble:   { backgroundColor:'white', borderRadius:20, padding:24, alignItems:'center', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
-  emptyChatIco:      { fontFamily: F.regular, fontSize:40, marginBottom:12 },
-  emptyChatTitle:    { fontSize:16, fontFamily: F.extrabold, color:Colors.dark, marginBottom:6, textAlign:'center' },
-  emptyChatSub:      { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', textAlign:'center', lineHeight:19 },
+  emptyChatBubble:   { backgroundColor:tema.card, borderRadius:20, padding:24, alignItems:'center', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
+  emptyChatIco:      { width:60, height:60, borderRadius:20, backgroundColor:'rgba(26,158,92,.1)', alignItems:'center', justifyContent:'center', marginBottom:12 },
+  emptyChatTitle:    { fontSize:16, fontFamily: F.extrabold, color:tema.texto, marginBottom:6, textAlign:'center' },
+  emptyChatSub:      { fontFamily: F.regular, fontSize:13, color:tema.subTexto, textAlign:'center', lineHeight:19 },
 
   // Fecha separador
   fechaSep:          { flexDirection:'row', alignItems:'center', gap:10, marginVertical:16 },
-  fechaLine:         { flex:1, height:1, backgroundColor:'rgba(0,0,0,.08)' },
-  fechaText:         { fontSize:11, color:'#aaa', fontFamily: F.semibold, backgroundColor:'#F0EDE8', paddingHorizontal:4 },
+  fechaLine:         { flex:1, height:1, backgroundColor:tema.overlay },
+  fechaText:         { fontSize:11, color:tema.subTexto, fontFamily: F.semibold, backgroundColor:tema.esOscuro ? tema.bg : '#F0EDE8', paddingHorizontal:4 },
 
   // Rows de mensajes
   msgRow:            { flexDirection:'row', alignItems:'flex-end', gap:6, marginBottom:2 },
@@ -483,45 +519,46 @@ const styles = StyleSheet.create({
   // Burbujas
   bubble:            { maxWidth:width*0.72, borderRadius:20, paddingHorizontal:14, paddingVertical:10, paddingBottom:6 },
   bubbleMio:         { backgroundColor:Colors.primary, borderBottomRightRadius:4 },
-  bubbleEllos:       { backgroundColor:'white', borderBottomLeftRadius:4, shadowColor:'#000', shadowOffset:{width:0,height:1}, shadowOpacity:.06, shadowRadius:4, elevation:1 },
+  bubbleEllos:       { backgroundColor:tema.card, borderBottomLeftRadius:4, shadowColor:tema.sombra, shadowOffset:{width:0,height:1}, shadowOpacity:.06, shadowRadius:4, elevation:1 },
   bubbleMioGroup:    { borderBottomRightRadius:20, borderTopRightRadius:4 },
   bubbleEllosGroup:  { borderBottomLeftRadius:20, borderTopLeftRadius:4 },
   bubbleAutor:       { fontSize:10, fontFamily: F.extrabold, color:Colors.primaryLight, marginBottom:3 },
-  bubbleText:        { fontFamily: F.regular, fontSize:15, color:Colors.dark, lineHeight:21 },
+  bubbleText:        { fontFamily: F.regular, fontSize:15, color:tema.texto, lineHeight:21 },
   bubbleTextMio:     { color:'white' },
   bubbleMeta:        { flexDirection:'row', alignItems:'center', justifyContent:'flex-end', gap:4, marginTop:3 },
-  bubbleHora:        { fontFamily: F.regular, fontSize:10, color:'rgba(0,0,0,.35)' },
+  bubbleHora:        { fontFamily: F.regular, fontSize:10, color:tema.esOscuro ? 'rgba(255,255,255,.4)' : 'rgba(0,0,0,.35)' },
   bubbleHoraMio:     { color:'rgba(255,255,255,.6)' },
   bubbleTick:        { fontFamily: F.regular, fontSize:10, color:'rgba(255,255,255,.7)' },
   bubbleTickLeido:   { color:'#8ED6FF' },
-  bubbleImagen:      { width:200, height:200, borderRadius:14, marginBottom:4 },
+  bubbleImagenWrap:  { width:200, height:200, borderRadius:14, marginBottom:4, alignItems:'center', justifyContent:'center', backgroundColor:tema.overlay },
 
   // Typing
   typingRow:         { flexDirection:'row', alignItems:'flex-end', gap:6, paddingHorizontal:16, paddingBottom:8 },
   typingAvatar:      { width:28, height:28, borderRadius:14, backgroundColor:Colors.primaryLight, alignItems:'center', justifyContent:'center' },
   typingAvatarText:  { color:'white', fontSize:11, fontFamily: F.extrabold },
-  typingBubble:      { backgroundColor:'white', borderRadius:18, borderBottomLeftRadius:4, paddingHorizontal:14, paddingVertical:12, shadowColor:'#000', shadowOffset:{width:0,height:1}, shadowOpacity:.06, shadowRadius:4, elevation:1 },
+  typingBubble:      { backgroundColor:tema.card, borderRadius:18, borderBottomLeftRadius:4, paddingHorizontal:14, paddingVertical:12, shadowColor:tema.sombra, shadowOffset:{width:0,height:1}, shadowOpacity:.06, shadowRadius:4, elevation:1 },
   typingDots:        { flexDirection:'row', alignItems:'center' },
   dot:               { width:7, height:7, borderRadius:4, backgroundColor:Colors.gray },
 
   // Quick replies
-  quickList:         { maxHeight:44, backgroundColor:'white', borderTopWidth:1, borderTopColor:'#f0f0f0' },
+  // flexGrow 0 en vez de una altura fija: con maxHeight 44 se cortaban las letras con cola (q, g)
+  quickList:         { flexGrow:0, backgroundColor:tema.card, borderTopWidth:1, borderTopColor:tema.border },
   quickContent:      { paddingHorizontal:14, gap:8, alignItems:'center', paddingVertical:8 },
-  quickBtn:          { flexDirection:'row', alignItems:'center', gap:5, paddingHorizontal:14, paddingVertical:6, borderRadius:100, backgroundColor:Colors.cream, borderWidth:1, borderColor:'#e8e8e8' },
+  quickBtn:          { flexDirection:'row', alignItems:'center', gap:5, paddingHorizontal:14, paddingVertical:6, borderRadius:100, backgroundColor:tema.bg, borderWidth:1, borderColor:tema.border },
   quickBtnPropia:    { backgroundColor:'rgba(255,210,63,.15)', borderColor:'rgba(212,160,23,.35)' },
-  quickBtnGestionar: { backgroundColor:'white', borderStyle:'dashed', borderColor:'#D4A017' },
+  quickBtnGestionar: { backgroundColor:tema.card, borderStyle:'dashed', borderColor:'#D4A017' },
   quickIco:          { fontFamily: F.regular, fontSize:13 },
-  quickTxt:          { fontSize:12, fontFamily: F.semibold, color:Colors.dark },
+  quickTxt:          { fontSize:12, fontFamily: F.semibold, color:tema.texto },
 
   // Input
-  inputArea:         { flexDirection:'row', alignItems:'flex-end', gap:8, paddingHorizontal:14, paddingVertical:10, paddingBottom:28, backgroundColor:'white', borderTopWidth:1, borderTopColor:'#f0f0f0' },
-  attachBtn:         { width:38, height:38, borderRadius:19, backgroundColor:Colors.cream, alignItems:'center', justifyContent:'center', flexShrink:0 },
+  inputArea:         { flexDirection:'row', alignItems:'flex-end', gap:8, paddingHorizontal:14, paddingVertical:10, paddingBottom:28, backgroundColor:tema.card, borderTopWidth:1, borderTopColor:tema.border },
+  attachBtn:         { width:38, height:38, borderRadius:19, backgroundColor:tema.bg, alignItems:'center', justifyContent:'center', flexShrink:0 },
   attachIco:         { fontFamily: F.regular, fontSize:18 },
-  inputWrap:         { flex:1, backgroundColor:Colors.cream, borderRadius:22, paddingHorizontal:16, paddingVertical:10, minHeight:42, maxHeight:100, justifyContent:'center', borderWidth:1, borderColor:'#e8e8e8' },
+  inputWrap:         { flex:1, backgroundColor:tema.bg, borderRadius:22, paddingHorizontal:16, paddingVertical:10, minHeight:42, maxHeight:100, justifyContent:'center', borderWidth:1, borderColor:tema.border },
   inputWrapTall:     { paddingVertical:12 },
-  input:             { fontFamily: F.regular, fontSize:15, color:Colors.dark, maxHeight:80, lineHeight:20 },
+  input:             { fontFamily: F.regular, fontSize:15, color:tema.texto, maxHeight:80, lineHeight:20 },
   sendBtn:           { width:42, height:42, borderRadius:21, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', flexShrink:0, shadowColor:Colors.primary, shadowOffset:{width:0,height:4}, shadowOpacity:.35, shadowRadius:8, elevation:5 },
   sendIco:           { color:'white', fontSize:17, fontFamily: F.extrabold, marginLeft:2 },
-  emojiBtn:          { width:42, height:42, borderRadius:21, backgroundColor:Colors.cream, alignItems:'center', justifyContent:'center', flexShrink:0 },
+  emojiBtn:          { width:42, height:42, borderRadius:21, backgroundColor:tema.bg, alignItems:'center', justifyContent:'center', flexShrink:0 },
   emojiIco:          { fontFamily: F.regular, fontSize:22 },
 })

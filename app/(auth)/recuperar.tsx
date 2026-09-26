@@ -11,14 +11,25 @@ import { EMAIL_REGEX, PASSWORD_REGEX, MENSAJE_PASSWORD } from '../../utils/valid
 import { FUENTES as F } from '../../constants/diseno'
 import { alertaError } from '../../utils/haptica'
 import { PressScale } from '../../components/ui/PressScale'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { mensajeDeError } from '../../utils/errores'
+import { Icono, NombreIcono } from '../../components/ui/Icono'
+import Reanimated, { Easing, Keyframe, ReduceMotion } from 'react-native-reanimated'
 
 type Paso = 'email' | 'codigo' | 'listo'
 
-const CABECERA: Record<Paso, { emoji: string; chip: string }> = {
-  email:  { emoji:'🔑', chip:'Recuperar acceso' },
-  codigo: { emoji:'📬', chip:'✓ Revisá tu correo' },
-  listo:  { emoji:'✅', chip:'Contraseña actualizada' },
+const CABECERA: Record<Paso, { icono: NombreIcono; chip: string }> = {
+  email:  { icono:'key',              chip:'Recuperar acceso' },
+  codigo: { icono:'mail-unread',      chip:'Revisá tu correo' },
+  listo:  { icono:'checkmark-circle', chip:'Contraseña actualizada' },
 }
+
+// El icono de la cabecera cambia con cada paso: entra con un pequeño asentamiento
+// para marcar que el proceso avanzó.
+const ENTRADA_ICONO = new Keyframe({
+  0:   { opacity: 0, transform: [{ scale: 0.8 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }], easing: Easing.bezier(0.23, 1, 0.32, 1) },
+}).duration(280).reduceMotion(ReduceMotion.System)
 
 // Recuperacion de contraseña en dos pasos: pedir un codigo por email y usarlo
 // para crear una contraseña nueva (POST /auth/recuperar y /auth/restablecer).
@@ -43,10 +54,6 @@ export default function RecuperarScreen() {
       Animated.timing(slideAnim, { toValue:0, duration:500, useNativeDriver:true }),
     ]).start()
   }, [paso])
-
-  function mensajeDeError(err: any, porDefecto: string) {
-    return err.response?.data?.mensaje || err.response?.data?.errores?.[0]?.msg || porDefecto
-  }
 
   async function handleEnviarCodigo() {
     if (!EMAIL_REGEX.test(email.trim())) return alertaError('Ingresá un email válido')
@@ -76,10 +83,10 @@ export default function RecuperarScreen() {
     }
   }
 
-  function campo(key: string, ico: string, props: React.ComponentProps<typeof TextInput>) {
+  function campo(key: string, ico: NombreIcono, props: React.ComponentProps<typeof TextInput>) {
     return (
       <View style={[styles.inputWrap, focused === key && styles.inputWrapFocused]}>
-        <Text style={styles.inputIco}>{ico}</Text>
+        <Icono nombre={ico} tamano={18} color={focused === key ? Colors.primary : '#767676'} style={styles.inputIco} />
         <TextInput
           style={styles.input}
           placeholderTextColor="#767676"
@@ -94,16 +101,18 @@ export default function RecuperarScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
         <View style={styles.topSection}>
           <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backText}>←</Text>
+            <Icono nombre="arrow-back" tamano={20} color="white" />
           </PressScale>
           <View style={styles.bigCircle} />
           <View style={styles.smallCircle} />
-          <Text style={styles.mainEmoji}>{CABECERA[paso].emoji}</Text>
+          <Reanimated.View key={paso} entering={ENTRADA_ICONO} style={styles.mainIco}>
+            <Icono nombre={CABECERA[paso].icono} tamano={46} color="#3DD68C" />
+          </Reanimated.View>
           <View style={styles.chip}>
             <Text style={styles.chipText}>{CABECERA[paso].chip}</Text>
           </View>
@@ -117,10 +126,10 @@ export default function RecuperarScreen() {
                 Ingresá el email de tu cuenta y te mandamos un código para crear una contraseña nueva.
               </Text>
 
-              {campo('email', '✉️', { placeholder:'Email', value:email, onChangeText:setEmail, keyboardType:'email-address' })}
+              {campo('email', 'mail-outline', { placeholder:'Email', value:email, onChangeText:setEmail, keyboardType:'email-address' })}
 
               <PressScale haptico style={[styles.btn, loading && { opacity:.7 }]} onPress={handleEnviarCodigo} disabled={loading}>
-                {loading ? <ActivityIndicator color="white" /> : <Text style={styles.btnText}>Enviar código →</Text>}
+                {loading ? <ActivityIndicator color="white" /> : <View style={styles.btnFila}><Text style={styles.btnText}>Enviar código</Text><Icono nombre="arrow-forward" tamano={18} color="white" /></View>}
               </PressScale>
             </>
           )}
@@ -133,12 +142,13 @@ export default function RecuperarScreen() {
                 de 6 números. Vence en 15 minutos.
               </Text>
 
-              {campo('codigo', '🔢', { placeholder:'Código de 6 números', value:codigo, onChangeText:setCodigo, keyboardType:'number-pad', maxLength:6 })}
-              {campo('pass', '🔒', { placeholder:'Contraseña nueva (mín. 8, letras y números)', value:password, onChangeText:setPassword, secureTextEntry:true })}
-              {campo('confirmar', '🔒', { placeholder:'Confirmar contraseña nueva', value:confirmar, onChangeText:setConfirmar, secureTextEntry:true })}
+              {campo('codigo', 'keypad-outline', { placeholder:'Código de 6 números', value:codigo, onChangeText:setCodigo, keyboardType:'number-pad', maxLength:6 })}
+              {campo('pass', 'lock-closed-outline', { placeholder:'Contraseña nueva (mín. 8, letras y números)', value:password, onChangeText:setPassword, secureTextEntry:true })}
+              {campo('confirmar', 'lock-closed-outline', { placeholder:'Confirmar contraseña nueva', value:confirmar, onChangeText:setConfirmar, secureTextEntry:true })}
 
               <View style={styles.tipBox}>
-                <Text style={styles.tipText}>💡 Si no lo ves, revisá la carpeta de spam o correo no deseado.</Text>
+                <Icono nombre="bulb-outline" tamano={16} color="#137A47" />
+                <Text style={styles.tipText}>Si no lo ves, revisá la carpeta de spam o correo no deseado.</Text>
               </View>
 
               <PressScale haptico style={[styles.btn, loading && { opacity:.7 }]} onPress={handleRestablecer} disabled={loading}>
@@ -165,6 +175,7 @@ export default function RecuperarScreen() {
           )}
         </Animated.View>
       </ScrollView>
+      <FondoBarraEstado color="#1a1a1a" />
     </KeyboardAvoidingView>
   )
 }
@@ -174,10 +185,9 @@ const styles = StyleSheet.create({
   scroll:           { flexGrow:1 },
   topSection:       { height:240, backgroundColor:'#1a1a1a', overflow:'hidden', justifyContent:'flex-end', padding:24, paddingBottom:44 },
   backBtn:          { position:'absolute', top:52, left:20, width:38, height:38, borderRadius:12, backgroundColor:'rgba(255,255,255,.1)', alignItems:'center', justifyContent:'center', zIndex:10 },
-  backText:         { fontFamily: F.regular, color:'white', fontSize:18 },
   bigCircle:        { position:'absolute', width:200, height:200, borderRadius:100, backgroundColor:'#1A9E5C', opacity:.2, top:-40, right:-40 },
   smallCircle:      { position:'absolute', width:100, height:100, borderRadius:50, backgroundColor:'#FFD23F', opacity:.15, bottom:60, right:60 },
-  mainEmoji:        { fontFamily: F.regular, fontSize:52, marginBottom:10 },
+  mainIco:          { marginBottom:10, alignSelf:'flex-start' },
   chip:             { backgroundColor:'rgba(26,158,92,.2)', borderRadius:100, paddingHorizontal:14, paddingVertical:6, borderWidth:1, borderColor:'rgba(26,158,92,.3)', alignSelf:'flex-start' },
   chipText:         { color:'#3DD68C', fontSize:12, fontFamily: F.bold },
   formSection:      { flex:1, backgroundColor:'white', borderTopLeftRadius:28, borderTopRightRadius:28, marginTop:-20, padding:28, paddingTop:32 },
@@ -186,10 +196,11 @@ const styles = StyleSheet.create({
   emailDestacado:   { color:'#1a1a1a', fontFamily: F.bold },
   inputWrap:        { flexDirection:'row', alignItems:'center', backgroundColor:'#f7f7f7', borderRadius:14, paddingHorizontal:14, marginBottom:12, borderWidth:1.5, borderColor:'transparent' },
   inputWrapFocused: { borderColor:Colors.primary, backgroundColor:'#F0FDF4' },
-  inputIco:         { fontFamily: F.regular, fontSize:16, marginRight:10 },
+  inputIco:         { marginRight:10 },
   input:            { fontFamily: F.regular, flex:1, paddingVertical:14, fontSize:14, color:'#1a1a1a' },
-  tipBox:           { backgroundColor:'#F0FDF4', borderRadius:14, padding:14, marginBottom:20, marginTop:8 },
-  tipText:          { fontFamily: F.regular, fontSize:12, color:'#555', lineHeight:18 },
+  tipBox:           { flexDirection:'row', gap:8, backgroundColor:'#F0FDF4', borderRadius:14, padding:14, marginBottom:20, marginTop:8 },
+  tipText:          { flex:1, fontFamily: F.regular, fontSize:12, color:'#555', lineHeight:18 },
+  btnFila:          { flexDirection:'row', alignItems:'center', gap:8 },
   btn:              { backgroundColor:'#1a1a1a', borderRadius:16, paddingVertical:16, alignItems:'center', marginBottom:16, marginTop:8 },
   btnText:          { color:'white', fontSize:15, fontFamily: F.bold, letterSpacing:.3 },
   linkBtn:          { alignSelf:'center', padding:6 },

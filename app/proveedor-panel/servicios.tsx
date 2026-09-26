@@ -9,10 +9,15 @@ import { useAuthStore } from '../../store/authStore'
 import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
 import { PressScale } from '../../components/ui/PressScale'
+import { Icono } from '../../components/ui/Icono'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { useTema, TemaTokens } from '../../store/temaStore'
 
 
 export default function ServiciosProveedorScreen() {
   const router  = useRouter()
+  const tema    = useTema()
+  const styles  = getStyles(tema)
   const usuario = useAuthStore(s => s.usuario)
   const [servicios, setServicios] = useState<any[]>([])
   const [loading, setLoading]     = useState(true)
@@ -33,7 +38,7 @@ export default function ServiciosProveedorScreen() {
 
       <View style={styles.header}>
         <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>←</Text>
+          <Icono nombre="arrow-back" tamano={20} color={tema.texto} />
         </PressScale>
         <Text style={styles.title}>Mis Servicios</Text>
         <PressScale haptico
@@ -54,7 +59,7 @@ export default function ServiciosProveedorScreen() {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyIco}>🔧</Text>
+              <Icono nombre="briefcase-outline" tamano={56} color={tema.subTexto} style={styles.emptyIco} />
               <Text style={styles.emptyTitle}>Sin servicios publicados</Text>
               <Text style={styles.emptySub}>Creá tu primer servicio para empezar a recibir pedidos</Text>
               <PressScale haptico
@@ -72,7 +77,7 @@ export default function ServiciosProveedorScreen() {
                   <View style={styles.serviceIco}>
                     {s.fotos?.[0]
                       ? <Image source={{ uri: archivoUrl(s.fotos[0])! }} style={styles.serviceFoto} />
-                      : <Text style={{ fontFamily: F.regular, fontSize:24}}>{categoriaInfo(s.categoria).ico}</Text>}
+                      : <Icono nombre={categoriaInfo(s.categoria).icono} tamano={24} color={Colors.primary} />}
                   </View>
                   <View style={styles.serviceInfo}>
                     <Text style={styles.serviceName}>{s.nombre}</Text>
@@ -82,14 +87,14 @@ export default function ServiciosProveedorScreen() {
                         <Text style={styles.catTagText}>{categoriaInfo(s.categoria).nombre}</Text>
                       </View>
                       <View style={[styles.catTag, { backgroundColor: s.activo ? 'rgba(26,158,92,.1)' : 'rgba(255,118,117,.1)' }]}>
-                        <Text style={[styles.catTagText, { color: s.activo ? Colors.primary : '#FF7675' }]}>
+                        <Text style={[styles.catTagText, { color: s.activo ? Colors.primary : tema.peligro }]}>
                           {s.activo ? '● Activo' : '● Inactivo'}
                         </Text>
                       </View>
                     </View>
                   </View>
                 </View>
-                <Text style={styles.servicePrice}>${s.precio?.toLocaleString()}</Text>
+                <Text style={styles.servicePrice}>${s.precio?.toLocaleString('es-AR')}</Text>
               </View>
 
               <View style={styles.serviceActions}>
@@ -97,45 +102,46 @@ export default function ServiciosProveedorScreen() {
                   style={styles.editBtn}
                   onPress={() => router.push({ pathname:'/proveedor-panel/nuevo-servicio', params:{ id:s.id, nombre:s.nombre, descripcion:s.descripcion, precio:s.precio, categoria:s.categoria } })}
                 >
-                  <Text style={styles.editBtnText}>✏️ Editar</Text>
+                  <Icono nombre="create-outline" tamano={16} color={tema.texto} />
+                  <Text style={styles.editBtnText}>Editar</Text>
                 </PressScale>
               </View>
             </View>
           ))}
         />
       )}
+      <FondoBarraEstado color={tema.bg} />
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  container:     { flex:1, backgroundColor:Colors.cream },
+const getStyles = (tema: TemaTokens) => StyleSheet.create({
+  container:     { flex:1, backgroundColor:tema.bg },
   header:        { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
-  backBtn:       { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },
-  backText:      { fontFamily: F.regular, fontSize:16, color:Colors.dark },
-  title:         { flex:1, fontSize:22, fontFamily: F.extrabold, color:Colors.dark },
+  backBtn:       { width:38, height:38, borderRadius:12, backgroundColor:tema.overlay, alignItems:'center', justifyContent:'center' },
+  title:         { flex:1, fontSize:22, fontFamily: F.extrabold, color:tema.texto },
   addBtn:        { backgroundColor:Colors.primary, paddingHorizontal:14, paddingVertical:8, borderRadius:100 },
   addBtnText:    { color:'white', fontSize:13, fontFamily: F.bold },
   listContainer: { paddingHorizontal:22, gap:14, paddingBottom:100 },
-  serviceCard:   { backgroundColor:'white', borderRadius:20, padding:18, shadowColor:'#000', shadowOffset:{width:0,height:3}, shadowOpacity:.06, shadowRadius:10, elevation:3 },
+  serviceCard:   { backgroundColor:tema.card, borderRadius:20, padding:18, shadowColor:tema.sombra, shadowOffset:{width:0,height:3}, shadowOpacity:.06, shadowRadius:10, elevation:3 },
   serviceTop:    { flexDirection:'row', alignItems:'flex-start', justifyContent:'space-between', marginBottom:14 },
   serviceLeft:   { flexDirection:'row', gap:12, flex:1 },
   serviceIco:    { width:50, height:50, borderRadius:15, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
   serviceFoto:   { width:'100%', height:'100%', borderRadius:15 },
   serviceInfo:   { flex:1, gap:4 },
-  serviceName:   { fontSize:15, fontFamily: F.extrabold, color:Colors.dark },
-  serviceDesc:   { fontFamily: F.regular, fontSize:12, color:'#6B6B6B', lineHeight:18 },
+  serviceName:   { fontSize:15, fontFamily: F.extrabold, color:tema.texto },
+  serviceDesc:   { fontFamily: F.regular, fontSize:12, color:tema.subTexto, lineHeight:18 },
   serviceTags:   { flexDirection:'row', gap:6, flexWrap:'wrap', marginTop:4 },
-  catTag:        { backgroundColor:Colors.cream, paddingHorizontal:10, paddingVertical:3, borderRadius:100 },
-  catTagText:    { fontSize:10, fontFamily: F.bold, color:'#6B6B6B' },
-  servicePrice:  { fontSize:18, fontFamily: F.extrabold, color:Colors.dark },
-  serviceActions:{ borderTopWidth:1, borderTopColor:Colors.border, paddingTop:12, flexDirection:'row', gap:10 },
-  editBtn:       { flex:1, paddingVertical:10, borderRadius:12, borderWidth:1.5, borderColor:Colors.border, alignItems:'center' },
-  editBtnText:   { fontSize:13, fontFamily: F.bold, color:Colors.dark },
+  catTag:        { backgroundColor:tema.bg, paddingHorizontal:10, paddingVertical:3, borderRadius:100 },
+  catTagText:    { fontSize:10, fontFamily: F.bold, color:tema.subTexto },
+  servicePrice:  { fontSize:18, fontFamily: F.extrabold, color:tema.texto },
+  serviceActions:{ borderTopWidth:1, borderTopColor:tema.border, paddingTop:12, flexDirection:'row', gap:10 },
+  editBtn:       { flex:1, flexDirection:'row', justifyContent:'center', gap:6, paddingVertical:10, borderRadius:12, borderWidth:1.5, borderColor:tema.border, alignItems:'center' },
+  editBtnText:   { fontSize:13, fontFamily: F.bold, color:tema.texto },
   empty:         { alignItems:'center', paddingTop:60, paddingHorizontal:32 },
-  emptyIco:      { fontFamily: F.regular, fontSize:56, marginBottom:16, opacity:.3 },
-  emptyTitle:    { fontSize:18, fontFamily: F.extrabold, color:Colors.dark, marginBottom:8 },
-  emptySub:      { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', textAlign:'center', lineHeight:20, marginBottom:24 },
+  emptyIco:      { marginBottom:16, opacity:.5 },
+  emptyTitle:    { fontSize:18, fontFamily: F.extrabold, color:tema.texto, marginBottom:8 },
+  emptySub:      { fontFamily: F.regular, fontSize:13, color:tema.subTexto, textAlign:'center', lineHeight:20, marginBottom:24 },
   emptyBtn:      { backgroundColor:Colors.primary, paddingHorizontal:24, paddingVertical:14, borderRadius:16 },
   emptyBtnText:  { color:'white', fontSize:14, fontFamily: F.bold },
 })

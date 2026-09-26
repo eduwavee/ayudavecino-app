@@ -10,6 +10,9 @@ import { Colors } from '../../constants/colors'
 import { useTema, TemaTokens } from '../../store/temaStore'
 import { usuariosService } from '../../services/usuarios.service'
 import { FUENTES as F } from '../../constants/diseno'
+import { Icono } from '../../components/ui/Icono'
+import { obtenerPosicion } from '../../utils/ubicacion'
+import { textoRating } from '../../utils/rating'
 
 // Fallback si no hay permiso de ubicación: San Miguel de Tucumán
 const REGION_DEFAULT = {
@@ -49,8 +52,8 @@ export default function MapaScreen() {
         return
       }
       setPermiso('concedido')
-      const pos = await Location.getCurrentPositionAsync({})
-      const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude }
+      const coords = await obtenerPosicion()
+      if (!coords) return
       setUbicacion(coords)
       setRegion({ ...coords, latitudeDelta: 0.05, longitudeDelta: 0.05 })
       mapRef.current?.animateToRegion({ ...coords, latitudeDelta: 0.05, longitudeDelta: 0.05 }, 500)
@@ -88,7 +91,7 @@ export default function MapaScreen() {
         </View>
         {!loading && (
           <View style={styles.contadorChip}>
-            <Text style={styles.contadorText}>{proveedoresConUbicacion.length} cerca</Text>
+            <Text style={styles.contadorText}>{proveedoresConUbicacion.length} en el mapa</Text>
           </View>
         )}
       </View>
@@ -114,10 +117,10 @@ export default function MapaScreen() {
                 <View style={styles.callout}>
                   <Text style={styles.calloutNombre}>{p.nombre}</Text>
                   <Text style={styles.calloutRating}>
-                    ⭐ {p.rating?.toFixed?.(1) ?? '0.0'}
-                    {p.plan === 'PREMIUM' ? ' · 👑 Premium' : p.plan === 'PRO' ? ' · 🚀 Pro' : ''}
+                    ★ {textoRating(p.rating)}
+                    {p.plan === 'PREMIUM' ? ' · Premium' : p.plan === 'PRO' ? ' · Pro' : ''}
                   </Text>
-                  <Text style={styles.calloutLink}>Ver perfil →</Text>
+                  <Text style={styles.calloutLink}>Ver perfil</Text>
                 </View>
               </Callout>
             </Marker>
@@ -132,7 +135,8 @@ export default function MapaScreen() {
 
         {permiso === 'denegado' && (
           <View style={styles.permisoBanner}>
-            <Text style={styles.permisoText}>📍 Activá la ubicación para verte en el mapa</Text>
+            <Icono nombre="location-outline" tamano={18} color={Colors.primary} style={{ marginRight: 8 }} />
+            <Text style={styles.permisoText}>Activá la ubicación para verte en el mapa</Text>
             <TouchableOpacity onPress={() => Linking.openSettings()}>
               <Text style={styles.permisoBtn}>Activar</Text>
             </TouchableOpacity>
@@ -140,7 +144,7 @@ export default function MapaScreen() {
         )}
 
         <TouchableOpacity style={styles.centrarBtn} onPress={centrarEnMiUbicacion} accessibilityRole="button" accessibilityLabel="Centrar el mapa en mi ubicación" hitSlop={10}>
-          <Text style={styles.centrarIco}>🎯</Text>
+          <Icono nombre="locate" tamano={22} color={Colors.primary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -160,7 +164,6 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   permisoText:     { flex:1, fontSize:12, color:tema.texto, fontFamily: F.semibold, marginRight:8 },
   permisoBtn:      { fontSize:12, fontFamily: F.extrabold, color:Colors.primary },
   centrarBtn:      { position:'absolute', bottom:24, right:20, width:48, height:48, borderRadius:24, backgroundColor:tema.card, alignItems:'center', justifyContent:'center', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.15, shadowRadius:8, elevation:4 },
-  centrarIco:      { fontFamily: F.regular, fontSize:20 },
   callout:         { minWidth:140, padding:4 },
   calloutNombre:   { fontSize:13, fontFamily: F.extrabold, color:Colors.dark, marginBottom:2 },
   calloutRating:   { fontFamily: F.regular, fontSize:11, color:'#6B6B6B', marginBottom:4 },

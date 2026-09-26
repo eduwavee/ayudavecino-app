@@ -19,6 +19,13 @@ import { Poppins_500Medium } from '@expo-google-fonts/poppins/500Medium'
 import { Poppins_600SemiBold } from '@expo-google-fonts/poppins/600SemiBold'
 import { Poppins_700Bold } from '@expo-google-fonts/poppins/700Bold'
 import { Poppins_800ExtraBold } from '@expo-google-fonts/poppins/800ExtraBold'
+import { FUENTE_ICONOS } from '../components/ui/Icono'
+
+// La app siempre arranca en las pestañas. Sin esto, Expo Router toma como inicial la
+// primera pantalla declarada en el <Stack> (antes era "pedido/exito").
+export const unstable_settings = {
+  initialRouteName: '(tabs)',
+}
 
 export default function RootLayout() {
   const router = useRouter()
@@ -36,6 +43,7 @@ export default function RootLayout() {
   // Si la fuente falla (sin red la primera vez), la app arranca igual con la del sistema
   const [fuentesCargadas, errorFuentes] = useFonts({
     Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold,
+    ...FUENTE_ICONOS,
   })
   const fuentesListas = fuentesCargadas || !!errorFuentes
 
@@ -139,10 +147,11 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: tema.bg },
         }}
       >
+        {/* Las pestañas van primero: son la pantalla de inicio */}
+        <Stack.Screen name="(tabs)" />
         {/* Pantallas de "éxito" y notificaciones suben desde abajo, como un momento aparte */}
         <Stack.Screen name="pedido/exito" options={{ animation: 'fade_from_bottom', gestureEnabled: false }} />
         <Stack.Screen name="resena/exito" options={{ animation: 'fade_from_bottom', gestureEnabled: false }} />
-        <Stack.Screen name="proveedor-panel/servicio-publicado" options={{ animation: 'fade_from_bottom', gestureEnabled: false }} />
         <Stack.Screen name="notificaciones" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
       </Stack>

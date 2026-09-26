@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Animated, Switch, ActivityIndicator,
-  Dimensions, StatusBar, Alert, RefreshControl
+  Dimensions, Alert, RefreshControl
 } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useRouter, useFocusEffect } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { useAuthStore } from '../../store/authStore'
 import { pedidosService } from '../../services/pedidos.service'
@@ -13,6 +13,13 @@ import { PressScale } from '../../components/ui/PressScale'
 import { FUENTES as F } from '../../constants/diseno'
 import { PlanBadge } from '../../components/ui/PlanBadge'
 import { usePlan } from '../../hooks/usePlan'
+import { Icono, NombreIcono } from '../../components/ui/Icono'
+import { EstadoBadge } from '../../components/ui/EstadoBadge'
+import { ContadorAnimado } from '../../components/ui/ContadorAnimado'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { FotoPerfil } from '../../components/ui/FotoPerfil'
+import { categoriaInfo } from '../../constants/categorias'
+import { textoRating } from '../../utils/rating'
 
 const { width } = Dimensions.get('window')
 
@@ -30,12 +37,12 @@ export default function ProveedorDashboard() {
   const fadeAnim    = useRef(new Animated.Value(0)).current
   const slideAnim   = useRef(new Animated.Value(30)).current
   const scaleAnim   = useRef(new Animated.Value(0.95)).current
-  const glowAnim    = useRef(new Animated.Value(0)).current
   const cardAnims   = [0,1,2,3].map(() => useRef(new Animated.Value(0)).current)
 
-  useEffect(() => {
-    cargarPedidos()
+  // Al volver de "Ver pedidos" (aceptar, completar...) el resumen quedaba desactualizado
+  useFocusEffect(useCallback(() => { cargarPedidos() }, []))
 
+  useEffect(() => {
     // Animación de entrada
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue:1, duration:700, useNativeDriver:true }),
@@ -50,14 +57,6 @@ export default function ProveedorDashboard() {
         Animated.spring(anim, { toValue:1, tension:60, friction:8, useNativeDriver:true }),
       ]).start()
     })
-
-    // Glow pulsante
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue:1, duration:2000, useNativeDriver:true }),
-        Animated.timing(glowAnim, { toValue:0, duration:2000, useNativeDriver:true }),
-      ])
-    ).start()
   }, [])
 
   async function cargarPedidos() {
@@ -108,19 +107,19 @@ export default function ProveedorDashboard() {
     ? Math.round(((gananciasEsteMes - gananciasMesAnterior) / gananciasMesAnterior) * 100)
     : null
 
-  const glowOpacity = glowAnim.interpolate({ inputRange:[0,1], outputRange:[0.3, 0.8] })
 
-  const ESTADO_CONFIG: Record<string, any> = {
-    PENDIENTE: { color:'#FFD23F', bg:'rgba(255,210,63,.15)', label:'⏳ Pendiente' },
-    ACEPTADO:  { color:Colors.primaryLight, bg:'rgba(61,214,140,.15)', label:'✓ Aceptado' },
-    EN_CURSO:  { color:'#74B9FF', bg:'rgba(116,185,255,.15)', label:'🔧 En curso' },
-    COMPLETADO:{ color:Colors.primaryLight, bg:'rgba(61,214,140,.15)', label:'✅ Completado' },
-    CANCELADO: { color:'#FF7675', bg:'rgba(255,118,117,.15)', label:'✕ Cancelado' },
-  }
+  // Accesos rápidos del panel: cada uno con su ícono y color
+  const ACCIONES: { icono: NombreIcono; label: string; ruta: any; estilo: any; color: string; badge?: number; candado?: boolean }[] = [
+    { icono: 'receipt-outline',   label: 'Ver pedidos',    ruta: '/proveedor-panel/pedidos',        estilo: styles.accionCardGreen,  color: Colors.primaryLight, badge: pendientes.length },
+    { icono: 'briefcase-outline', label: 'Mis servicios',  ruta: '/proveedor-panel/servicios',      estilo: styles.accionCardBlue,   color: '#74B9FF' },
+    { icono: 'add-circle-outline', label: 'Nuevo servicio', ruta: '/proveedor-panel/nuevo-servicio', estilo: styles.accionCardYellow, color: '#FFD23F' },
+    { icono: 'person-outline',    label: 'Mi perfil',      ruta: '/(tabs)/perfil',                  estilo: styles.accionCardPurple, color: '#A29BFE' },
+    { icono: 'stats-chart-outline', label: 'Estadísticas', ruta: '/proveedor-panel/estadisticas',   estilo: styles.accionCardBlue,   color: '#74B9FF', candado: plan.nivel < 1 },
+    { icono: 'diamond-outline',   label: 'Planes',         ruta: '/planes',                         estilo: styles.accionCardGold,   color: '#FFD23F' },
+  ]
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -134,23 +133,22 @@ export default function ProveedorDashboard() {
 
           {/* Decoración de fondo */}
           <View style={styles.heroBg} />
-          <Animated.View style={[styles.heroGlow, { opacity: glowOpacity }]} />
+          {/* Halo fijo y sutil: antes latía entre 30% y 80% y tapaba el encabezado */}
+          <View style={styles.heroGlow} />
           <View style={styles.heroGrid} />
 
           {/* Top bar */}
           <View style={styles.heroTop}>
             <View>
               <Text style={styles.heroGreeting}>Panel de trabajo</Text>
-              <Text style={styles.heroNombre}>Hola, {usuario?.nombre?.split(' ')[0]} 👋</Text>
+              <Text style={styles.heroNombre}>Hola, {usuario?.nombre?.split(' ')[0]}</Text>
               <PlanBadge plan={plan.plan} rol="PROVEEDOR" oscuro style={{ marginTop: 6 }} />
             </View>
             <TouchableOpacity
               style={styles.heroAvatar}
               onPress={() => router.push('/(tabs)/perfil')}
             >
-              <Text style={styles.heroAvatarText}>
-                {usuario?.nombre?.charAt(0).toUpperCase()}
-              </Text>
+              <FotoPerfil ruta={usuario?.avatar} nombre={usuario?.nombre} radio={15} estiloTexto={styles.heroAvatarText} />
               <View style={styles.heroAvatarBadge} />
             </TouchableOpacity>
           </View>
@@ -159,19 +157,23 @@ export default function ProveedorDashboard() {
           <Animated.View style={[styles.gananciaCard, { transform:[{scale:scaleAnim}] }]}>
             <View style={styles.gananciaLeft}>
               <Text style={styles.gananciaLabel}>Ganado este mes</Text>
-              <Text style={styles.gananciaNum}>
-                ${Math.round(gananciasEsteMes).toLocaleString()}
-              </Text>
+              {/* Momento principal del panel: la cifra cuenta hasta el total del mes */}
+              <ContadorAnimado style={styles.gananciaNum} valor={loading ? null : Math.round(gananciasEsteMes)} prefijo="$" />
               {variacionMensual !== null && (
-                <View style={styles.gananciaBadge}>
-                  <Text style={styles.gananciaBadgeText}>
-                    {variacionMensual >= 0 ? '↑' : '↓'} {variacionMensual >= 0 ? '+' : ''}{variacionMensual}% vs mes anterior
+                <View style={[styles.gananciaBadge, variacionMensual < 0 && styles.gananciaBadgeBaja]}>
+                  <Icono
+                    nombre={variacionMensual >= 0 ? 'trending-up' : 'trending-down'}
+                    tamano={13}
+                    color={variacionMensual >= 0 ? Colors.primaryLight : '#FF7675'}
+                  />
+                  <Text style={[styles.gananciaBadgeText, variacionMensual < 0 && { color: '#FF7675' }]}>
+                    {variacionMensual >= 0 ? '+' : ''}{variacionMensual}% vs mes anterior
                   </Text>
                 </View>
               )}
             </View>
             <View style={styles.gananciaRight}>
-              <Text style={styles.gananciaIco}>💰</Text>
+              <Icono nombre="wallet-outline" tamano={30} color={Colors.primaryLight} />
             </View>
           </Animated.View>
 
@@ -203,13 +205,14 @@ export default function ProveedorDashboard() {
             onPress={() => router.push('/planes')}
             accessibilityLabel={plan.plan === 'GRATIS' ? 'Ver planes' : 'Ver mi plan'}
           >
-            <Text style={styles.planStripIco}>{plan.plan === 'GRATIS' ? '🚀' : plan.info.ico}</Text>
-            <Text style={styles.planStripText} numberOfLines={1}>
+            <Icono nombre={plan.plan === 'GRATIS' ? 'rocket-outline' : plan.info.icono} tamano={18} color="#FFD23F" />
+            <Text style={styles.planStripText} numberOfLines={2}>
               {plan.plan === 'GRATIS'
                 ? 'Plan Gratis · Pasate a Pro y aparecé primero'
                 : `Plan ${plan.info.nombre}${plan.venceEn ? ` · hasta el ${plan.venceEn.toLocaleDateString('es-AR')}` : ''}`}
             </Text>
-            <Text style={styles.planStripCta}>{plan.plan === 'GRATIS' ? 'Mejorar' : 'Ver'} ›</Text>
+            <Text style={styles.planStripCta}>{plan.plan === 'GRATIS' ? 'Mejorar' : 'Ver'}</Text>
+            <Icono nombre="chevron-forward" tamano={14} color="#FFD23F" />
           </PressScale>
         </Animated.View>
 
@@ -217,12 +220,12 @@ export default function ProveedorDashboard() {
         <View style={styles.metricasSection}>
           <Text style={styles.sectionTitle}>Resumen</Text>
           <View style={styles.metricasGrid}>
-            {[
-              { ico:'📋', num:pedidos.length, label:'Total', color:Colors.primaryLight, delay:0 },
-              { ico:'⏳', num:pendientes.length, label:'Pendientes', color:'#FFD23F', delay:1 },
-              { ico:'🔧', num:enCurso.length, label:'En curso', color:'#74B9FF', delay:2 },
-              { ico:'⭐', num:usuario?.rating?.toFixed(1) ?? '0.0', label:'Rating', color:'#FF7675', delay:3 },
-            ].map((m, i) => (
+            {([
+              { ico:'layers-outline', num:pedidos.length, label:'Total', color:Colors.primaryLight },
+              { ico:'time-outline', num:pendientes.length, label:'Pendientes', color:'#FFD23F' },
+              { ico:'construct-outline', num:enCurso.length, label:'En curso', color:'#74B9FF' },
+              { ico:'star', num:textoRating(usuario?.rating, '–'), label:'Rating', color:'#FFD23F' },
+            ] as { ico: NombreIcono; num: any; label: string; color: string }[]).map((m, i) => (
               <Animated.View
                 key={i}
                 style={[styles.metricaCard, {
@@ -230,7 +233,7 @@ export default function ProveedorDashboard() {
                   transform:[{ translateY: cardAnims[i].interpolate({ inputRange:[0,1], outputRange:[20,0] }) }]
                 }]}
               >
-                <Text style={styles.metricaIco}>{m.ico}</Text>
+                <Icono nombre={m.ico} tamano={20} color={m.color} />
                 <Text style={[styles.metricaNum, { color: m.color }]}>{m.num}</Text>
                 <Text style={styles.metricaLabel}>{m.label}</Text>
               </Animated.View>
@@ -242,59 +245,23 @@ export default function ProveedorDashboard() {
         <View style={styles.accionesSection}>
           <Text style={styles.sectionTitle}>Acciones rápidas</Text>
           <View style={styles.accionesGrid}>
-            <PressScale
-              style={[styles.accionCard, styles.accionCardGreen]}
-              onPress={() => router.push('/proveedor-panel/pedidos')}
-            >
-              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>📋</Text></View>
-              <Text style={styles.accionLabel}>Ver pedidos</Text>
-              {pendientes.length > 0 && (
-                <View style={styles.accionBadge}>
-                  <Text style={styles.accionBadgeText}>{pendientes.length}</Text>
-                </View>
-              )}
-            </PressScale>
-
-            <PressScale
-              style={[styles.accionCard, styles.accionCardBlue]}
-              onPress={() => router.push('/proveedor-panel/servicios')}
-            >
-              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>🔧</Text></View>
-              <Text style={styles.accionLabel}>Mis servicios</Text>
-            </PressScale>
-
-            <PressScale
-              style={[styles.accionCard, styles.accionCardYellow]}
-              onPress={() => router.push('/proveedor-panel/nuevo-servicio')}
-            >
-              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>➕</Text></View>
-              <Text style={styles.accionLabel}>Nuevo servicio</Text>
-            </PressScale>
-
-            <PressScale
-              style={[styles.accionCard, styles.accionCardPurple]}
-              onPress={() => router.push('/(tabs)/perfil')}
-            >
-              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>👤</Text></View>
-              <Text style={styles.accionLabel}>Mi perfil</Text>
-            </PressScale>
-
-            <PressScale
-              style={[styles.accionCard, styles.accionCardBlue]}
-              onPress={() => router.push('/proveedor-panel/estadisticas')}
-            >
-              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>📊</Text></View>
-              <Text style={styles.accionLabel}>Estadísticas</Text>
-              {plan.nivel < 1 && <Text style={styles.accionLock}>🔒</Text>}
-            </PressScale>
-
-            <PressScale
-              style={[styles.accionCard, styles.accionCardGold]}
-              onPress={() => router.push('/planes')}
-            >
-              <View style={styles.accionIco}><Text style={{ fontFamily: F.regular, fontSize:26}}>💎</Text></View>
-              <Text style={styles.accionLabel}>Planes</Text>
-            </PressScale>
+            {ACCIONES.map(a => (
+              <PressScale
+                key={a.label}
+                style={[styles.accionCard, a.estilo]}
+                onPress={() => router.push(a.ruta)}
+                accessibilityLabel={a.badge ? `${a.label}, ${a.badge} pendientes` : a.label}
+              >
+                <View style={styles.accionIco}><Icono nombre={a.icono} tamano={24} color={a.color} /></View>
+                <Text style={styles.accionLabel}>{a.label}</Text>
+                {!!a.badge && (
+                  <View style={styles.accionBadge}>
+                    <Text style={styles.accionBadgeText}>{a.badge}</Text>
+                  </View>
+                )}
+                {a.candado && <Icono nombre="lock-closed" tamano={14} color="rgba(255,255,255,.5)" style={styles.accionLock} />}
+              </PressScale>
+            ))}
           </View>
         </View>
 
@@ -303,7 +270,7 @@ export default function ProveedorDashboard() {
           <View style={styles.sectionRow}>
             <Text style={styles.sectionTitle}>Pedidos recientes</Text>
             <TouchableOpacity onPress={() => router.push('/proveedor-panel/pedidos')}>
-              <Text style={styles.sectionLink}>Ver todos →</Text>
+              <Text style={styles.sectionLink}>Ver todos</Text>
             </TouchableOpacity>
           </View>
 
@@ -311,13 +278,12 @@ export default function ProveedorDashboard() {
             <ActivityIndicator color={Colors.primaryLight} style={{ marginTop:20 }} />
           ) : pedidos.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIco}>📭</Text>
+              <Icono nombre="file-tray-outline" tamano={44} color="rgba(255,255,255,.3)" style={styles.emptyIco} />
               <Text style={styles.emptyTitle}>Sin pedidos todavía</Text>
               <Text style={styles.emptySub}>Cuando un cliente te contrate aparecerá acá</Text>
             </View>
           ) : (
             pedidos.slice(0,4).map((p, i) => {
-              const est = ESTADO_CONFIG[p.estado] ?? ESTADO_CONFIG.PENDIENTE
               return (
                 <Animated.View key={p.id} style={[styles.pedidoCard, {
                   opacity: cardAnims[Math.min(i, 3)],
@@ -327,20 +293,26 @@ export default function ProveedorDashboard() {
                     onPress={() => router.push('/proveedor-panel/pedidos')}
                   >
                     <View style={styles.pedidoIco}>
-                      <Text style={{ fontFamily: F.regular, fontSize:20}}>🔧</Text>
+                      <Icono nombre={categoriaInfo(p.servicio?.categoria).icono} tamano={20} color={Colors.primaryLight} />
                     </View>
                     <View style={styles.pedidoInfo}>
                       <Text style={styles.pedidoServicio}>{p.servicio?.nombre}</Text>
-                      <Text style={styles.pedidoCliente}>👤 {p.cliente?.nombre}</Text>
-                      <Text style={styles.pedidoFecha}>
-                        📅 {new Date(p.fecha).toLocaleDateString('es-AR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
-                      </Text>
+                      <View style={styles.pedidoMeta}>
+                        <View style={styles.clienteMini}>
+                          <FotoPerfil ruta={p.cliente?.avatar} nombre={p.cliente?.nombre} radio={8} estiloTexto={styles.clienteMiniTexto} />
+                        </View>
+                        <Text style={styles.pedidoCliente}>{p.cliente?.nombre}</Text>
+                      </View>
+                      <View style={styles.pedidoMeta}>
+                        <Icono nombre="calendar-outline" tamano={11} color="rgba(255,255,255,.4)" />
+                        <Text style={styles.pedidoFecha}>
+                          {new Date(p.fecha).toLocaleDateString('es-AR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
+                        </Text>
+                      </View>
                     </View>
                     <View style={styles.pedidoRight}>
-                      <Text style={styles.pedidoMonto}>${p.montoTotal?.toLocaleString()}</Text>
-                      <View style={[styles.estadoBadge, { backgroundColor: est.bg }]}>
-                        <Text style={[styles.estadoText, { color: est.color }]}>{est.label}</Text>
-                      </View>
+                      <Text style={styles.pedidoMonto}>${p.montoTotal?.toLocaleString('es-AR')}</Text>
+                      <EstadoBadge estado={p.estado} oscuro />
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
@@ -351,6 +323,7 @@ export default function ProveedorDashboard() {
 
         <View style={{ height:100 }} />
       </ScrollView>
+      <FondoBarraEstado color="#0D0D0D" />
     </View>
   )
 }
@@ -364,7 +337,7 @@ const styles = StyleSheet.create({
   heroGlow:           { position:'absolute', width:200, height:200, borderRadius:100, backgroundColor:'#1A9E5C', top:20, right:20, opacity:.08 },
   heroGrid:           { position:'absolute', inset:0, opacity:.03 },
   heroTop:            { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:24 },
-  heroGreeting:       { fontSize:11, color:'rgba(255,255,255,.4)', fontFamily: F.semibold, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4 },
+  heroGreeting:       { fontSize:11, color:'rgba(255,255,255,.6)', fontFamily: F.semibold, letterSpacing:1.5, textTransform:'uppercase', marginBottom:4 },
   heroNombre:         { fontSize:26, fontFamily: F.extrabold, color:'white' },
   heroAvatar:         { width:46, height:46, borderRadius:15, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', position:'relative' },
   heroAvatarText:     { color:'white', fontSize:18, fontFamily: F.extrabold },
@@ -373,19 +346,19 @@ const styles = StyleSheet.create({
   // Ganancia card
   gananciaCard:       { backgroundColor:'rgba(26,158,92,.12)', borderRadius:20, padding:20, marginBottom:14, borderWidth:1, borderColor:'rgba(61,214,140,.2)', flexDirection:'row', alignItems:'center' },
   gananciaLeft:       { flex:1 },
-  gananciaLabel:      { fontSize:11, color:'rgba(255,255,255,.4)', fontFamily: F.semibold, letterSpacing:1, textTransform:'uppercase', marginBottom:6 },
+  gananciaLabel:      { fontSize:11, color:'rgba(255,255,255,.6)', fontFamily: F.semibold, letterSpacing:1, textTransform:'uppercase', marginBottom:6 },
   gananciaNum:        { fontSize:36, fontFamily: F.extrabold, color:'white', marginBottom:8 },
-  gananciaBadge:      { backgroundColor:'rgba(61,214,140,.2)', alignSelf:'flex-start', paddingHorizontal:10, paddingVertical:4, borderRadius:100 },
+  gananciaBadge:      { flexDirection:'row', alignItems:'center', gap:5, backgroundColor:'rgba(61,214,140,.2)', alignSelf:'flex-start', paddingHorizontal:10, paddingVertical:4, borderRadius:100 },
+  gananciaBadgeBaja:  { backgroundColor:'rgba(255,118,117,.18)' },
   gananciaBadgeText:  { fontSize:10, color:Colors.primaryLight, fontFamily: F.bold },
   gananciaRight:      { alignItems:'center', justifyContent:'center' },
-  gananciaIco:        { fontFamily: F.regular, fontSize:48 },
 
   // Toggle
   toggleCard:         { backgroundColor:'rgba(255,255,255,.05)', borderRadius:16, padding:14, flexDirection:'row', alignItems:'center', justifyContent:'space-between', borderWidth:1, borderColor:'rgba(255,255,255,.08)' },
   toggleLeft:         { flexDirection:'row', alignItems:'center', gap:10 },
   toggleDot:          { width:10, height:10, borderRadius:5 },
   toggleTitle:        { fontSize:14, fontFamily: F.bold, color:'white', marginBottom:2 },
-  toggleSub:          { fontFamily: F.regular, fontSize:11, color:'rgba(255,255,255,.35)' },
+  toggleSub:          { fontFamily: F.regular, fontSize:11, color:'rgba(255,255,255,.6)' },
 
   // Secciones
   metricasSection:    { padding:22, paddingTop:24, paddingBottom:0 },
@@ -398,9 +371,8 @@ const styles = StyleSheet.create({
   // Métricas
   metricasGrid:       { flexDirection:'row', gap:10 },
   metricaCard:        { flex:1, backgroundColor:'rgba(255,255,255,.05)', borderRadius:16, padding:14, alignItems:'center', gap:6, borderWidth:1, borderColor:'rgba(255,255,255,.07)' },
-  metricaIco:         { fontFamily: F.regular, fontSize:22 },
   metricaNum:         { fontSize:22, fontFamily: F.extrabold, color:'white' },
-  metricaLabel:       { fontSize:9, color:'rgba(255,255,255,.4)', fontFamily: F.semibold, textAlign:'center' },
+  metricaLabel:       { fontSize:9, color:'rgba(255,255,255,.6)', fontFamily: F.semibold, textAlign:'center' },
 
   // Acciones
   accionesGrid:       { flexDirection:'row', flexWrap:'wrap', gap:10 },
@@ -410,11 +382,10 @@ const styles = StyleSheet.create({
   accionCardYellow:   { backgroundColor:'rgba(255,210,63,.1)', borderColor:'rgba(255,210,63,.2)' },
   accionCardPurple:   { backgroundColor:'rgba(162,155,254,.1)', borderColor:'rgba(162,155,254,.2)' },
   accionCardGold:     { backgroundColor:'rgba(255,210,63,.08)', borderColor:'rgba(255,210,63,.25)' },
-  accionLock:         { position:'absolute', top:14, right:14, fontFamily: F.regular, fontSize:14 },
+  accionLock:         { position:'absolute', top:14, right:14 },
 
   // Plan
   planStrip:          { flexDirection:'row', alignItems:'center', gap:10, marginTop:10, backgroundColor:'rgba(255,210,63,.08)', borderRadius:16, paddingVertical:12, paddingHorizontal:14, borderWidth:1, borderColor:'rgba(255,210,63,.2)' },
-  planStripIco:       { fontFamily: F.regular, fontSize:18 },
   planStripText:      { flex:1, fontSize:12, fontFamily: F.bold, color:'rgba(255,255,255,.8)' },
   planStripCta:       { fontSize:12, fontFamily: F.extrabold, color:'#FFD23F' },
   accionIco:          { width:48, height:48, borderRadius:14, backgroundColor:'rgba(255,255,255,.08)', alignItems:'center', justifyContent:'center' },
@@ -428,16 +399,17 @@ const styles = StyleSheet.create({
   pedidoIco:          { width:46, height:46, borderRadius:14, backgroundColor:'rgba(26,158,92,.15)', alignItems:'center', justifyContent:'center' },
   pedidoInfo:         { flex:1, gap:3 },
   pedidoServicio:     { fontSize:14, fontFamily: F.bold, color:'white' },
-  pedidoCliente:      { fontFamily: F.regular, fontSize:11, color:'rgba(255,255,255,.4)' },
-  pedidoFecha:        { fontFamily: F.regular, fontSize:11, color:'rgba(255,255,255,.3)' },
+  pedidoMeta:         { flexDirection:'row', alignItems:'center', gap:5 },
+  pedidoCliente:      { fontFamily: F.regular, fontSize:11, color:'rgba(255,255,255,.55)' },
+  clienteMini:        { width:16, height:16, borderRadius:8, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center' },
+  clienteMiniTexto:   { color:'white', fontSize:8, fontFamily: F.bold },
+  pedidoFecha:        { fontFamily: F.regular, fontSize:11, color:'rgba(255,255,255,.55)' },
   pedidoRight:        { alignItems:'flex-end', gap:6 },
   pedidoMonto:        { fontSize:16, fontFamily: F.extrabold, color:'white' },
-  estadoBadge:        { paddingHorizontal:10, paddingVertical:4, borderRadius:100 },
-  estadoText:         { fontSize:10, fontFamily: F.bold },
 
   // Empty
   empty:              { alignItems:'center', paddingVertical:40 },
-  emptyIco:           { fontFamily: F.regular, fontSize:48, marginBottom:12, opacity:.3 },
-  emptyTitle:         { fontSize:16, fontFamily: F.extrabold, color:'rgba(255,255,255,.4)', marginBottom:6 },
-  emptySub:           { fontFamily: F.regular, fontSize:13, color:'rgba(255,255,255,.2)', textAlign:'center' },
+  emptyIco:           { marginBottom:12 },
+  emptyTitle:         { fontSize:16, fontFamily: F.extrabold, color:'rgba(255,255,255,.75)', marginBottom:6 },
+  emptySub:           { fontFamily: F.regular, fontSize:13, color:'rgba(255,255,255,.55)', textAlign:'center' },
 })

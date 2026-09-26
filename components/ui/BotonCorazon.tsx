@@ -1,7 +1,8 @@
-import { Pressable, Text, StyleProp, ViewStyle } from 'react-native'
+import { Pressable, StyleProp, ViewStyle } from 'react-native'
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withSpring } from 'react-native-reanimated'
-import { FUENTES as F, DURACION, CURVA, RESORTE, HIT_SLOP } from '../../constants/diseno'
+import { DURACION, CURVA, RESORTE, HIT_SLOP } from '../../constants/diseno'
 import { haptica } from '../../utils/haptica'
+import { Icono } from './Icono'
 
 // Corazón de favoritos: al marcarlo "late" (crece rápido y vuelve con un resorte lúdico,
 // uno de los pocos lugares donde el rebote es intencional). Anuncia su estado al lector
@@ -11,11 +12,13 @@ export function BotonCorazon({
   onToggle,
   style,
   size = 17,
+  color = '#FFFFFF',
 }: {
   activo: boolean
   onToggle: () => void
   style?: StyleProp<ViewStyle>
   size?: number
+  color?: string          // color del corazón vacío (el lleno siempre es rojo)
 }) {
   const scale = useSharedValue(1)
   const animado = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
@@ -38,7 +41,7 @@ export function BotonCorazon({
       accessibilityState={{ selected: activo }}
     >
       <Animated.View style={animado}>
-        <Text style={{ fontFamily: F.regular, fontSize: size }}>{activo ? '❤️' : '🤍'}</Text>
+        <Icono nombre={activo ? 'heart' : 'heart-outline'} tamano={size + 3} color={activo ? '#FF4D5E' : color} />
       </Animated.View>
     </Pressable>
   )

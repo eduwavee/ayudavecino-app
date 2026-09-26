@@ -3,7 +3,8 @@ import { View, Text, StyleSheet } from 'react-native'
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated'
 import { Colors } from '../../constants/colors'
 import { FUENTES as F, DURACION, CURVA } from '../../constants/diseno'
-import { useTema } from '../../store/temaStore'
+import { useTema, TemaTokens } from '../../store/temaStore'
+import { Icono } from './Icono'
 
 const PASOS = ['Enviado', 'Aceptado', 'Pagado', 'En curso', 'Listo']
 
@@ -20,8 +21,11 @@ function pasoActual(estado: string, pagado: boolean): number {
 
 // Línea de tiempo del pedido: la barra se llena hasta el paso actual (power3.out) y los
 // puntos alcanzados se pintan. Un pedido cancelado muestra solo el aviso.
-export function ProgresoPedido({ estado, pagado }: { estado: string; pagado: boolean }) {
-  const tema = useTema()
+// `tema` fuerza una paleta: las pantallas que son siempre claras pasan TEMAS.claro (con el
+// tema del teléfono en oscuro, el texto del paso actual salía blanco sobre la tarjeta blanca)
+export function ProgresoPedido({ estado, pagado, tema: temaFijo }: { estado: string; pagado: boolean; tema?: TemaTokens }) {
+  const temaActivo = useTema()
+  const tema = temaFijo ?? temaActivo
   const [ancho, setAncho] = useState(0)
   const paso = pasoActual(estado, pagado)
   const progreso = useSharedValue(0)
@@ -34,7 +38,12 @@ export function ProgresoPedido({ estado, pagado }: { estado: string; pagado: boo
   const relleno = useAnimatedStyle(() => ({ transform: [{ translateX: (progreso.value - 1) * ancho }] }))
 
   if (estado === 'CANCELADO') {
-    return <Text style={[styles.cancelado, { color: '#C0392B' }]}>✕ Pedido cancelado</Text>
+    return (
+      <View style={styles.canceladoFila}>
+        <Icono nombre="close-circle-outline" tamano={14} color={tema.peligro} />
+        <Text style={[styles.cancelado, { color: tema.peligro }]}>Pedido cancelado</Text>
+      </View>
+    )
   }
 
   return (
@@ -69,5 +78,6 @@ const styles = StyleSheet.create({
   punto:      { width: 10, height: 10, borderRadius: 5, borderWidth: 2, marginBottom: 4 },
   pasoTexto:  { fontFamily: F.medium, fontSize: 9.5 },
   pasoActual: { fontFamily: F.bold },
-  cancelado:  { fontFamily: F.semibold, fontSize: 11, marginBottom: 10 },
+  canceladoFila: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 },
+  cancelado:  { fontFamily: F.semibold, fontSize: 11 },
 })

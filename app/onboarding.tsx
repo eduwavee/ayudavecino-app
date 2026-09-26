@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  Dimensions, StatusBar, FlatList,
+  Dimensions, FlatList,
 } from 'react-native'
 import Animated, {
   useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, Extrapolation, SharedValue,
@@ -12,30 +12,32 @@ import { Colors } from '../constants/colors'
 import { ONBOARDING_KEY } from '../constants/config'
 import { FUENTES as F } from '../constants/diseno'
 import { PressScale } from '../components/ui/PressScale'
+import { Icono, NombreIcono } from '../components/ui/Icono'
+import { FondoBarraEstado } from '../components/ui/FondoBarraEstado'
 
 const { width } = Dimensions.get('window')
 
-const SLIDES = [
+const SLIDES: { icono: NombreIcono; color: string; titulo: string; texto: string; bg: string }[] = [
   {
-    emoji: '🏘️',
+    icono: 'home', color: 'white',
     titulo: 'Bienvenido a AyudaVecino',
     texto: 'Conectamos vecinos con profesionales de confianza para resolver cualquier trabajo en tu casa.',
     bg: Colors.primary,
   },
   {
-    emoji: '🗺️',
+    icono: 'map', color: 'white',
     titulo: 'Encontrá ayuda cerca tuyo',
     texto: 'Mapa en vivo con proveedores cercanos, filtrados por categoría y con tu distancia real a cada uno.',
     bg: '#74B9FF',
   },
   {
-    emoji: '💬',
+    icono: 'chatbubbles', color: Colors.dark,
     titulo: 'Coordiná todo por chat',
     texto: 'Mensajes en tiempo real con el proveedor para acordar horarios y detalles, sin salir de la app.',
     bg: '#FFD23F',
   },
   {
-    emoji: '⭐',
+    icono: 'star', color: Colors.dark,
     titulo: 'Elegí con confianza',
     texto: 'Mirá reseñas reales de otros vecinos antes de contratar, para saber con quién estás trabajando.',
     bg: Colors.primaryLight,
@@ -69,7 +71,7 @@ function Slide({ item, indice, scrollX }: { item: typeof SLIDES[number]; indice:
       <View style={styles.iconZona}>
         <Animated.View style={[styles.iconRing, { backgroundColor: item.bg + '22' }, aro]} />
         <Animated.View style={[styles.iconCircle, { backgroundColor: item.bg }, icono]}>
-          <Text style={styles.emoji}>{item.emoji}</Text>
+          <Icono nombre={item.icono} tamano={56} color={item.color} />
         </Animated.View>
       </View>
       <Animated.View style={texto}>
@@ -87,8 +89,11 @@ function Indicador({ scrollX }: { scrollX: SharedValue<number> }) {
   }))
   return (
     <View style={styles.dots}>
-      {SLIDES.map((_, i) => <View key={i} style={styles.dot} />)}
-      <Animated.View style={[styles.pildora, pildora]} />
+      {/* La fila interna mide lo mismo que los puntos: así left:0 cae sobre el primero */}
+      <View style={styles.dotsFila}>
+        {SLIDES.map((_, i) => <View key={i} style={styles.dot} />)}
+        <Animated.View style={[styles.pildora, pildora]} />
+      </View>
     </View>
   )
 }
@@ -117,7 +122,6 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
 
       <TouchableOpacity style={styles.skipBtn} onPress={finalizarOnboarding} accessibilityRole="button" accessibilityLabel="Saltar la presentación" hitSlop={10}>
         <Text style={styles.skipText}>Saltar</Text>
@@ -143,9 +147,13 @@ export default function OnboardingScreen() {
         <Indicador scrollX={scrollX} />
 
         <PressScale haptico style={styles.nextBtn} onPress={irASiguiente}>
-          <Text style={styles.nextText}>{esUltima ? 'Empezar →' : 'Siguiente'}</Text>
+          <View style={styles.nextFila}>
+            <Text style={styles.nextText}>{esUltima ? 'Empezar' : 'Siguiente'}</Text>
+            {esUltima && <Icono nombre="arrow-forward" tamano={18} color="white" />}
+          </View>
         </PressScale>
       </View>
+      <FondoBarraEstado color="#FFFFFF" />
     </View>
   )
 }
@@ -157,11 +165,12 @@ const styles = StyleSheet.create({
   slide:       { alignItems:'center', justifyContent:'center', paddingHorizontal:36, paddingTop:80 },
   iconRing:    { position:'absolute', width:200, height:200, borderRadius:100 },
   iconCircle:  { width:120, height:120, borderRadius:36, alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:8}, shadowOpacity:.15, shadowRadius:16, elevation:8 },
-  emoji:       { fontFamily: F.regular, fontSize:56 },
+  nextFila:    { flexDirection:'row', alignItems:'center', gap:8 },
   titulo:      { fontSize:24, fontFamily: F.extrabold, color:Colors.dark, textAlign:'center', marginBottom:14 },
   texto:       { fontFamily: F.regular, fontSize:14, color:'#6B6B6B', textAlign:'center', lineHeight:21, paddingHorizontal:8 },
   bottom:      { paddingHorizontal:28, paddingBottom:48, paddingTop:12, gap:24 },
-  dots:        { flexDirection:'row', justifyContent:'center', alignItems:'center', gap:6 },
+  dots:        { alignItems:'center' },
+  dotsFila:    { flexDirection:'row', alignItems:'center', gap:GAP },
   dot:         { width:DOT, height:DOT, borderRadius:DOT/2, backgroundColor:Colors.primary, opacity:.25 },
   pildora:     { position:'absolute', left:0, width:PILDORA, height:DOT, borderRadius:DOT/2, backgroundColor:Colors.primary },
   iconZona:    { width:200, height:200, alignItems:'center', justifyContent:'center', marginBottom:40 },

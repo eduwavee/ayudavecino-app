@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, Alert, ActivityIndicator,
-  Animated, Image
+  Animated, Image, KeyboardAvoidingView
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as Location from 'expo-location'
@@ -17,9 +17,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { FUENTES as F } from '../constants/diseno'
 import { alertaError } from '../utils/haptica'
 import { PressScale } from '../components/ui/PressScale'
+import { Icono } from '../components/ui/Icono'
+import { FondoBarraEstado } from '../components/ui/FondoBarraEstado'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { obtenerPosicion, MENSAJE_UBICACION_APAGADA } from '../utils/ubicacion'
+import { useTema, TemaTokens } from '../store/temaStore'
 
 export default function EditarPerfilScreen() {
   const router  = useRouter()
+  const tema    = useTema()
+  const styles  = getStyles(tema)
+  // El botón fijo de abajo respeta la barra de navegación del sistema (gestos o 3 botones)
+  const insets  = useSafeAreaInsets()
   const { usuario, setUsuario } = useAuthStore()
 
   const esProveedor = usuario?.rol === 'PROVEEDOR'
@@ -53,7 +62,7 @@ export default function EditarPerfilScreen() {
       return
     }
     const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
@@ -80,11 +89,12 @@ export default function EditarPerfilScreen() {
         Alert.alert('Permiso necesario', 'Activá el permiso de ubicación para que los clientes te encuentren en el mapa')
         return
       }
-      const pos = await Location.getCurrentPositionAsync({})
-      setLatitud(pos.coords.latitude)
-      setLongitud(pos.coords.longitude)
-    } catch {
-      alertaError('No se pudo obtener tu ubicación')
+      const pos = await obtenerPosicion()
+      if (!pos) return alertaError('No se pudo obtener tu ubicación. Probá de nuevo en un lugar abierto o con el GPS encendido.')
+      setLatitud(pos.latitude)
+      setLongitud(pos.longitude)
+    } catch (e: any) {
+      alertaError(e?.message === 'UBICACION_APAGADA' ? MENSAJE_UBICACION_APAGADA : 'No se pudo obtener tu ubicación')
     } finally {
       setUbicando(false)
     }
@@ -133,13 +143,13 @@ export default function EditarPerfilScreen() {
     || longitud !== (usuario?.longitud ?? null)
 
   return (
-    <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
         {/* Header */}
         <View style={styles.header}>
           <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backText}>←</Text>
+            <Icono nombre="arrow-back" tamano={20} color={tema.texto} />
           </PressScale>
           <Text style={styles.title}>Editar perfil</Text>
         </View>
@@ -171,7 +181,7 @@ export default function EditarPerfilScreen() {
                 accessibilityLabel="Cambiar foto de perfil"
                 hitSlop={10}
               >
-                <Text style={styles.avatarEditText}>📷</Text>
+                <Icono nombre="camera" tamano={16} color={Colors.primary} />
               </TouchableOpacity>
             </View>
             <Text style={styles.avatarHint}>Tocá para cambiar foto</Text>
@@ -183,7 +193,7 @@ export default function EditarPerfilScreen() {
 
             <View style={styles.fieldGroup}>
               <View style={[styles.fieldWrap, focused === 'nombre' && styles.fieldFocused]}>
-                <Text style={styles.fieldIco}>👤</Text>
+                <Icono nombre="person-outline" tamano={20} color={focused === 'nombre' ? Colors.primary : tema.subTexto} style={styles.fieldIco} />
                 <View style={styles.fieldContent}>
                   <Text style={styles.fieldLabel}>Nombre completo</Text>
                   <TextInput
@@ -191,7 +201,7 @@ export default function EditarPerfilScreen() {
                     value={nombre}
                     onChangeText={setNombre}
                     placeholder="Tu nombre"
-                    placeholderTextColor="#767676"
+                    placeholderTextColor={tema.subTexto}
                     onFocus={() => setFocused('nombre')}
                     onBlur={() => setFocused(null)}
                   />
@@ -201,7 +211,7 @@ export default function EditarPerfilScreen() {
               <View style={styles.fieldDivider} />
 
               <View style={[styles.fieldWrap, focused === 'telefono' && styles.fieldFocused]}>
-                <Text style={styles.fieldIco}>📱</Text>
+                <Icono nombre="call-outline" tamano={20} color={focused === 'telefono' ? Colors.primary : tema.subTexto} style={styles.fieldIco} />
                 <View style={styles.fieldContent}>
                   <Text style={styles.fieldLabel}>Teléfono</Text>
                   <TextInput
@@ -209,7 +219,7 @@ export default function EditarPerfilScreen() {
                     value={telefono}
                     onChangeText={setTelefono}
                     placeholder="Ej: 381 123 4567"
-                    placeholderTextColor="#767676"
+                    placeholderTextColor={tema.subTexto}
                     keyboardType="phone-pad"
                     onFocus={() => setFocused('telefono')}
                     onBlur={() => setFocused(null)}
@@ -221,7 +231,7 @@ export default function EditarPerfilScreen() {
                 <>
                   <View style={styles.fieldDivider} />
                   <View style={[styles.fieldWrap, focused === 'bio' && styles.fieldFocused]}>
-                    <Text style={styles.fieldIco}>📝</Text>
+                    <Icono nombre="document-text-outline" tamano={20} color={focused === 'bio' ? Colors.primary : tema.subTexto} style={styles.fieldIco} />
                     <View style={styles.fieldContent}>
                       <Text style={styles.fieldLabel}>Sobre mí ({bio.length}/300)</Text>
                       <TextInput
@@ -229,7 +239,7 @@ export default function EditarPerfilScreen() {
                         value={bio}
                         onChangeText={setBio}
                         placeholder="Contá tu experiencia, zona de trabajo, horarios..."
-                        placeholderTextColor="#767676"
+                        placeholderTextColor={tema.subTexto}
                         multiline
                         maxLength={300}
                         onFocus={() => setFocused('bio')}
@@ -247,12 +257,17 @@ export default function EditarPerfilScreen() {
                 <Text style={[styles.sectionLabel, { marginTop:20 }]}>UBICACIÓN</Text>
                 <View style={styles.fieldGroup}>
                   <View style={styles.fieldWrap}>
-                    <Text style={styles.fieldIco}>📍</Text>
+                    <Icono nombre="location-outline" tamano={20} color={tema.subTexto} style={styles.fieldIco} />
                     <View style={styles.fieldContent}>
                       <Text style={styles.fieldLabel}>En el mapa de clientes</Text>
-                      <Text style={styles.fieldInputReadOnly}>
-                        {latitud != null && longitud != null ? '✅ Ubicación guardada' : 'Sin ubicación cargada'}
-                      </Text>
+                      {latitud != null && longitud != null ? (
+                        <View style={styles.ubicacionOk}>
+                          <Icono nombre="checkmark-circle" tamano={16} color="#137A47" />
+                          <Text style={[styles.fieldInputReadOnly, { color:tema.esOscuro ? Colors.primaryLight : '#137A47' }]}>Ubicación guardada</Text>
+                        </View>
+                      ) : (
+                        <Text style={styles.fieldInputReadOnly}>Sin ubicación cargada</Text>
+                      )}
                     </View>
                     <PressScale haptico
                       style={styles.ubicacionBtn}
@@ -297,7 +312,7 @@ export default function EditarPerfilScreen() {
             <Text style={[styles.sectionLabel, { marginTop:20 }]}>CUENTA</Text>
             <View style={styles.fieldGroup}>
               <View style={styles.fieldWrap}>
-                <Text style={styles.fieldIco}>✉️</Text>
+                <Icono nombre="mail-outline" tamano={20} color={tema.subTexto} style={styles.fieldIco} />
                 <View style={styles.fieldContent}>
                   <Text style={styles.fieldLabel}>Email</Text>
                   <Text style={styles.fieldInputReadOnly}>{usuario?.email}</Text>
@@ -310,11 +325,11 @@ export default function EditarPerfilScreen() {
               <View style={styles.fieldDivider} />
 
               <View style={styles.fieldWrap}>
-                <Text style={styles.fieldIco}>🏷️</Text>
+                <Icono nombre="pricetag-outline" tamano={20} color={tema.subTexto} style={styles.fieldIco} />
                 <View style={styles.fieldContent}>
                   <Text style={styles.fieldLabel}>Rol</Text>
                   <Text style={styles.fieldInputReadOnly}>
-                    {usuario?.rol === 'PROVEEDOR' ? '🔨 Proveedor' : '🙋 Cliente'}
+                    {usuario?.rol === 'PROVEEDOR' ? 'Proveedor' : 'Cliente'}
                   </Text>
                 </View>
                 <View style={styles.noeditBadge}>
@@ -329,7 +344,7 @@ export default function EditarPerfilScreen() {
       </ScrollView>
 
       {/* Botón guardar */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: 16 + Math.max(insets.bottom, 16) }]}>
         <PressScale haptico
           style={[
             styles.guardarBtn,
@@ -348,18 +363,19 @@ export default function EditarPerfilScreen() {
 
       {/* Toast de éxito */}
       <Animated.View style={[styles.successToast, { opacity: successAnim, transform:[{ translateY: successAnim.interpolate({ inputRange:[0,1], outputRange:[20,0] }) }] }]}>
-        <Text style={styles.successToastText}>✅ Perfil actualizado</Text>
+        <Icono nombre="checkmark-circle" tamano={18} color={Colors.primaryLight} />
+        <Text style={styles.successToastText}>Perfil actualizado</Text>
       </Animated.View>
-    </View>
+      <FondoBarraEstado color={tema.bg} />
+    </KeyboardAvoidingView>
   )
 }
 
-const styles = StyleSheet.create({
-  container:          { flex:1, backgroundColor:Colors.cream },
+const getStyles = (tema: TemaTokens) => StyleSheet.create({
+  container:          { flex:1, backgroundColor:tema.bg },
   header:             { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:20 },
-  backBtn:            { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },
-  backText:           { fontFamily: F.regular, fontSize:16, color:Colors.dark },
-  title:              { fontSize:22, fontFamily: F.extrabold, color:Colors.dark },
+  backBtn:            { width:38, height:38, borderRadius:12, backgroundColor:tema.overlay, alignItems:'center', justifyContent:'center' },
+  title:              { fontSize:22, fontFamily: F.extrabold, color:tema.texto },
   content:            { paddingHorizontal:22 },
   avatarSection:      { alignItems:'center', marginBottom:28 },
   avatarWrap:         { position:'relative', marginBottom:8 },
@@ -367,31 +383,32 @@ const styles = StyleSheet.create({
   avatarImg:          { width:'100%', height:'100%' },
   avatarLoading:       { ...StyleSheet.absoluteFill, backgroundColor:'rgba(0,0,0,.4)', alignItems:'center', justifyContent:'center' },
   avatarText:         { color:'white', fontSize:36, fontFamily: F.extrabold },
-  avatarEdit:         { position:'absolute', bottom:-4, right:-4, width:32, height:32, borderRadius:10, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:4, elevation:3 },
-  avatarEditText:     { fontFamily: F.regular, fontSize:16 },
-  avatarHint:         { fontFamily: F.regular, fontSize:12, color:'#6B6B6B' },
+  avatarEdit:         { position:'absolute', bottom:-4, right:-4, width:32, height:32, borderRadius:10, backgroundColor:tema.card, alignItems:'center', justifyContent:'center', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.1, shadowRadius:4, elevation:3 },
+  avatarHint:         { fontFamily: F.regular, fontSize:12, color:tema.subTexto },
   formSection:        { gap:0 },
-  sectionLabel:       { fontSize:11, fontFamily: F.bold, color:'#6B6B6B', letterSpacing:1.5, marginBottom:10 },
-  fieldGroup:         { backgroundColor:'white', borderRadius:18, overflow:'hidden', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
+  sectionLabel:       { fontSize:11, fontFamily: F.bold, color:tema.subTexto, letterSpacing:1.5, marginBottom:10 },
+  fieldGroup:         { backgroundColor:tema.card, borderRadius:18, overflow:'hidden', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
   fieldWrap:          { flexDirection:'row', alignItems:'center', padding:16, gap:12, borderWidth:1.5, borderColor:'transparent', borderRadius:18 },
-  fieldFocused:       { borderColor:Colors.primary, backgroundColor:'#F0FDF4' },
-  fieldIco:           { fontFamily: F.regular, fontSize:22, width:28, textAlign:'center' },
+  fieldFocused:       { borderColor:Colors.primary, backgroundColor:tema.esOscuro ? 'rgba(26,158,92,.12)' : '#F0FDF4' },
+  fieldIco:           { width:28, textAlign:'center' },
   fieldContent:       { flex:1 },
-  fieldLabel:         { fontSize:10, fontFamily: F.bold, color:'#aaa', marginBottom:4, textTransform:'uppercase', letterSpacing:.5 },
-  fieldInput:         { fontSize:15, color:Colors.dark, fontFamily: F.medium },
-  fieldInputReadOnly: { fontSize:15, color:'#aaa', fontFamily: F.medium },
-  fieldDivider:       { height:1, backgroundColor:'#f5f5f5', marginLeft:56 },
-  noeditBadge:        { backgroundColor:'#f5f5f5', paddingHorizontal:8, paddingVertical:3, borderRadius:100 },
-  noeditText:         { fontSize:9, fontFamily: F.bold, color:'#bbb' },
+  fieldLabel:         { fontSize:10, fontFamily: F.bold, color:tema.subTexto, marginBottom:4, textTransform:'uppercase', letterSpacing:.5 },
+  // paddingHorizontal:0 alinea el texto con la etiqueta (Android le pone relleno por defecto)
+  fieldInput:         { fontSize:15, color:tema.texto, fontFamily: F.medium, paddingHorizontal:0 },
+  fieldInputReadOnly: { fontSize:15, color:tema.subTexto, fontFamily: F.medium },
+  ubicacionOk:        { flexDirection:'row', alignItems:'center', gap:6 },
+  fieldDivider:       { height:1, backgroundColor:tema.inputBg, marginLeft:56 },
+  noeditBadge:        { backgroundColor:tema.inputBg, paddingHorizontal:8, paddingVertical:3, borderRadius:100 },
+  noeditText:         { fontSize:9, fontFamily: F.bold, color:tema.subTexto },
   ubicacionBtn:       { backgroundColor:Colors.greenLight, paddingHorizontal:12, paddingVertical:8, borderRadius:100, minWidth:80, alignItems:'center' },
   ubicacionBtnText:   { fontSize:11, fontFamily: F.bold, color:Colors.primary },
-  ubicacionHint:      { fontFamily: F.regular, fontSize:11, color:'#bbb', marginTop:8, paddingHorizontal:4 },
+  ubicacionHint:      { fontFamily: F.regular, fontSize:11, color:tema.subTexto, marginTop:8, paddingHorizontal:4 },
   previewMapWrap:     { height:160, borderRadius:16, overflow:'hidden', marginTop:10, position:'relative' },
   previewMapHint:     { position:'absolute', bottom:8, alignSelf:'center', backgroundColor:'rgba(0,0,0,.6)', color:'white', fontSize:10, fontFamily: F.semibold, paddingHorizontal:10, paddingVertical:5, borderRadius:100 },
-  bottomBar:          { position:'absolute', bottom:0, left:0, right:0, backgroundColor:Colors.cream, padding:16, paddingBottom:32 },
+  bottomBar:          { position:'absolute', bottom:0, left:0, right:0, backgroundColor:tema.bg, padding:16, paddingBottom:32 },
   guardarBtn:         { backgroundColor:Colors.primary, borderRadius:16, paddingVertical:16, alignItems:'center', shadowColor:Colors.primary, shadowOffset:{width:0,height:4}, shadowOpacity:.3, shadowRadius:10, elevation:5 },
-  guardarBtnDisabled: { backgroundColor:'#ddd', shadowOpacity:0, elevation:0 },
+  guardarBtnDisabled: { backgroundColor:tema.esOscuro ? '#333333' : '#dddddd', shadowOpacity:0, elevation:0 },
   guardarBtnText:     { color:'white', fontSize:15, fontFamily: F.bold },
-  successToast:       { position:'absolute', bottom:100, alignSelf:'center', backgroundColor:'#1a1a1a', paddingHorizontal:20, paddingVertical:12, borderRadius:100 },
+  successToast:       { flexDirection:'row', alignItems:'center', gap:8, position:'absolute', bottom:100, alignSelf:'center', backgroundColor:tema.esOscuro ? '#2A2A2A' : '#1a1a1a', paddingHorizontal:20, paddingVertical:12, borderRadius:100 },
   successToastText:   { color:'white', fontSize:14, fontFamily: F.bold },
 })

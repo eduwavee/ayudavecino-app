@@ -11,6 +11,8 @@ export default {
   expo: {
     name: 'ayudavecino-app',
     slug: 'ayudavecino-app',
+    // Esquema para los links profundos (expo-router lo necesita en las builds de producción)
+    scheme: 'ayudavecino',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',

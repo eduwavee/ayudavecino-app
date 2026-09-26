@@ -13,6 +13,9 @@ import { ProgresoPedido } from '../../components/ui/ProgresoPedido'
 import { PressScale } from '../../components/ui/PressScale'
 import { PlanBadge } from '../../components/ui/PlanBadge'
 import { usePlan } from '../../hooks/usePlan'
+import { Icono, NombreIcono } from '../../components/ui/Icono'
+import { EstadoBadge } from '../../components/ui/EstadoBadge'
+import { categoriaInfo } from '../../constants/categorias'
 
 function SkeletonPedidoCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -34,24 +37,22 @@ function SkeletonPedidoCard({ styles }: { styles: ReturnType<typeof getStyles> }
 }
 
 // Estado del pago del pedido (escrow)
-const PAGO_ESTADO: Record<string, { texto: string; color: string }> = {
-  RETENIDO: { texto:'🔒 Pago retenido hasta que confirmes el trabajo', color:'#D4A017' },
-  LIBERADO: { texto:'✅ Pago liberado al proveedor', color:Colors.primary },
-  DEVUELTO: { texto:'↩️ Pago devuelto', color:'#888' },
-}
-
-const ESTADO_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  PENDIENTE:   { color:'#D4A017', bg:'rgba(255,210,63,.15)', label:'⏳ Pendiente' },
-  ACEPTADO:    { color:Colors.primary, bg:'rgba(26,158,92,.12)', label:'✓ Aceptado' },
-  EN_CURSO:    { color:'#74B9FF', bg:'rgba(116,185,255,.15)', label:'🔧 En curso' },
-  COMPLETADO:  { color:Colors.primary, bg:'rgba(26,158,92,.12)', label:'✅ Completado' },
-  CANCELADO:   { color:'#FF7675', bg:'rgba(255,118,117,.15)', label:'✕ Cancelado' },
+const PAGO_ESTADO: Record<string, { texto: string; color: string; icono: NombreIcono }> = {
+  RETENIDO: { texto:'Pago retenido hasta que confirmes el trabajo', color:'#8A6500',      icono:'lock-closed' },
+  LIBERADO: { texto:'Pago liberado al proveedor',                   color:'#137A47',      icono:'checkmark-circle' },
+  DEVUELTO: { texto:'Pago devuelto',                                color:'#6B6B6B',      icono:'return-down-back' },
 }
 
 export default function PedidosScreen() {
   const router  = useRouter()
   const usuario = useAuthStore(s => s.usuario)
   const tema = useTema()
+  // Los colores del estado del pago dependen del tema: los tonos oscuros no se leían sobre
+  // la tarjeta en modo oscuro
+  const colorPago = (estado: string) =>
+    estado === 'RETENIDO' ? tema.dorado
+      : estado === 'LIBERADO' ? (tema.esOscuro ? Colors.primaryLight : '#137A47')
+      : tema.subTexto
   const styles = getStyles(tema)
   const esProveedor = usuario?.rol === 'PROVEEDOR'
 
@@ -107,7 +108,7 @@ export default function PedidosScreen() {
 
 (Modo de prueba: no se cobra dinero real.)`,
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Ahora no', style: 'cancel' },
         {
           text: 'Pagar',
           onPress: async () => {
@@ -152,9 +153,40 @@ export default function PedidosScreen() {
     )
   }
 
+  // El cliente puede cancelar mientras el trabajo no arrancó (si ya pagó, se le devuelve)
+  function cancelarPedido(id: string, servicioNombre: string, pagado: boolean) {
+    Alert.alert(
+      '¿Cancelar el pedido?',
+      `${servicioNombre}${pagado ? ' — te devolvemos el pago completo.' : ''}`,
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Cancelar pedido',
+          style: 'destructive',
+          onPress: async () => {
+            setCompletando(id)
+            try {
+              await pedidosService.cambiarEstado(id, 'CANCELADO')
+              haptica.exito()
+              await cargarPedidos()
+            } catch (err: any) {
+              alertaError(err.response?.data?.mensaje || 'No se pudo cancelar el pedido')
+            } finally {
+              setCompletando(null)
+            }
+          },
+        },
+      ]
+    )
+  }
+
+  // "En curso" incluye los aceptados (igual que el contador de arriba): antes un pedido
+  // aceptado no aparecía en ningún filtro salvo "Todos"
   const filtrados = filtro === 'todos'
     ? pedidos
-    : pedidos.filter(p => p.estado === filtro.toUpperCase())
+    : filtro === 'en_curso'
+      ? pedidos.filter(p => p.estado === 'EN_CURSO' || p.estado === 'ACEPTADO')
+      : pedidos.filter(p => p.estado === filtro.toUpperCase())
 
   function formatFecha(fecha: string) {
     return new Date(fecha).toLocaleDateString('es-AR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
@@ -176,7 +208,8 @@ export default function PedidosScreen() {
             style={styles.panelBtn}
             onPress={() => router.push('/proveedor-panel')}
           >
-            <Text style={styles.panelBtnText}>Panel →</Text>
+            <Text style={styles.panelBtnText}>Panel</Text>
+            <Icono nombre="arrow-forward" tamano={13} color="white" />
           </PressScale>
         )}
       </View>
@@ -188,7 +221,7 @@ export default function PedidosScreen() {
           <Text style={styles.statLabel}>Pendientes</Text>
         </View>
         <View style={styles.statChip}>
-          <Text style={[styles.statNum, { color:'#74B9FF' }]}>{pedidos.filter(p => p.estado === 'EN_CURSO' || p.estado === 'ACEPTADO').length}</Text>
+          <Text style={[styles.statNum, { color:'#1F6FD1' }]}>{pedidos.filter(p => p.estado === 'EN_CURSO' || p.estado === 'ACEPTADO').length}</Text>
           <Text style={styles.statLabel}>En curso</Text>
         </View>
         <View style={styles.statChip}>
@@ -229,13 +262,12 @@ export default function PedidosScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); cargarPedidos() }} tintColor={Colors.primary} />}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyIco}>{esProveedor ? '🔨' : '📋'}</Text>
+              <Icono nombre={esProveedor ? 'briefcase-outline' : 'receipt-outline'} tamano={48} color={tema.subTexto} style={styles.emptyIco} />
               <Text style={styles.emptyText}>{esProveedor ? 'Sin trabajos todavía' : 'No hay pedidos'}</Text>
               <Text style={styles.emptySub}>{esProveedor ? 'Cuando un cliente te contrate aparecerá acá' : 'Tus pedidos aparecerán acá'}</Text>
             </View>
           }
           renderItem={conEntrada(({ item }) => {
-            const est      = ESTADO_CONFIG[item.estado] ?? ESTADO_CONFIG.PENDIENTE
             const tienChat = ['ACEPTADO','EN_CURSO','COMPLETADO'].includes(item.estado)
             const contraparte = esProveedor ? item.cliente : item.proveedor
 
@@ -246,7 +278,7 @@ export default function PedidosScreen() {
                 onPress={() => {
                   if (tienChat) {
                     router.push({
-                      pathname: '/chat/'+item.id,
+                      pathname: '/chat/[pedidoId]',
                       params: {
                         pedidoId:          item.id,
                         nombreContraparte: contraparte?.nombre,
@@ -258,27 +290,36 @@ export default function PedidosScreen() {
               >
                 <View style={styles.pedidoTop}>
                   <View style={styles.pedidoIco}>
-                    <Text style={{ fontFamily: F.regular, fontSize:20 }}>🔧</Text>
+                    <Icono nombre={categoriaInfo(item.servicio?.categoria).icono} tamano={20} color={Colors.primary} />
                   </View>
                   <View style={styles.pedidoInfo}>
                     <Text style={styles.pedidoServicio}>{item.servicio?.nombre}</Text>
-                    <Text style={styles.pedidoContraparte}>
-                      {esProveedor ? '👤 Cliente: ' : '🔧 Proveedor: '}{contraparte?.nombre}
-                    </Text>
+                    <View style={styles.contraparteFila}>
+                      <Icono nombre={esProveedor ? 'person-outline' : 'briefcase-outline'} tamano={11} color={tema.subTexto} />
+                      <Text style={styles.pedidoContraparte}>
+                        {esProveedor ? 'Cliente: ' : 'Proveedor: '}{contraparte?.nombre}
+                      </Text>
+                    </View>
                     {(item.urgente || (contraparte?.plan && contraparte.plan !== 'GRATIS')) && (
                       <View style={styles.badgesRow}>
                         {item.urgente && (
-                          <View style={styles.urgenteBadge}><Text style={styles.urgenteText}>⚡ Urgente</Text></View>
+                          <View style={styles.urgenteBadge}>
+                            <Icono nombre="flash" tamano={10} color={tema.dorado} />
+                            <Text style={styles.urgenteText}>Urgente</Text>
+                          </View>
                         )}
-                        <PlanBadge plan={contraparte?.plan} rol={esProveedor ? 'CLIENTE' : 'PROVEEDOR'} />
+                        <PlanBadge plan={contraparte?.plan} rol={esProveedor ? 'CLIENTE' : 'PROVEEDOR'} oscuro={tema.esOscuro} />
                       </View>
                     )}
                   </View>
                   <View style={styles.pedidoRight}>
-                    <View style={[styles.estadoBadge, { backgroundColor: est.bg }]}>
-                      <Text style={[styles.estadoText, { color: est.color }]}>{est.label}</Text>
-                    </View>
-                    {tienChat && <Text style={styles.chatHint}>💬 Chat</Text>}
+                    <EstadoBadge estado={item.estado} oscuro={tema.esOscuro} />
+                    {tienChat && (
+                      <View style={styles.contraparteFila}>
+                        <Icono nombre="chatbubble-ellipses-outline" tamano={12} color={Colors.primary} />
+                        <Text style={styles.chatHint}>Chat</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
 
@@ -289,7 +330,8 @@ export default function PedidosScreen() {
                       style={styles.btnAceptar}
                       onPress={() => router.push('/proveedor-panel/pedidos')}
                     >
-                      <Text style={styles.btnAceptarText}>✓ Gestionar pedido</Text>
+                      <Icono nombre="checkmark-circle-outline" tamano={16} color="white" />
+                      <Text style={styles.btnAceptarText}>Gestionar pedido</Text>
                     </PressScale>
                   </View>
                 )}
@@ -304,7 +346,8 @@ export default function PedidosScreen() {
                         style={styles.btnAceptar}
                         onPress={() => pagarPedido(item.id, item.servicio?.nombre, item.montoTotal)}
                       >
-                        <Text style={styles.btnAceptarText}>💳 Pagar ${item.montoTotal?.toLocaleString('es-AR')}</Text>
+                        <Icono nombre="card-outline" tamano={16} color="white" />
+                        <Text style={styles.btnAceptarText}>Pagar ${item.montoTotal?.toLocaleString('es-AR')}</Text>
                       </PressScale>
                     )}
                   </View>
@@ -314,9 +357,12 @@ export default function PedidosScreen() {
 
                 {/* Estado del pago */}
                 {item.pago && (
-                  <Text style={[styles.pagoEstado, { color: PAGO_ESTADO[item.pago.estado]?.color }]}>
-                    {PAGO_ESTADO[item.pago.estado]?.texto}
-                  </Text>
+                  <View style={styles.pagoFila}>
+                    <Icono nombre={PAGO_ESTADO[item.pago.estado]?.icono ?? 'card-outline'} tamano={13} color={colorPago(item.pago.estado)} />
+                    <Text style={[styles.pagoEstado, { color: colorPago(item.pago.estado) }]}>
+                      {PAGO_ESTADO[item.pago.estado]?.texto}
+                    </Text>
+                  </View>
                 )}
 
                 {/* Confirmar completado (solo cliente, pedido en curso) */}
@@ -329,16 +375,42 @@ export default function PedidosScreen() {
                         style={styles.btnAceptar}
                         onPress={() => confirmarCompletado(item.id, item.servicio?.nombre)}
                       >
-                        <Text style={styles.btnAceptarText}>✅ Confirmar trabajo completado</Text>
+                        <Icono nombre="checkmark-done" tamano={16} color="white" />
+                        <Text style={styles.btnAceptarText}>Confirmar trabajo completado</Text>
                       </PressScale>
                     )}
                   </View>
                 )}
 
                 <View style={styles.pedidoBottom}>
-                  <Text style={styles.pedidoFecha}>📅 {formatFecha(item.fecha)}</Text>
-                  <View style={styles.bottomRight}>
-                    {item.estado === 'COMPLETADO' && !esProveedor && (
+                  <View style={styles.contraparteFila}>
+                    <Icono nombre="calendar-outline" tamano={12} color={tema.subTexto} />
+                    <Text style={styles.pedidoFecha}>{formatFecha(item.fecha)}</Text>
+                  </View>
+                  <Text style={styles.pedidoMonto}>${item.montoTotal?.toLocaleString('es-AR')}</Text>
+                </View>
+
+                {/* Acciones en su propia fila: junto a la fecha y el precio no entraban y el
+                    precio quedaba cortado */}
+                {!esProveedor && item.estado !== 'EN_CURSO' && completando !== item.id && (
+                  <View style={styles.accionesPie}>
+                    {['PENDIENTE', 'ACEPTADO'].includes(item.estado) && completando !== item.id && (
+                      <PressScale
+                        style={styles.cancelarBtn}
+                        onPress={() => cancelarPedido(item.id, item.servicio?.nombre, !!item.pago)}
+                        accessibilityLabel="Cancelar pedido"
+                      >
+                        <Icono nombre="close" tamano={13} color={tema.peligro} />
+                        <Text style={[styles.cancelarBtnText, { color: tema.peligro }]}>Cancelar</Text>
+                      </PressScale>
+                    )}
+                    {item.estado === 'COMPLETADO' && !esProveedor && item.resena && (
+                      <View style={styles.calificadoBadge} accessibilityLabel={`Calificaste con ${item.resena.puntaje} estrellas`}>
+                        <Icono nombre="star" tamano={12} color={tema.dorado} />
+                        <Text style={styles.calificarBtnText}>{item.resena.puntaje} · Calificado</Text>
+                      </View>
+                    )}
+                    {item.estado === 'COMPLETADO' && !esProveedor && !item.resena && (
                       <PressScale haptico
                         style={styles.calificarBtn}
                         onPress={() => router.push({
@@ -346,11 +418,13 @@ export default function PedidosScreen() {
                           params: {
                             pedidoId:        item.id,
                             proveedorNombre: item.proveedor?.nombre,
+                            proveedorAvatar: item.proveedor?.avatar ?? '',
                             servicioNombre:  item.servicio?.nombre,
                           }
                         })}
                       >
-                        <Text style={styles.calificarBtnText}>⭐ Calificar</Text>
+                        <Icono nombre="star" tamano={12} color={tema.dorado} />
+                        <Text style={styles.calificarBtnText}>Calificar</Text>
                       </PressScale>
                     )}
                     {!esProveedor && ['COMPLETADO', 'CANCELADO'].includes(item.estado) && (
@@ -359,12 +433,13 @@ export default function PedidosScreen() {
                         onPress={() => repetirPedido(item)}
                         accessibilityLabel="Repetir pedido"
                       >
-                        <Text style={styles.repetirBtnText}>🔁 Repetir{nivel < 1 ? ' ✨' : ''}</Text>
+                        <Icono nombre="repeat" tamano={13} color={tema.esOscuro ? Colors.primaryLight : '#137A47'} />
+                        <Text style={styles.repetirBtnText}>Repetir</Text>
+                        {nivel < 1 && <Icono nombre="sparkles" tamano={11} color="#2F80ED" />}
                       </PressScale>
                     )}
-                    <Text style={styles.pedidoMonto}>${item.montoTotal?.toLocaleString()}</Text>
                   </View>
-                </View>
+                )}
               </TouchableOpacity>
             )
           })}
@@ -379,16 +454,18 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   header: { flexDirection:'row', alignItems:'center', justifyContent:'space-between', paddingHorizontal:22, paddingTop:60, paddingBottom:12 },
   title:              { fontSize:26, fontFamily: F.extrabold, color:tema.texto },
   subtitle:           { fontFamily: F.regular, fontSize:12, color:tema.subTexto, marginTop:2 },
-  panelBtn:           { backgroundColor:Colors.dark, paddingHorizontal:14, paddingVertical:8, borderRadius:100 },
+  panelBtn:           { flexDirection:'row', alignItems:'center', gap:5, backgroundColor:tema.seleccion, paddingHorizontal:14, paddingVertical:8, borderRadius:100 },
   panelBtnText:       { color:'white', fontSize:12, fontFamily: F.bold },
   statsRow:           { flexDirection:'row', gap:10, paddingHorizontal:22, marginBottom:16 },
   statChip:           { flex:1, backgroundColor:tema.card, borderRadius:14, padding:12, alignItems:'center', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:6, elevation:2 },
   statNum:            { fontSize:22, fontFamily: F.extrabold, color:tema.texto, marginBottom:2 },
   statLabel:          { fontSize:10, color:tema.subTexto, fontFamily: F.medium },
-  filtrosList:        { maxHeight:48, marginBottom:14 },
-  filtrosContainer:   { paddingHorizontal:22, gap:8 },
+  // Sin flexGrow/flexShrink 0 la lista de pedidos le robaba altura y los chips quedaban cortados
+  filtrosList:        { flexGrow:0, flexShrink:0, marginBottom:14 },
+  // alignItems:center: cada chip toma su altura natural en vez de estirarse al alto de la lista
+  filtrosContainer:   { paddingHorizontal:22, gap:8, alignItems:'center' },
   filtroBtn:          { paddingHorizontal:16, paddingVertical:8, borderRadius:100, backgroundColor:tema.card, borderWidth:1.5, borderColor:tema.border },
-  filtroBtnActive:    { backgroundColor:Colors.dark, borderColor:Colors.dark },
+  filtroBtnActive:    { backgroundColor:tema.seleccion, borderColor:tema.seleccion },
   filtroBtnText:      { fontSize:12, fontFamily: F.semibold, color:tema.subTexto },
   filtroBtnTextActive:{ color:'white' },
   listContainer:      { paddingHorizontal:22, gap:12, paddingBottom:100 },
@@ -399,28 +476,31 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   pedidoServicio:     { fontSize:14, fontFamily: F.bold, color:tema.texto, marginBottom:2 },
   pedidoContraparte:  { fontFamily: F.regular, fontSize:11, color:tema.subTexto },
   pedidoRight:        { alignItems:'flex-end', gap:4 },
-  estadoBadge:        { paddingHorizontal:10, paddingVertical:4, borderRadius:100 },
-  estadoText:         { fontSize:10, fontFamily: F.bold },
   chatHint:           { fontSize:10, color:Colors.primary, fontFamily: F.semibold },
+  contraparteFila:    { flexDirection:'row', alignItems:'center', gap:4 },
   accionesRow:        { flexDirection:'row', gap:8, marginBottom:12 },
-  pagoEstado:         { fontSize:11, fontFamily: F.bold, marginBottom:10 },
+  pagoFila:           { flexDirection:'row', alignItems:'center', gap:6, marginBottom:10 },
+  pagoEstado:         { fontSize:11, fontFamily: F.bold, flexShrink:1 },
   btnRechazar:        { flex:1, paddingVertical:10, borderRadius:12, borderWidth:1.5, borderColor:tema.border, alignItems:'center' },
   btnRechazarText:    { color:tema.texto, fontFamily: F.semibold, fontSize:13 },
-  btnAceptar:         { flex:2, paddingVertical:10, borderRadius:12, backgroundColor:Colors.primary, alignItems:'center' },
+  btnAceptar:         { flex:2, flexDirection:'row', justifyContent:'center', gap:7, paddingVertical:11, borderRadius:12, backgroundColor:Colors.primary, alignItems:'center' },
   btnAceptarText:     { color:'white', fontFamily: F.bold, fontSize:13 },
   pedidoBottom:       { flexDirection:'row', justifyContent:'space-between', alignItems:'center', borderTopWidth:1, borderTopColor:tema.border, paddingTop:10 },
-  bottomRight:        { flexDirection:'row', alignItems:'center', gap:8 },
+  accionesPie:        { flexDirection:'row', flexWrap:'wrap', justifyContent:'flex-end', gap:8, marginTop:10 },
   pedidoFecha:        { fontFamily: F.regular, fontSize:11, color:tema.subTexto },
   pedidoMonto:        { fontSize:16, fontFamily: F.extrabold, color:tema.texto },
-  calificarBtn:       { backgroundColor:'rgba(255,210,63,.15)', paddingHorizontal:12, paddingVertical:6, borderRadius:100 },
-  calificarBtnText:   { fontSize:11, fontFamily: F.bold, color:'#D4A017' },
-  repetirBtn:         { backgroundColor:'rgba(26,158,92,.1)', paddingHorizontal:12, paddingVertical:6, borderRadius:100 },
-  repetirBtnText:     { fontSize:11, fontFamily: F.bold, color:Colors.primary },
+  calificarBtn:       { flexDirection:'row', alignItems:'center', gap:4, backgroundColor:'rgba(255,210,63,.18)', paddingHorizontal:12, paddingVertical:6, borderRadius:100 },
+  calificarBtnText:   { fontSize:11, fontFamily: F.bold, color:tema.dorado },
+  calificadoBadge:    { flexDirection:'row', alignItems:'center', gap:4, paddingHorizontal:4, paddingVertical:6 },
+  cancelarBtn:        { flexDirection:'row', alignItems:'center', gap:4, backgroundColor:'rgba(192,57,43,.08)', paddingHorizontal:12, paddingVertical:6, borderRadius:100 },
+  cancelarBtnText:    { fontSize:11, fontFamily: F.bold },
+  repetirBtn:         { flexDirection:'row', alignItems:'center', gap:4, backgroundColor:'rgba(26,158,92,.1)', paddingHorizontal:12, paddingVertical:6, borderRadius:100 },
+  repetirBtnText:     { fontSize:11, fontFamily: F.bold, color: tema.esOscuro ? Colors.primaryLight : '#137A47' },
   badgesRow:          { flexDirection:'row', alignItems:'center', gap:6, marginTop:5 },
-  urgenteBadge:       { backgroundColor:'rgba(255,210,63,.25)', paddingHorizontal:8, paddingVertical:2, borderRadius:100 },
-  urgenteText:        { fontSize:9, fontFamily: F.extrabold, color:'#A87C00' },
+  urgenteBadge:       { flexDirection:'row', alignItems:'center', gap:3, backgroundColor:'rgba(255,210,63,.25)', paddingHorizontal:8, paddingVertical:2, borderRadius:100 },
+  urgenteText:        { fontSize:9, fontFamily: F.extrabold, color:tema.dorado },
   empty:              { alignItems:'center', paddingTop:60 },
-  emptyIco:           { fontFamily: F.regular, fontSize:48, marginBottom:12, opacity:.3 },
+  emptyIco:           { marginBottom:12, opacity:.5 },
   emptyText:          { fontSize:16, fontFamily: F.bold, color:tema.subTexto },
   emptySub:           { fontFamily: F.regular, fontSize:13, color:tema.subTexto, marginTop:4, textAlign:'center', paddingHorizontal:32 },
 })

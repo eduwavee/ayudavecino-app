@@ -17,6 +17,18 @@ import { useTemaStore, useTema, TemaTokens } from "../store/temaStore";
 import { authService } from "../services/auth.service";
 import { FUENTES as F } from '../constants/diseno'
 import { PressScale } from '../components/ui/PressScale'
+import { Icono, NombreIcono } from '../components/ui/Icono'
+import { FondoBarraEstado } from '../components/ui/FondoBarraEstado'
+import { FotoPerfil } from '../components/ui/FotoPerfil'
+
+// Ícono de cada ajuste, en un recuadro teñido (mismo lenguaje que el menú de Perfil)
+function IcoAjuste({ nombre, color = Colors.primary }: { nombre: NombreIcono; color?: string }) {
+  return (
+    <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: color + '1A', alignItems: 'center', justifyContent: 'center' }}>
+      <Icono nombre={nombre} tamano={18} color={color} />
+    </View>
+  )
+}
 
 export default function AjustesScreen() {
   const router = useRouter();
@@ -114,11 +126,12 @@ export default function AjustesScreen() {
   }
 
   return (
+    <View style={styles.container}>
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
         <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>←</Text>
+          <Icono nombre="arrow-back" tamano={20} color={tema.texto} />
         </PressScale>
         <Text style={styles.title}>Ajustes</Text>
       </View>
@@ -132,14 +145,12 @@ export default function AjustesScreen() {
           onPress={() => router.push("/editar-perfil")}
         >
           <View style={styles.perfilAvatar}>
-            <Text style={styles.perfilAvatarText}>
-              {usuario?.nombre?.charAt(0).toUpperCase()}
-            </Text>
+            <FotoPerfil ruta={usuario?.avatar} nombre={usuario?.nombre} radio={18} estiloTexto={styles.perfilAvatarText} />
           </View>
           <View style={styles.perfilInfo}>
             <Text style={styles.perfilNombre}>{usuario?.nombre}</Text>
             <Text style={styles.perfilEmail}>{usuario?.email}</Text>
-            <Text style={styles.perfilEditar}>Toca para editar perfil →</Text>
+            <Text style={styles.perfilEditar}>Tocá para editar tu perfil</Text>
           </View>
           <View
             style={[
@@ -148,18 +159,18 @@ export default function AjustesScreen() {
             ]}
           >
             <Text style={styles.rolBadgeText}>
-              {usuario?.rol === "PROVEEDOR" ? "🔨 Pro" : "🙋 Cliente"}
+              {usuario?.rol === "PROVEEDOR" ? "Proveedor" : "Cliente"}
             </Text>
           </View>
         </TouchableOpacity>
 
         {/* Notificaciones */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🔔 Notificaciones</Text>
+          <Text style={styles.sectionTitle}>Notificaciones</Text>
           <View style={styles.sectionCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>📋</Text>
+                <IcoAjuste nombre="receipt-outline" />
                 <View>
                   <Text style={styles.settingLabel}>Pedidos y trabajos</Text>
                   <Text style={styles.settingDesc}>
@@ -180,7 +191,7 @@ export default function AjustesScreen() {
             <View style={styles.rowDivider} />
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>💬</Text>
+                <IcoAjuste nombre="chatbubbles-outline" color="#1F6FD1" />
                 <View>
                   <Text style={styles.settingLabel}>Mensajes</Text>
                   <Text style={styles.settingDesc}>
@@ -201,7 +212,7 @@ export default function AjustesScreen() {
             <View style={styles.rowDivider} />
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>🎉</Text>
+                <IcoAjuste nombre="gift-outline" color="#B8860B" />
                 <View>
                   <Text style={styles.settingLabel}>Promociones</Text>
                   <Text style={styles.settingDesc}>
@@ -222,7 +233,7 @@ export default function AjustesScreen() {
             <View style={styles.rowDivider} />
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>📧</Text>
+                <IcoAjuste nombre="mail-outline" color="#6C5CE7" />
                 <View>
                   <Text style={styles.settingLabel}>Emails</Text>
                   <Text style={styles.settingDesc}>
@@ -245,11 +256,11 @@ export default function AjustesScreen() {
 
         {/* Privacidad */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🔒 Privacidad</Text>
+          <Text style={styles.sectionTitle}>Privacidad</Text>
           <View style={styles.sectionCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>📍</Text>
+                <IcoAjuste nombre="location-outline" />
                 <View>
                   <Text style={styles.settingLabel}>Compartir ubicación</Text>
                   <Text style={styles.settingDesc}>
@@ -273,7 +284,7 @@ export default function AjustesScreen() {
               onPress={() => router.push("/cambiar-password")}
             >
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>🔑</Text>
+                <IcoAjuste nombre="key-outline" color="#B8860B" />
                 <View>
                   <Text style={styles.settingLabel}>Cambiar contraseña</Text>
                   <Text style={styles.settingDesc}>
@@ -281,12 +292,12 @@ export default function AjustesScreen() {
                   </Text>
                 </View>
               </View>
-              <Text style={styles.settingArrow}>›</Text>
+              <Icono nombre="chevron-forward" tamano={18} color={tema.subTexto} />
             </TouchableOpacity>
             <View style={styles.rowDivider} />
             <TouchableOpacity style={styles.settingRow} onPress={handleTerminos}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>📄</Text>
+                <IcoAjuste nombre="document-text-outline" color="#6B6B6B" />
                 <View>
                   <Text style={styles.settingLabel}>
                     Términos y condiciones
@@ -294,18 +305,18 @@ export default function AjustesScreen() {
                   <Text style={styles.settingDesc}>Leé nuestras políticas</Text>
                 </View>
               </View>
-              <Text style={styles.settingArrow}>›</Text>
+              <Icono nombre="chevron-forward" tamano={18} color={tema.subTexto} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Apariencia */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎨 Apariencia</Text>
+          <Text style={styles.sectionTitle}>Apariencia</Text>
           <View style={styles.sectionCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>🌙</Text>
+                <IcoAjuste nombre={oscuro ? 'moon' : 'moon-outline'} color="#6C5CE7" />
                 <View>
                   <Text style={styles.settingLabel}>Modo oscuro</Text>
                   <Text style={styles.settingDesc}>
@@ -328,11 +339,11 @@ export default function AjustesScreen() {
 
         {/* Sobre la app */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ℹ️ Sobre la app</Text>
+          <Text style={styles.sectionTitle}>Sobre la app</Text>
           <View style={styles.sectionCard}>
             <TouchableOpacity style={styles.settingRow} onPress={handleCalificar}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>⭐</Text>
+                <IcoAjuste nombre="star-outline" color="#B8860B" />
                 <View>
                   <Text style={styles.settingLabel}>Calificar AyudaVecino</Text>
                   <Text style={styles.settingDesc}>
@@ -340,12 +351,12 @@ export default function AjustesScreen() {
                   </Text>
                 </View>
               </View>
-              <Text style={styles.settingArrow}>›</Text>
+              <Icono nombre="chevron-forward" tamano={18} color={tema.subTexto} />
             </TouchableOpacity>
             <View style={styles.rowDivider} />
             <TouchableOpacity style={styles.settingRow} onPress={handleReportarProblema}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>🐛</Text>
+                <IcoAjuste nombre="bug-outline" color="#C0392B" />
                 <View>
                   <Text style={styles.settingLabel}>Reportar un problema</Text>
                   <Text style={styles.settingDesc}>
@@ -353,12 +364,12 @@ export default function AjustesScreen() {
                   </Text>
                 </View>
               </View>
-              <Text style={styles.settingArrow}>›</Text>
+              <Icono nombre="chevron-forward" tamano={18} color={tema.subTexto} />
             </TouchableOpacity>
             <View style={styles.rowDivider} />
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <Text style={styles.settingIco}>📱</Text>
+                <IcoAjuste nombre="phone-portrait-outline" color="#6B6B6B" />
                 <View>
                   <Text style={styles.settingLabel}>Versión</Text>
                   <Text style={styles.settingDesc}>AyudaVecino v1.0.0</Text>
@@ -374,19 +385,23 @@ export default function AjustesScreen() {
         {/* Botones de sesión */}
         <View style={styles.section}>
           <PressScale haptico style={styles.logoutBtn} onPress={handleLogout}>
-            <Text style={styles.logoutText}>🚪 Cerrar sesión</Text>
+            <Icono nombre="log-out-outline" tamano={18} color={tema.peligro} />
+          <Text style={styles.logoutText}>Cerrar sesión</Text>
           </PressScale>
           <TouchableOpacity
             style={styles.deleteBtn}
             onPress={handleEliminarCuenta}
           >
-            <Text style={styles.deleteText}>🗑️ Eliminar cuenta</Text>
+            <Icono nombre="trash-outline" tamano={16} color={tema.peligro} />
+          <Text style={styles.deleteText}>Eliminar cuenta</Text>
           </TouchableOpacity>
         </View>
 
         <View style={{ height: 40 }} />
       </Animated.View>
     </ScrollView>
+    <FondoBarraEstado color={tema.bg} />
+    </View>
   );
 }
 
@@ -409,7 +424,6 @@ const getStyles = (tema: TemaTokens) =>
       alignItems: "center",
       justifyContent: "center",
     },
-    backText: { fontFamily: F.regular, fontSize: 16, color: tema.texto },
     title: { fontSize: 22, fontFamily: F.extrabold, color: tema.texto },
     perfilCard: {
       flexDirection: "row",
@@ -456,7 +470,8 @@ const getStyles = (tema: TemaTokens) =>
       backgroundColor: "rgba(26,158,92,.1)",
       borderColor: "rgba(26,158,92,.25)",
     },
-    rolBadgeText: { fontSize: 11, fontFamily: F.extrabold, color: Colors.dark },
+    // tema.texto: con Colors.dark fijo la etiqueta no se leía en modo oscuro
+    rolBadgeText: { fontSize: 11, fontFamily: F.extrabold, color: tema.texto },
     section: { paddingHorizontal: 22, marginBottom: 20 },
     sectionTitle: {
       fontSize: 13,
@@ -482,7 +497,6 @@ const getStyles = (tema: TemaTokens) =>
       padding: 16,
     },
     settingLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
-    settingIco: { fontFamily: F.regular, fontSize: 22, width: 32, textAlign: "center" },
     settingLabel: {
       fontSize: 14,
       fontFamily: F.semibold,
@@ -490,7 +504,6 @@ const getStyles = (tema: TemaTokens) =>
       marginBottom: 2,
     },
     settingDesc: { fontFamily: F.regular, fontSize: 11, color: tema.subTexto },
-    settingArrow: { fontFamily: F.regular, fontSize: 22, color: tema.subTexto },
     rowDivider: { height: 1, backgroundColor: tema.border, marginLeft: 60 },
     versionBadge: {
       backgroundColor: "rgba(26,158,92,.1)",
@@ -504,6 +517,9 @@ const getStyles = (tema: TemaTokens) =>
       borderRadius: 16,
       paddingVertical: 16,
       alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 8,
       marginBottom: 10,
       borderWidth: 1.5,
       borderColor: "#FF7675",
@@ -513,7 +529,7 @@ const getStyles = (tema: TemaTokens) =>
       shadowRadius: 6,
       elevation: 2,
     },
-    logoutText: { color: "#FF7675", fontSize: 15, fontFamily: F.bold },
-    deleteBtn: { borderRadius: 16, paddingVertical: 14, alignItems: "center" },
-    deleteText: { color: tema.subTexto, fontSize: 13, fontFamily: F.semibold },
+    logoutText: { color: tema.peligro, fontSize: 15, fontFamily: F.bold },
+    deleteBtn: { borderRadius: 16, paddingVertical: 14, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 6 },
+    deleteText: { color: tema.peligro, fontSize: 13, fontFamily: F.semibold },
   });

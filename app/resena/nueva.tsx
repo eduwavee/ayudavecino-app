@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet,
   TextInput, Alert, ActivityIndicator,
-  Animated, ScrollView
+  Animated, ScrollView, KeyboardAvoidingView
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
@@ -12,17 +12,29 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { FUENTES as F } from '../../constants/diseno'
 import { haptica } from '../../utils/haptica'
 import { PressScale } from '../../components/ui/PressScale'
+import { Icono, NombreIcono } from '../../components/ui/Icono'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { FotoPerfil } from '../../components/ui/FotoPerfil'
+import { useReducedMotion } from 'react-native-reanimated'
+import { useTema, TemaTokens } from '../../store/temaStore'
 
-const TAGS = [
-  '✓ Puntual', '✓ Prolijo', '💰 Precio justo',
-  '⚡ Rápido', '💬 Buen trato', '🔧 Muy profesional',
+const TAGS: { icono: NombreIcono; texto: string }[] = [
+  { icono: 'time-outline',       texto: 'Puntual' },
+  { icono: 'sparkles-outline',   texto: 'Prolijo' },
+  { icono: 'pricetag-outline',   texto: 'Precio justo' },
+  { icono: 'flash-outline',      texto: 'Rápido' },
+  { icono: 'happy-outline',      texto: 'Buen trato' },
+  { icono: 'ribbon-outline',     texto: 'Muy profesional' },
 ]
 
-const LABELS = ['', 'Muy malo 😞', 'Malo 😕', 'Regular 😐', 'Bueno 😊', 'Excelente 🤩']
+const LABELS = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente']
+const COLOR_ESTRELLA = '#F5B301'
 
 export default function NuevaResenaScreen() {
   const router = useRouter()
-  const { pedidoId, proveedorNombre, servicioNombre } = useLocalSearchParams<any>()
+  const tema   = useTema()
+  const styles = getStyles(tema)
+  const { pedidoId, proveedorNombre, proveedorAvatar, servicioNombre } = useLocalSearchParams<any>()
 
   const [puntaje, setPuntaje]       = useState(0)
   const [comentario, setComentario] = useState('')
@@ -31,6 +43,7 @@ export default function NuevaResenaScreen() {
 
   const fadeAnim  = useRef(new Animated.Value(0)).current
   const scaleAnims = [1,2,3,4,5].map(() => useRef(new Animated.Value(1)).current)
+  const reducido = useReducedMotion()
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue:1, duration:500, useNativeDriver:true }).start()
@@ -39,8 +52,9 @@ export default function NuevaResenaScreen() {
   function seleccionarEstrella(n: number) {
     haptica.seleccion()
     setPuntaje(n)
+    if (reducido) return
     Animated.sequence([
-      Animated.timing(scaleAnims[n-1], { toValue:1.4, duration:150, useNativeDriver:true }),
+      Animated.timing(scaleAnims[n-1], { toValue:1.25, duration:120, useNativeDriver:true }),
       Animated.spring(scaleAnims[n-1], { toValue:1, tension:60, friction:5, useNativeDriver:true }),
     ]).start()
   }
@@ -81,12 +95,13 @@ export default function NuevaResenaScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
       {/* Header */}
       <View style={styles.header}>
         <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>←</Text>
+          <Icono nombre="arrow-back" tamano={20} color={tema.texto} />
         </PressScale>
         <Text style={styles.title}>Calificar servicio</Text>
       </View>
@@ -96,15 +111,13 @@ export default function NuevaResenaScreen() {
         {/* Proveedor */}
         <View style={styles.provCard}>
           <View style={styles.provAvatar}>
-            <Text style={styles.provAvatarText}>
-              {proveedorNombre?.charAt(0).toUpperCase()}
-            </Text>
+            <FotoPerfil ruta={proveedorAvatar || null} nombre={proveedorNombre} radio={16} estiloTexto={styles.provAvatarText} />
           </View>
           <View style={styles.provInfo}>
             <Text style={styles.provNombre}>{proveedorNombre}</Text>
             <Text style={styles.provServicio}>{servicioNombre}</Text>
           </View>
-          <Text style={styles.provIco}>🔧</Text>
+          <Icono nombre="construct-outline" tamano={22} color={Colors.primary} />
         </View>
 
         {/* Estrellas */}
@@ -112,37 +125,51 @@ export default function NuevaResenaScreen() {
           <Text style={styles.starsTitle}>¿Cómo fue tu experiencia?</Text>
           <View style={styles.starsRow}>
             {[1,2,3,4,5].map(n => (
-              <TouchableOpacity key={n} onPress={() => seleccionarEstrella(n)} activeOpacity={.7}>
-                <Animated.Text style={[
-                  styles.star,
-                  { transform:[{ scale: scaleAnims[n-1] }] },
-                  n <= puntaje && styles.starActive
-                ]}>
-                  ⭐
-                </Animated.Text>
+              <TouchableOpacity
+                key={n}
+                onPress={() => seleccionarEstrella(n)}
+                activeOpacity={.7}
+                hitSlop={4}
+                accessibilityRole="button"
+                accessibilityLabel={`${n} ${n === 1 ? 'estrella' : 'estrellas'}`}
+                accessibilityState={{ selected: n === puntaje }}
+              >
+                <Animated.View style={{ transform:[{ scale: scaleAnims[n-1] }] }}>
+                  <Icono
+                    nombre={n <= puntaje ? 'star' : 'star-outline'}
+                    tamano={40}
+                    color={n <= puntaje ? COLOR_ESTRELLA : '#9A9A9A'}
+                  />
+                </Animated.View>
               </TouchableOpacity>
             ))}
           </View>
-          {puntaje > 0 && (
-            <Text style={styles.starLabel}>{LABELS[puntaje]}</Text>
-          )}
+          {/* Siempre ocupa su lugar: si aparecía recién al elegir, empujaba las etiquetas
+              de abajo y el siguiente toque caía en otra */}
+          <Text style={[styles.starLabel, puntaje === 0 && styles.starLabelVacio]}>
+            {puntaje > 0 ? LABELS[puntaje] : 'Tocá una estrella'}
+          </Text>
         </View>
 
         {/* Tags */}
         <View style={styles.tagsSection}>
           <Text style={styles.tagsTitle}>¿Qué destacás? (opcional)</Text>
           <View style={styles.tagsWrap}>
-            {TAGS.map(tag => (
-              <TouchableOpacity
-                key={tag}
-                style={[styles.tagBtn, tagsSelected.includes(tag) && styles.tagBtnActive]}
-                onPress={() => toggleTag(tag)}
-              >
-                <Text style={[styles.tagText, tagsSelected.includes(tag) && styles.tagTextActive]}>
-                  {tag}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {TAGS.map(({ icono, texto }) => {
+              const activo = tagsSelected.includes(texto)
+              return (
+                <TouchableOpacity
+                  key={texto}
+                  style={[styles.tagBtn, activo && styles.tagBtnActive]}
+                  onPress={() => toggleTag(texto)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: activo }}
+                >
+                  <Icono nombre={activo ? 'checkmark' : icono} tamano={14} color={activo ? Colors.primary : tema.subTexto} />
+                  <Text style={[styles.tagText, activo && styles.tagTextActive]}>{texto}</Text>
+                </TouchableOpacity>
+              )
+            })}
           </View>
         </View>
 
@@ -152,7 +179,7 @@ export default function NuevaResenaScreen() {
           <TextInput
             style={styles.comentarioInput}
             placeholder="Contá tu experiencia... ¿qué fue lo que más te gustó?"
-            placeholderTextColor="#767676"
+            placeholderTextColor={tema.subTexto}
             value={comentario}
             onChangeText={setComentario}
             multiline
@@ -171,48 +198,47 @@ export default function NuevaResenaScreen() {
         >
           {loading
             ? <ActivityIndicator color="white" />
-            : <Text style={styles.enviarBtnText}>Publicar reseña ⭐</Text>
+            : <Text style={styles.enviarBtnText}>Publicar reseña</Text>
           }
         </PressScale>
 
         <View style={{ height: 40 }} />
       </Animated.View>
     </ScrollView>
+    <FondoBarraEstado color={tema.bg} />
+    </KeyboardAvoidingView>
   )
 }
 
-const styles = StyleSheet.create({
-  container:         { flex:1, backgroundColor:Colors.cream },
+const getStyles = (tema: TemaTokens) => StyleSheet.create({
+  container:         { flex:1, backgroundColor:tema.bg },
   header:            { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:20 },
-  backBtn:           { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },
-  backText:          { fontFamily: F.regular, fontSize:16, color:Colors.dark },
-  title:             { fontSize:20, fontFamily: F.extrabold, color:Colors.dark },
+  backBtn:           { width:38, height:38, borderRadius:12, backgroundColor:tema.overlay, alignItems:'center', justifyContent:'center' },
+  title:             { fontSize:20, fontFamily: F.extrabold, color:tema.texto },
   content:           { paddingHorizontal:22 },
-  provCard:          { flexDirection:'row', alignItems:'center', gap:14, backgroundColor:'white', borderRadius:18, padding:16, marginBottom:24, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
+  provCard:          { flexDirection:'row', alignItems:'center', gap:14, backgroundColor:tema.card, borderRadius:18, padding:16, marginBottom:24, shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
   provAvatar:        { width:50, height:50, borderRadius:16, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center' },
   provAvatarText:    { color:'white', fontSize:20, fontFamily: F.extrabold },
   provInfo:          { flex:1 },
-  provNombre:        { fontSize:16, fontFamily: F.extrabold, color:Colors.dark, marginBottom:3 },
-  provServicio:      { fontFamily: F.regular, fontSize:12, color:'#6B6B6B' },
-  provIco:           { fontFamily: F.regular, fontSize:24 },
-  starsSection:      { backgroundColor:'white', borderRadius:18, padding:20, marginBottom:16, alignItems:'center', shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
-  starsTitle:        { fontSize:15, fontFamily: F.bold, color:Colors.dark, marginBottom:16 },
+  provNombre:        { fontSize:16, fontFamily: F.extrabold, color:tema.texto, marginBottom:3 },
+  provServicio:      { fontFamily: F.regular, fontSize:12, color:tema.subTexto },
+  starsSection:      { backgroundColor:tema.card, borderRadius:18, padding:20, marginBottom:16, alignItems:'center', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
+  starsTitle:        { fontSize:15, fontFamily: F.bold, color:tema.texto, marginBottom:16 },
   starsRow:          { flexDirection:'row', gap:8, marginBottom:10 },
-  star:              { fontFamily: F.regular, fontSize:40, opacity:.3 },
-  starActive:        { opacity:1 },
-  starLabel:         { fontSize:16, fontFamily: F.extrabold, color:Colors.dark, marginTop:4 },
-  tagsSection:       { backgroundColor:'white', borderRadius:18, padding:16, marginBottom:16, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
-  tagsTitle:         { fontSize:13, fontFamily: F.bold, color:Colors.dark, marginBottom:12 },
+  starLabel:         { fontSize:16, fontFamily: F.extrabold, color:tema.texto, marginTop:4 },
+  starLabelVacio:    { fontFamily: F.medium, color:tema.subTexto },
+  tagsSection:       { backgroundColor:tema.card, borderRadius:18, padding:16, marginBottom:16, shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
+  tagsTitle:         { fontSize:13, fontFamily: F.bold, color:tema.texto, marginBottom:12 },
   tagsWrap:          { flexDirection:'row', flexWrap:'wrap', gap:8 },
-  tagBtn:            { paddingHorizontal:14, paddingVertical:8, borderRadius:100, backgroundColor:Colors.cream, borderWidth:1.5, borderColor:'#eee' },
-  tagBtnActive:      { backgroundColor:'#F0FDF4', borderColor:Colors.primary },
-  tagText:           { fontSize:12, fontFamily: F.semibold, color:'#555' },
+  tagBtn:            { flexDirection:'row', alignItems:'center', gap:6, paddingHorizontal:14, paddingVertical:8, borderRadius:100, backgroundColor:tema.bg, borderWidth:1.5, borderColor:tema.border },
+  tagBtnActive:      { backgroundColor:tema.esOscuro ? 'rgba(26,158,92,.15)' : '#F0FDF4', borderColor:Colors.primary },
+  tagText:           { fontSize:12, fontFamily: F.semibold, color:tema.subTexto },
   tagTextActive:     { color:Colors.primary },
-  comentarioSection: { backgroundColor:'white', borderRadius:18, padding:16, marginBottom:24, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
-  comentarioTitle:   { fontSize:13, fontFamily: F.bold, color:Colors.dark, marginBottom:10 },
-  comentarioInput:   { fontFamily: F.regular, backgroundColor:Colors.cream, borderRadius:14, padding:14, fontSize:13, color:Colors.dark, minHeight:100, borderWidth:1.5, borderColor:'#eee' },
-  charCount:         { fontFamily: F.regular, textAlign:'right', fontSize:10, color:'#bbb', marginTop:6 },
+  comentarioSection: { backgroundColor:tema.card, borderRadius:18, padding:16, marginBottom:24, shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:2 },
+  comentarioTitle:   { fontSize:13, fontFamily: F.bold, color:tema.texto, marginBottom:10 },
+  comentarioInput:   { fontFamily: F.regular, backgroundColor:tema.bg, borderRadius:14, padding:14, fontSize:13, color:tema.texto, minHeight:100, borderWidth:1.5, borderColor:tema.border },
+  charCount:         { fontFamily: F.regular, textAlign:'right', fontSize:10, color:tema.subTexto, marginTop:6 },
   enviarBtn:         { backgroundColor:Colors.primary, borderRadius:16, paddingVertical:16, alignItems:'center', shadowColor:Colors.primary, shadowOffset:{width:0,height:4}, shadowOpacity:.3, shadowRadius:10, elevation:5 },
-  enviarBtnDisabled: { backgroundColor:'#ccc', shadowOpacity:0, elevation:0 },
+  enviarBtnDisabled: { backgroundColor:tema.esOscuro ? '#333333' : '#cccccc', shadowOpacity:0, elevation:0 },
   enviarBtnText:     { color:'white', fontSize:15, fontFamily: F.extrabold },
 })

@@ -1,11 +1,26 @@
-import * as Notifications from 'expo-notifications'
 import * as Device from 'expo-device'
+import Constants, { ExecutionEnvironment } from 'expo-constants'
 import { Platform } from 'react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import axios from 'axios'
-import { API_URL } from '../constants/config'
 
-Notifications.setNotificationHandler({
+type ModuloNotificaciones = typeof import('expo-notifications')
+
+// Desde el SDK 53, Expo Go para Android lanza un error apenas se importa
+// expo-notifications. Lo cargamos solo donde funciona (development build, build
+// de release o iOS) para que la app no se caiga al abrirla en Expo Go.
+const enExpoGoAndroid =
+  Platform.OS === 'android' &&
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient
+
+let Notifications: ModuloNotificaciones | null = null
+if (!enExpoGoAndroid) {
+  try {
+    Notifications = require('expo-notifications') as ModuloNotificaciones
+  } catch {
+    Notifications = null
+  }
+}
+
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList:   true,
@@ -17,6 +32,10 @@ Notifications.setNotificationHandler({
 export const notificacionesService = {
 
   async registrarDispositivo() {
+    if (!Notifications) {
+      console.log('Notificaciones no disponibles en Expo Go para Android; usá un development build')
+      return null
+    }
     if (!Device.isDevice) {
       console.log('Solo funciona en dispositivo real')
       return null
@@ -36,7 +55,7 @@ export const notificacionesService = {
     }
 
     // Sin projectId — solo notificaciones locales por ahora
-    console.log('✅ Permisos de notificación concedidos')
+    console.log('Permisos de notificación concedidos')
 
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
@@ -57,6 +76,7 @@ export const notificacionesService = {
   },
 
   async mostrarLocal(titulo: string, cuerpo: string, datos?: any) {
+    if (!Notifications) return
     await Notifications.scheduleNotificationAsync({
       content: {
         title: titulo,
@@ -72,12 +92,14 @@ export const notificacionesService = {
     onRecibida: (notif: any) => void,
     onTocada:   (response: any) => void
   ) {
+    if (!Notifications) return () => {}
     const sub1 = Notifications.addNotificationReceivedListener(onRecibida)
     const sub2 = Notifications.addNotificationResponseReceivedListener(onTocada)
     return () => { sub1.remove(); sub2.remove() }
   },
 
   async limpiarBadge() {
+    if (!Notifications) return
     await Notifications.setBadgeCountAsync(0)
   },
 }
