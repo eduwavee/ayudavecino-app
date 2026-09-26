@@ -1,26 +1,37 @@
 import { useEffect, useRef } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  Animated, Dimensions
+  Animated, Dimensions, ScrollView
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
 import { FUENTES as F } from '../../constants/diseno'
 import { PressScale } from '../../components/ui/PressScale'
+import { Icono } from '../../components/ui/Icono'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { useReducedMotion } from 'react-native-reanimated'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const { width } = Dimensions.get('window')
 
 export default function PedidoExitoScreen() {
   const router = useRouter()
-  const { monto, servicio, proveedor } = useLocalSearchParams<any>()
+  const { numero, monto, servicio, proveedor } = useLocalSearchParams<any>()
+  const insets = useSafeAreaInsets()
 
   // Animaciones
   const scaleCheck  = useRef(new Animated.Value(0)).current
   const fadeContent = useRef(new Animated.Value(0)).current
   const slideUp     = useRef(new Animated.Value(60)).current
   const ripple      = useRef(new Animated.Value(0)).current
+  const reducido    = useReducedMotion()
 
   useEffect(() => {
+    if (reducido) {
+      // Movimiento reducido: el resultado se muestra directo, sin rebote ni desplazamiento
+      scaleCheck.setValue(1); fadeContent.setValue(1); slideUp.setValue(0); ripple.setValue(1)
+      return
+    }
     // 1. Ripple de fondo
     Animated.timing(ripple, {
       toValue: 1, duration: 800,
@@ -44,7 +55,7 @@ export default function PedidoExitoScreen() {
         Animated.timing(slideUp,     { toValue:0, duration:500, useNativeDriver:true }),
       ]),
     ]).start()
-  }, [])
+  }, [reducido])
 
   const rippleScale = ripple.interpolate({
     inputRange: [0, 1],
@@ -53,6 +64,8 @@ export default function PedidoExitoScreen() {
 
   return (
     <View style={styles.container}>
+    {/* Con scroll: en pantallas bajas los botones quedaban fuera de la pantalla */}
+    <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 8 }} bounces={false} showsVerticalScrollIndicator={false}>
 
       {/* Fondo verde animado */}
       <View style={styles.greenBg}>
@@ -68,12 +81,12 @@ export default function PedidoExitoScreen() {
 
       {/* CHECK animado */}
       <View style={styles.topSection}>
-        <Animated.View style={[styles.checkWrap, { transform: [{ scale: scaleCheck }] }]}>
+        <Animated.View style={[styles.checkWrap, { opacity: scaleCheck.interpolate({ inputRange:[0, .4, 1], outputRange:[0, 1, 1] }), transform: [{ scale: scaleCheck.interpolate({ inputRange:[0, 1], outputRange:[0.6, 1] }) }] }]}>
           <View style={styles.checkRing3} />
           <View style={styles.checkRing2} />
           <View style={styles.checkRing1} />
           <View style={styles.checkCircle}>
-            <Text style={styles.checkMark}>✓</Text>
+            <Icono nombre="checkmark" tamano={38} color={Colors.primary} />
           </View>
         </Animated.View>
 
@@ -89,7 +102,7 @@ export default function PedidoExitoScreen() {
         {/* Número de pedido */}
         <View style={styles.orderIdRow}>
           <Text style={styles.orderIdLabel}>Número de pedido</Text>
-          <Text style={styles.orderId}>#AV-{Math.floor(Math.random() * 90000) + 10000}</Text>
+          <Text style={styles.orderId}>#{numero || '—'}</Text>
         </View>
 
         <View style={styles.divider} />
@@ -105,7 +118,7 @@ export default function PedidoExitoScreen() {
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Total</Text>
-          <Text style={[styles.detailValue, styles.detailMonto]}>${Number(monto ?? 0).toLocaleString()}</Text>
+          <Text style={[styles.detailValue, styles.detailMonto]}>${Number(monto ?? 0).toLocaleString('es-AR')}</Text>
         </View>
 
         <View style={styles.divider} />
@@ -113,7 +126,7 @@ export default function PedidoExitoScreen() {
         {/* Tracker */}
         <View style={styles.tracker}>
           <View style={styles.trackStep}>
-            <View style={[styles.trackDot, styles.trackDotDone]}><Text style={styles.trackDotText}>✓</Text></View>
+            <View style={[styles.trackDot, styles.trackDotDone]}><Icono nombre="checkmark" tamano={12} color="white" /></View>
             <View style={styles.trackLine} />
             <View style={styles.trackInfo}>
               <Text style={styles.trackTitle}>Pedido enviado</Text>
@@ -132,7 +145,7 @@ export default function PedidoExitoScreen() {
             <View style={[styles.trackDot, { backgroundColor:'#eee' }]} />
             <View style={[styles.trackLine, { backgroundColor:'transparent' }]} />
             <View style={styles.trackInfo}>
-              <Text style={[styles.trackTitle, { color:'#bbb' }]}>Trabajo en curso</Text>
+              <Text style={[styles.trackTitle, { color:'#8A8A8A' }]}>Trabajo en curso</Text>
               <Text style={styles.trackDesc}>Próximamente</Text>
             </View>
           </View>
@@ -140,22 +153,24 @@ export default function PedidoExitoScreen() {
 
       </Animated.View>
 
-      {/* Botones */}
+      {/* Botones: dismissTo vuelve a las pestañas que ya están abajo en la pila. Con
+          replace se montaba otra copia de las pestañas, que arrancaba en Inicio */}
       <Animated.View style={[styles.buttons, { opacity: fadeContent }]}>
         <PressScale haptico
           style={styles.btnPrimary}
-          onPress={() => router.replace('/(tabs)/pedidos')}
+          onPress={() => router.dismissTo('/(tabs)/pedidos')}
         >
           <Text style={styles.btnPrimaryText}>Ver mis pedidos</Text>
         </PressScale>
         <PressScale haptico
           style={styles.btnSecondary}
-          onPress={() => router.replace('/(tabs)')}
+          onPress={() => router.dismissTo('/(tabs)')}
         >
           <Text style={styles.btnSecondaryText}>Volver al inicio</Text>
         </PressScale>
       </Animated.View>
-
+    </ScrollView>
+      <FondoBarraEstado color={Colors.primary} />
     </View>
   )
 }
@@ -171,7 +186,6 @@ const styles = StyleSheet.create({
   checkRing2:      { position:'absolute', width:120, height:120, borderRadius:60, backgroundColor:'rgba(255,255,255,.12)' },
   checkRing1:      { position:'absolute', width:90, height:90, borderRadius:45, backgroundColor:'rgba(255,255,255,.18)' },
   checkCircle:     { width:72, height:72, borderRadius:36, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:8}, shadowOpacity:.2, shadowRadius:16, elevation:8 },
-  checkMark:       { fontSize:32, color:Colors.primary, fontFamily: F.extrabold },
   topTexts:        { alignItems:'center' },
   exitoTitle:      { fontSize:36, fontFamily: F.extrabold, color:'white', textAlign:'center', lineHeight:42, marginBottom:8 },
   exitoSub:        { fontFamily: F.regular, fontSize:14, color:'rgba(255,255,255,.7)', textAlign:'center' },
@@ -189,11 +203,10 @@ const styles = StyleSheet.create({
   trackDot:        { width:26, height:26, borderRadius:13, alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2 },
   trackDotDone:    { backgroundColor:Colors.primary },
   trackDotActive:  { backgroundColor:Colors.primary, shadowColor:Colors.primary, shadowOffset:{width:0,height:0}, shadowOpacity:.5, shadowRadius:6, elevation:4 },
-  trackDotText:    { color:'white', fontSize:12, fontFamily: F.extrabold },
   trackLine:       { position:'absolute', left:12, top:28, width:2, height:36, backgroundColor:Colors.primary, marginLeft:0 },
   trackInfo:       { flex:1, paddingBottom:24 },
   trackTitle:      { fontSize:13, fontFamily: F.bold, color:'#1a1a1a', marginBottom:2 },
-  trackDesc:       { fontFamily: F.regular, fontSize:11, color:'#aaa' },
+  trackDesc:       { fontFamily: F.regular, fontSize:11, color:'#767676' },
   buttons:         { padding:20, gap:10 },
   btnPrimary:      { backgroundColor:'white', borderRadius:16, paddingVertical:16, alignItems:'center' },
   btnPrimaryText:  { color:Colors.primary, fontSize:15, fontFamily: F.extrabold },

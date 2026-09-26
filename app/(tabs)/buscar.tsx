@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
-  FlatList, StyleSheet, Modal, Pressable, Switch, Alert
+  FlatList, StyleSheet, Modal, Pressable, Switch, Alert, Image
 } from 'react-native'
+import { archivoUrl } from '../../constants/config'
+import { FotoPerfil } from '../../components/ui/FotoPerfil'
 import * as Location from 'expo-location'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Colors } from '../../constants/colors'
@@ -15,6 +17,9 @@ import { FUENTES as F } from '../../constants/diseno'
 import { conEntrada } from '../../components/ui/Aparecer'
 import { PressScale } from '../../components/ui/PressScale'
 import { PlanBadge } from '../../components/ui/PlanBadge'
+import { Icono, NombreIcono } from '../../components/ui/Icono'
+import { obtenerPosicion, MENSAJE_UBICACION_APAGADA } from '../../utils/ubicacion'
+import { textoRating } from '../../utils/rating'
 
 function SkeletonServiceCard({ styles }: { styles: ReturnType<typeof getStyles> }) {
   return (
@@ -32,9 +37,9 @@ function SkeletonServiceCard({ styles }: { styles: ReturnType<typeof getStyles> 
   )
 }
 
-const CATEGORIAS = [
-  { label:'Todos', value:'' },
-  ...CATEGORIAS_SERVICIO.map(c => ({ label: c.nombre, value: c.value })),
+const CATEGORIAS: { label: string; value: string; icono: NombreIcono }[] = [
+  { label:'Todos', value:'', icono:'apps-outline' },
+  ...CATEGORIAS_SERVICIO.map(c => ({ label: c.nombre, value: c.value, icono: c.icono })),
 ]
 
 type Orden = 'rating' | 'precio_asc' | 'precio_desc' | 'cercanos'
@@ -49,16 +54,16 @@ interface Filtros {
 
 const FILTROS_INICIALES: Filtros = { orden:'rating', ratingMin:null, precioMin:'', precioMax:'', verificados:false }
 
-const ORDENES: { value: Orden; label: string }[] = [
+const ORDENES: { value: Orden; label: string; icono: NombreIcono }[] = [
   // Por defecto: primero los planes Premium y Pro, y dentro de cada grupo los mejor valorados
-  { value:'rating',      label:'⭐ Recomendados' },
-  { value:'cercanos',    label:'📍 Más cercanos' },
-  { value:'precio_asc',  label:'💲 Menor precio' },
-  { value:'precio_desc', label:'💰 Mayor precio' },
+  { value:'rating',      label:'Recomendados',  icono:'star-outline' },
+  { value:'cercanos',    label:'Más cercanos',  icono:'navigate-outline' },
+  { value:'precio_asc',  label:'Menor precio',  icono:'trending-down-outline' },
+  { value:'precio_desc', label:'Mayor precio',  icono:'trending-up-outline' },
 ]
 
 const RATINGS: { value: number | null; label: string }[] = [
-  { value:null, label:'Todos' }, { value:3, label:'3+ ⭐' }, { value:4, label:'4+ ⭐' }, { value:4.5, label:'4.5+ ⭐' },
+  { value:null, label:'Todos' }, { value:3, label:'3+' }, { value:4, label:'4+' }, { value:4.5, label:'4.5+' },
 ]
 
 function cantidadFiltrosActivos(f: Filtros) {
@@ -117,10 +122,14 @@ export default function BuscarScreen() {
           Alert.alert('Ubicación', 'Activá el permiso de ubicación para ordenar por cercanía')
           return
         }
-        const pos = await Location.getCurrentPositionAsync({})
-        setMiUbicacion({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
-      } catch {
-        Alert.alert('Ubicación', 'No se pudo obtener tu ubicación')
+        const pos = await obtenerPosicion()
+        if (!pos) {
+          Alert.alert('Ubicación', 'No se pudo obtener tu ubicación. Probá de nuevo en un momento.')
+          return
+        }
+        setMiUbicacion(pos)
+      } catch (e: any) {
+        Alert.alert('Ubicación', e?.message === 'UBICACION_APAGADA' ? MENSAJE_UBICACION_APAGADA : 'No se pudo obtener tu ubicación')
         return
       }
     }
@@ -154,7 +163,7 @@ export default function BuscarScreen() {
       </View>
 
       <View style={styles.searchWrap}>
-        <Text style={styles.searchIco}>🔍</Text>
+        <Icono nombre="search-outline" tamano={18} color={tema.subTexto} style={styles.searchIco} />
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar servicio o proveedor..."
@@ -164,7 +173,7 @@ export default function BuscarScreen() {
         />
         {busqueda.length > 0 &&
           <TouchableOpacity onPress={() => setBusqueda('')} accessibilityRole="button" accessibilityLabel="Borrar búsqueda" hitSlop={10}>
-            <Text style={styles.clearBtn}>✕</Text>
+            <Icono nombre="close-circle" tamano={18} color={tema.subTexto} style={styles.clearBtn} />
           </TouchableOpacity>
         }
         <TouchableOpacity
@@ -174,7 +183,7 @@ export default function BuscarScreen() {
           accessibilityLabel={activos > 0 ? `Filtros, ${activos} activos` : 'Filtros'}
           hitSlop={8}
         >
-          <Text style={styles.filtroBtnIco}>⚙️</Text>
+          <Icono nombre="options-outline" tamano={19} color={activos > 0 ? Colors.primary : tema.texto} />
           {activos > 0 && <View style={styles.filtroBadge}><Text style={styles.filtroBadgeText}>{activos}</Text></View>}
         </TouchableOpacity>
       </View>
@@ -190,7 +199,10 @@ export default function BuscarScreen() {
           <TouchableOpacity
             style={[styles.catBtn, catActiva === item.value && styles.catBtnActive]}
             onPress={() => setCatActiva(item.value)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: catActiva === item.value }}
           >
+            <Icono nombre={item.icono} tamano={14} color={catActiva === item.value ? 'white' : tema.subTexto} />
             <Text style={[styles.catBtnText, catActiva === item.value && styles.catBtnTextActive]}>
               {item.label}
             </Text>
@@ -200,7 +212,7 @@ export default function BuscarScreen() {
 
       {!loading && (
         <Text style={styles.contador}>
-          <Text style={styles.contadorNum}>{filtrados.length}</Text> servicios encontrados
+          <Text style={styles.contadorNum}>{filtrados.length}</Text> {filtrados.length === 1 ? 'servicio encontrado' : 'servicios encontrados'}
         </Text>
       )}
 
@@ -216,7 +228,10 @@ export default function BuscarScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={recomendados.length > 0 ? (
             <View style={styles.recoWrap}>
-              <Text style={styles.recoTitulo}>👑 Recomendados</Text>
+              <View style={styles.recoTituloFila}>
+                <Icono nombre="diamond" tamano={15} color="#B8860B" />
+                <Text style={styles.recoTitulo}>Recomendados</Text>
+              </View>
               <FlatList
                 data={recomendados}
                 horizontal
@@ -225,12 +240,19 @@ export default function BuscarScreen() {
                 contentContainerStyle={{ gap: 10 }}
                 renderItem={({ item: s }) => (
                   <PressScale style={styles.recoCard} onPress={() => router.push(`/proveedor/${s.proveedor?.id}`)}>
-                    <Text style={styles.recoIco}>{categoriaInfo(s.categoria).ico}</Text>
+                    <View style={styles.recoIco}>
+                      {s.fotos?.[0]
+                        ? <Image source={{ uri: archivoUrl(s.fotos[0])! }} style={[StyleSheet.absoluteFill, { borderRadius: 11 }]} />
+                        : <Icono nombre={categoriaInfo(s.categoria).icono} tamano={20} color={tema.dorado} />}
+                    </View>
                     <Text style={styles.recoNombre} numberOfLines={1}>{s.nombre}</Text>
                     <Text style={styles.recoProveedor} numberOfLines={1}>{s.proveedor?.nombre}</Text>
                     <View style={styles.recoFila}>
-                      <Text style={styles.serviceRating}>⭐ {s.proveedor?.rating?.toFixed(1) ?? '0.0'}</Text>
-                      <Text style={styles.recoPrecio}>${s.precio?.toLocaleString()}</Text>
+                      <View style={styles.ratingFila}>
+                        <Icono nombre="star" tamano={12} color="#F5B301" />
+                        <Text style={styles.serviceRating}>{textoRating(s.proveedor?.rating)}</Text>
+                      </View>
+                      <Text style={styles.recoPrecio}>${s.precio?.toLocaleString('es-AR')}</Text>
                     </View>
                   </PressScale>
                 )}
@@ -239,7 +261,7 @@ export default function BuscarScreen() {
           ) : null}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyIco}>🔍</Text>
+              <Icono nombre="search-outline" tamano={44} color={tema.subTexto} style={styles.emptyIco} />
               <Text style={styles.emptyText}>No hay servicios disponibles</Text>
               <Text style={styles.emptySub}>{activos > 0 || busqueda ? 'Probá sacando algún filtro' : 'Intentá con otra categoría'}</Text>
             </View>
@@ -250,27 +272,42 @@ export default function BuscarScreen() {
               onPress={() => router.push(`/proveedor/${item.proveedor?.id}`)}
             >
               <View style={styles.serviceLeft}>
+                {/* La foto del trabajo muestra más que el ícono de la categoría */}
                 <View style={styles.serviceIco}>
-                  <Text style={styles.serviceIcoText}>{categoriaInfo(item.categoria).ico}</Text>
+                  {item.fotos?.[0]
+                    ? <Image source={{ uri: archivoUrl(item.fotos[0])! }} style={[StyleSheet.absoluteFill, { borderRadius: 14 }]} />
+                    : <Icono nombre={categoriaInfo(item.categoria).icono} tamano={22} color={Colors.primary} />}
                 </View>
                 <View style={styles.serviceInfo}>
                   <Text style={styles.serviceName}>{item.nombre}</Text>
-                  <Text style={styles.serviceProveedor}>{item.proveedor?.nombre}</Text>
+                  <View style={styles.proveedorFila}>
+                    <View style={styles.proveedorMini}>
+                      <FotoPerfil ruta={item.proveedor?.avatar} nombre={item.proveedor?.nombre} radio={9} estiloTexto={styles.proveedorMiniTexto} />
+                    </View>
+                    <Text style={styles.serviceProveedor} numberOfLines={1}>{item.proveedor?.nombre}</Text>
+                  </View>
                   <View style={styles.serviceRow}>
-                    <Text style={styles.serviceRating}>⭐ {item.proveedor?.rating?.toFixed(1) ?? '0.0'}</Text>
+                    <View style={styles.ratingFila}>
+                      <Icono nombre="star" tamano={12} color="#F5B301" />
+                      <Text style={styles.serviceRating}>{textoRating(item.proveedor?.rating)}</Text>
+                    </View>
                     {item.proveedor?.verificado && (
                       <View style={styles.verifiedBadge}>
-                        <Text style={styles.verifiedText}>✓ Verificado</Text>
+                        <Icono nombre="shield-checkmark" tamano={10} color={Colors.primary} />
+                        <Text style={styles.verifiedText}>Verificado</Text>
                       </View>
                     )}
-                    <PlanBadge plan={item.proveedor?.plan} rol="PROVEEDOR" />
+                    <PlanBadge plan={item.proveedor?.plan} rol="PROVEEDOR" oscuro={tema.esOscuro} />
                     {distanciaDe(item) != null && (
-                      <Text style={styles.serviceDist}>📍 {formatearDistancia(distanciaDe(item)!)}</Text>
+                      <View style={styles.ratingFila}>
+                        <Icono nombre="location-outline" tamano={11} color={tema.subTexto} />
+                        <Text style={styles.serviceDist}>{formatearDistancia(distanciaDe(item)!)}</Text>
+                      </View>
                     )}
                   </View>
                 </View>
               </View>
-              <Text style={styles.servicePrice}>${item.precio?.toLocaleString()}</Text>
+              <Text style={styles.servicePrice}>${item.precio?.toLocaleString('es-AR')}</Text>
             </TouchableOpacity>
           ))}
         />
@@ -287,6 +324,7 @@ export default function BuscarScreen() {
           <View style={styles.chips}>
             {ORDENES.map(o => (
               <TouchableOpacity key={o.value} style={[styles.chip, borrador.orden === o.value && styles.chipActivo]} onPress={() => setBorrador({ ...borrador, orden:o.value })}>
+                <Icono nombre={o.icono} tamano={14} color={borrador.orden === o.value ? 'white' : tema.subTexto} />
                 <Text style={[styles.chipText, borrador.orden === o.value && styles.chipTextActivo]}>{o.label}</Text>
               </TouchableOpacity>
             ))}
@@ -296,6 +334,7 @@ export default function BuscarScreen() {
           <View style={styles.chips}>
             {RATINGS.map(r => (
               <TouchableOpacity key={String(r.value)} style={[styles.chip, borrador.ratingMin === r.value && styles.chipActivo]} onPress={() => setBorrador({ ...borrador, ratingMin:r.value })}>
+                {r.value != null && <Icono nombre="star" tamano={13} color={borrador.ratingMin === r.value ? '#FFD23F' : '#F5B301'} />}
                 <Text style={[styles.chipText, borrador.ratingMin === r.value && styles.chipTextActivo]}>{r.label}</Text>
               </TouchableOpacity>
             ))}
@@ -335,12 +374,11 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   header:           { paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
   title:            { fontSize:26, fontFamily: F.extrabold, color:tema.texto },
   searchWrap:       { flexDirection:'row', alignItems:'center', backgroundColor:tema.card, borderRadius:16, padding:12, marginHorizontal:22, marginBottom:14, shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.06, shadowRadius:8, elevation:3 },
-  searchIco:        { fontFamily: F.regular, fontSize:16, marginRight:10 },
+  searchIco:        { marginRight:10 },
   searchInput:      { fontFamily: F.regular, flex:1, fontSize:14, color:tema.texto },
-  clearBtn:         { fontFamily: F.regular, fontSize:14, color:tema.subTexto, padding:4 },
+  clearBtn:         { padding:4 },
   filtroBtn:        { marginLeft:8, width:34, height:34, borderRadius:10, backgroundColor:tema.bg, alignItems:'center', justifyContent:'center' },
   filtroBtnActivo:  { backgroundColor:Colors.greenLight },
-  filtroBtnIco:     { fontFamily: F.regular, fontSize:15 },
   filtroBadge:      { position:'absolute', top:-4, right:-4, minWidth:16, height:16, borderRadius:8, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center', paddingHorizontal:3 },
   filtroBadgeText:  { color:'white', fontSize:9, fontFamily: F.extrabold },
   serviceDist:      { fontSize:10, fontFamily: F.semibold, color:tema.subTexto },
@@ -350,8 +388,8 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   panelTitulo:      { fontSize:20, fontFamily: F.extrabold, color:tema.texto, marginBottom:16 },
   panelLabel:       { fontSize:11, fontFamily: F.bold, color:tema.subTexto, letterSpacing:1.2, marginBottom:8 },
   chips:            { flexDirection:'row', flexWrap:'wrap', gap:8, marginBottom:18 },
-  chip:             { paddingHorizontal:14, paddingVertical:8, borderRadius:100, backgroundColor:tema.bg, borderWidth:1.5, borderColor:tema.border },
-  chipActivo:       { backgroundColor:Colors.dark, borderColor:Colors.dark },
+  chip:             { flexDirection:'row', alignItems:'center', gap:5, paddingHorizontal:14, paddingVertical:8, borderRadius:100, backgroundColor:tema.bg, borderWidth:1.5, borderColor:tema.border },
+  chipActivo:       { backgroundColor:tema.seleccion, borderColor:tema.seleccion },
   chipText:         { fontSize:12, fontFamily: F.semibold, color:tema.subTexto },
   chipTextActivo:   { color:'white' },
   precioRow:        { flexDirection:'row', alignItems:'center', gap:10, marginBottom:18 },
@@ -362,12 +400,13 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   panelBotones:     { flexDirection:'row', gap:10 },
   btnLimpiar:       { flex:1, paddingVertical:14, borderRadius:14, borderWidth:1.5, borderColor:tema.border, alignItems:'center' },
   btnLimpiarText:   { fontSize:14, fontFamily: F.bold, color:tema.texto },
-  btnAplicar:       { flex:2, paddingVertical:14, borderRadius:14, backgroundColor:Colors.dark, alignItems:'center' },
+  btnAplicar:       { flex:2, paddingVertical:14, borderRadius:14, backgroundColor:tema.seleccion, alignItems:'center' },
   btnAplicarText:   { fontSize:14, fontFamily: F.bold, color:'white' },
-  catsList:         { maxHeight:48, marginBottom:14 },
+  // Sin flexGrow/flexShrink 0 la lista de abajo le robaba altura y los chips quedaban cortados
+  catsList:         { flexGrow:0, flexShrink:0, marginBottom:14 },
   catsContainer:    { paddingHorizontal:22, gap:8 },
-  catBtn:           { paddingHorizontal:16, paddingVertical:8, borderRadius:100, backgroundColor:tema.card, borderWidth:1.5, borderColor:tema.border },
-  catBtnActive:     { backgroundColor:Colors.dark, borderColor:Colors.dark },
+  catBtn:           { flexDirection:'row', alignItems:'center', gap:6, paddingHorizontal:14, paddingVertical:8, borderRadius:100, backgroundColor:tema.card, borderWidth:1.5, borderColor:tema.border },
+  catBtnActive:     { backgroundColor:tema.seleccion, borderColor:tema.seleccion },
   catBtnText:       { fontSize:12, fontFamily: F.semibold, color:tema.subTexto },
   catBtnTextActive: { color:'white' },
   contador:         { fontFamily: F.regular, paddingHorizontal:22, marginBottom:12, fontSize:12, color:tema.subTexto },
@@ -376,26 +415,30 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   serviceCard:      { backgroundColor:tema.card, borderRadius:18, padding:16, flexDirection:'row', alignItems:'center', justifyContent:'space-between', shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2 },
   serviceCardPremium: { borderWidth:1.5, borderColor:'rgba(255,210,63,.6)' },
   recoWrap:         { marginBottom:6 },
-  recoTitulo:       { fontSize:15, fontFamily: F.extrabold, color:tema.texto, marginBottom:10 },
+  recoTituloFila:   { flexDirection:'row', alignItems:'center', gap:6, marginBottom:10 },
+  recoTitulo:       { fontSize:15, fontFamily: F.extrabold, color:tema.texto },
+  ratingFila:       { flexDirection:'row', alignItems:'center', gap:3 },
   recoCard:         { width:170, backgroundColor:tema.card, borderRadius:18, padding:14, gap:2, borderWidth:2, borderColor:'#FFD23F' },
-  recoIco:          { fontFamily: F.regular, fontSize:22, marginBottom:4 },
+  recoIco:          { width:38, height:38, borderRadius:11, backgroundColor:'rgba(255,210,63,.2)', alignItems:'center', justifyContent:'center', marginBottom:6 },
   recoNombre:       { fontSize:14, fontFamily: F.bold, color:tema.texto },
   recoProveedor:    { fontFamily: F.regular, fontSize:11, color:tema.subTexto },
   recoFila:         { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginTop:6 },
   recoPrecio:       { fontSize:14, fontFamily: F.extrabold, color:tema.texto },
   serviceLeft:      { flexDirection:'row', alignItems:'center', gap:12, flex:1 },
   serviceIco:       { width:48, height:48, borderRadius:14, backgroundColor:Colors.greenLight, alignItems:'center', justifyContent:'center' },
-  serviceIcoText:   { fontFamily: F.regular, fontSize:22 },
   serviceInfo:      { flex:1 },
   serviceName:      { fontSize:14, fontFamily: F.bold, color:tema.texto, marginBottom:2 },
-  serviceProveedor: { fontFamily: F.regular, fontSize:11, color:tema.subTexto, marginBottom:6 },
+  serviceProveedor: { flexShrink:1, fontFamily: F.regular, fontSize:11, color:tema.subTexto },
+  proveedorFila:    { flexDirection:'row', alignItems:'center', gap:5, marginBottom:6 },
+  proveedorMini:    { width:18, height:18, borderRadius:9, backgroundColor:Colors.primary, alignItems:'center', justifyContent:'center' },
+  proveedorMiniTexto:{ color:'white', fontSize:9, fontFamily: F.bold },
   serviceRow:       { flexDirection:'row', alignItems:'center', gap:8 },
   serviceRating:    { fontSize:11, fontFamily: F.bold, color:tema.texto },
-  verifiedBadge:    { backgroundColor:Colors.greenLight, paddingHorizontal:8, paddingVertical:2, borderRadius:100 },
+  verifiedBadge:    { flexDirection:'row', alignItems:'center', gap:3, backgroundColor:Colors.greenLight, paddingHorizontal:8, paddingVertical:2, borderRadius:100 },
   verifiedText:     { fontSize:9, fontFamily: F.bold, color:Colors.primary },
   servicePrice:     { fontSize:16, fontFamily: F.extrabold, color:tema.texto },
   empty:            { alignItems:'center', paddingTop:60 },
-  emptyIco:         { fontFamily: F.regular, fontSize:48, marginBottom:12, opacity:.3 },
+  emptyIco:         { marginBottom:12, opacity:.5 },
   emptyText:        { fontSize:16, fontFamily: F.bold, color:tema.subTexto },
   emptySub:         { fontFamily: F.regular, fontSize:13, color:tema.subTexto, marginTop:4 },
 })

@@ -13,6 +13,9 @@ import { alertaError, haptica } from '../../utils/haptica'
 import Reanimated from 'react-native-reanimated'
 import { useSacudida } from '../../hooks/useSacudida'
 import { PressScale } from '../../components/ui/PressScale'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { mensajeDeError } from '../../utils/errores'
+import { Icono } from '../../components/ui/Icono'
 
 export default function LoginScreen() {
   const sacudida = useSacudida()
@@ -51,7 +54,7 @@ export default function LoginScreen() {
       // 401 = usuario/contraseña incorrectos o cuenta del otro rol; recordamos el tab elegido
       const msg = err.response?.status === 401
         ? `Usuario o contraseña incorrectos para una cuenta de ${rol === 'CLIENTE' ? 'cliente' : 'proveedor'}`
-        : err.response?.data?.mensaje || err.response?.data?.errores?.[0]?.msg || err.message || 'Error al iniciar sesión'
+        : mensajeDeError(err, 'No se pudo iniciar sesión')
       fallar(msg)
     } finally {
       setLoading(false)
@@ -59,20 +62,20 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
         {/* TOP — ilustración */}
         <Animated.View style={[styles.topSection, { opacity: fadeAnim }]}>
           <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backText}>←</Text>
+            <Icono nombre="arrow-back" tamano={20} color="white" />
           </PressScale>
           <View style={styles.illustrationWrap}>
             <View style={styles.bigCircle} />
             <View style={styles.smallCircle} />
-            <Text style={styles.mainEmoji}>🏘️</Text>
+            <Icono nombre="home" tamano={46} color="#3DD68C" style={styles.mainIco} />
             <View style={styles.welcomeChip}>
-              <Text style={styles.welcomeChipText}>👋 Bienvenido de vuelta</Text>
+              <Text style={styles.welcomeChipText}>Bienvenido de vuelta</Text>
             </View>
           </View>
         </Animated.View>
@@ -81,7 +84,7 @@ export default function LoginScreen() {
         <Animated.View style={[styles.formSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}>
           <Reanimated.View style={sacudida.estilo}>
 
-          <Text style={styles.title}>Hola de{'\n'}nuevo 👋</Text>
+          <Text style={styles.title}>Hola de{'\n'}nuevo</Text>
           <Text style={styles.subtitle}>Ingresá a tu cuenta para continuar</Text>
 
           {/* Tabs de rol */}
@@ -90,19 +93,21 @@ export default function LoginScreen() {
               style={[styles.rolTab, rol === 'CLIENTE' && styles.rolTabActive]}
               onPress={() => setRol('CLIENTE')}
             >
-              <Text style={[styles.rolTabText, rol === 'CLIENTE' && styles.rolTabTextActive]}>🙋 Cliente</Text>
+              <Icono nombre={rol === 'CLIENTE' ? 'person' : 'person-outline'} tamano={15} color={rol === 'CLIENTE' ? 'white' : '#6B6B6B'} />
+              <Text style={[styles.rolTabText, rol === 'CLIENTE' && styles.rolTabTextActive]}>Cliente</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.rolTab, rol === 'PROVEEDOR' && styles.rolTabActive]}
               onPress={() => setRol('PROVEEDOR')}
             >
-              <Text style={[styles.rolTabText, rol === 'PROVEEDOR' && styles.rolTabTextActive]}>🔨 Proveedor</Text>
+              <Icono nombre={rol === 'PROVEEDOR' ? 'hammer' : 'hammer-outline'} tamano={15} color={rol === 'PROVEEDOR' ? 'white' : '#6B6B6B'} />
+              <Text style={[styles.rolTabText, rol === 'PROVEEDOR' && styles.rolTabTextActive]}>Proveedor</Text>
             </TouchableOpacity>
           </View>
 
           {/* Usuario */}
           <View style={[styles.inputWrap, focusedField === 'usuario' && styles.inputWrapFocused]}>
-            <Text style={styles.inputIco}>👤</Text>
+            <Icono nombre="person-outline" tamano={18} color={focusedField === 'usuario' ? Colors.primary : '#767676'} style={styles.inputIco} />
             <TextInput
               style={styles.input}
               placeholder="Usuario"
@@ -118,7 +123,7 @@ export default function LoginScreen() {
 
           {/* Password */}
           <View style={[styles.inputWrap, focusedField === 'pass' && styles.inputWrapFocused]}>
-            <Text style={styles.inputIco}>🔒</Text>
+            <Icono nombre="lock-closed-outline" tamano={18} color={focusedField === 'pass' ? Colors.primary : '#767676'} style={styles.inputIco} />
             <TextInput
               style={styles.input}
               placeholder="Contraseña"
@@ -142,7 +147,12 @@ export default function LoginScreen() {
           >
             {loading
               ? <ActivityIndicator color="white" />
-              : <Text style={styles.btnText}>Ingresar →</Text>
+              : (
+                <View style={styles.btnFila}>
+                  <Text style={styles.btnText}>Ingresar</Text>
+                  <Icono nombre="arrow-forward" tamano={18} color="white" />
+                </View>
+              )
             }
           </PressScale>
 
@@ -157,7 +167,7 @@ export default function LoginScreen() {
             style={styles.googleBtn}
             onPress={() => Alert.alert('Próximamente', 'El ingreso con Google va a estar disponible en una próxima versión de la app.')}
           >
-            <Text style={styles.googleIco}>🇬</Text>
+            <Icono nombre="logo-google" tamano={18} color="#4285F4" />
             <Text style={styles.googleText}>Continuar con Google</Text>
           </PressScale>
 
@@ -171,6 +181,7 @@ export default function LoginScreen() {
           </Reanimated.View>
         </Animated.View>
       </ScrollView>
+      <FondoBarraEstado color="#1a1a1a" />
     </KeyboardAvoidingView>
   )
 }
@@ -180,34 +191,33 @@ const styles = StyleSheet.create({
   scroll:           { flexGrow:1 },
   topSection:       { height:240, backgroundColor:'#1a1a1a', overflow:'hidden', justifyContent:'flex-end', padding:24 },
   backBtn:          { position:'absolute', top:52, left:20, width:38, height:38, borderRadius:12, backgroundColor:'rgba(255,255,255,.1)', alignItems:'center', justifyContent:'center', zIndex:10 },
-  backText:         { fontFamily: F.regular, color:'white', fontSize:18 },
   illustrationWrap: { position:'relative', alignItems:'flex-start' },
   bigCircle:        { position:'absolute', width:200, height:200, borderRadius:100, backgroundColor:'#1A9E5C', opacity:.2, top:-80, right:-40 },
   smallCircle:      { position:'absolute', width:100, height:100, borderRadius:50, backgroundColor:'#FFD23F', opacity:.15, bottom:20, right:40 },
-  mainEmoji:        { fontFamily: F.regular, fontSize:52, marginBottom:10 },
+  mainIco:          { marginBottom:10 },
   welcomeChip:      { backgroundColor:'rgba(26,158,92,.2)', borderRadius:100, paddingHorizontal:14, paddingVertical:6, borderWidth:1, borderColor:'rgba(26,158,92,.3)', alignSelf:'flex-start' },
   welcomeChipText:  { color:'#3DD68C', fontSize:12, fontFamily: F.bold },
   formSection:      { flex:1, backgroundColor:'white', borderTopLeftRadius:28, borderTopRightRadius:28, marginTop:-20, padding:28, paddingTop:32 },
   title:            { fontSize:30, fontFamily: F.extrabold, color:'#1a1a1a', lineHeight:36, marginBottom:6 },
   subtitle:         { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', marginBottom:24 },
   rolTabs:          { flexDirection:'row', backgroundColor:'#f5f5f5', borderRadius:14, padding:4, marginBottom:20, gap:6 },
-  rolTab:           { flex:1, paddingVertical:9, borderRadius:10, alignItems:'center' },
+  rolTab:           { flex:1, flexDirection:'row', justifyContent:'center', gap:6, paddingVertical:9, borderRadius:10, alignItems:'center' },
   rolTabActive:     { backgroundColor:'#1a1a1a' },
   rolTabText:       { fontSize:13, fontFamily: F.semibold, color:'#6B6B6B' },
   rolTabTextActive: { color:'white' },
   inputWrap:        { flexDirection:'row', alignItems:'center', backgroundColor:'#f7f7f7', borderRadius:14, paddingHorizontal:14, marginBottom:12, borderWidth:1.5, borderColor:'transparent' },
   inputWrapFocused: { borderColor:Colors.primary, backgroundColor:'#F0FDF4' },
-  inputIco:         { fontFamily: F.regular, fontSize:16, marginRight:10 },
+  inputIco:         { marginRight:10 },
   input:            { fontFamily: F.regular, flex:1, paddingVertical:14, fontSize:14, color:'#1a1a1a' },
   forgotBtn:        { alignSelf:'flex-end', marginBottom:20 },
   forgotText:       { fontSize:12, color:Colors.primary, fontFamily: F.semibold },
   btn:              { backgroundColor:'#1a1a1a', borderRadius:16, paddingVertical:16, alignItems:'center', marginBottom:20 },
+  btnFila:          { flexDirection:'row', alignItems:'center', gap:8 },
   btnText:          { color:'white', fontSize:15, fontFamily: F.bold, letterSpacing:.3 },
   divider:          { flexDirection:'row', alignItems:'center', gap:12, marginBottom:16 },
   dividerLine:      { flex:1, height:1, backgroundColor:'#eee' },
-  dividerText:      { fontFamily: F.regular, fontSize:12, color:'#aaa' },
+  dividerText:      { fontFamily: F.regular, fontSize:12, color:'#767676' },
   googleBtn:        { flexDirection:'row', alignItems:'center', justifyContent:'center', gap:10, backgroundColor:'#f7f7f7', borderRadius:14, paddingVertical:14, marginBottom:24, borderWidth:1.5, borderColor:'#eee' },
-  googleIco:        { fontFamily: F.regular, fontSize:18 },
   googleText:       { fontSize:14, fontFamily: F.semibold, color:'#1a1a1a' },
   registerRow:      { flexDirection:'row', justifyContent:'center' },
   registerText:     { fontFamily: F.regular, fontSize:13, color:'#6B6B6B' },

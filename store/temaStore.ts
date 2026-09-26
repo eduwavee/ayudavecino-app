@@ -38,6 +38,12 @@ export const TEMAS = {
     inputBg:  '#F7F7F7',
     overlay:  'rgba(0,0,0,.06)',
     sombra:   '#000000',
+    peligro:  '#C0392B', // acciones destructivas (cerrar sesión, eliminar): 5.4:1 sobre blanco
+    seleccion: '#1a1a1a', // fondo de chips/botones activos (texto blanco encima)
+    dorado:   '#8A6500', // texto/íconos dorados (Premium, urgente): 5.6:1 sobre blanco
+    // Para los componentes con variante de fondo oscuro (PlanBadge, EstadoBadge): las
+    // pantallas con tema se lo pasan; las que siempre son claras no
+    esOscuro: false,
   },
   oscuro: {
     bg:       '#0D0D0D',
@@ -48,6 +54,10 @@ export const TEMAS = {
     inputBg:  '#252525',
     overlay:  'rgba(255,255,255,.08)',
     sombra:   '#000000',
+    peligro:  '#FF7675', // el rojo oscuro no se lee sobre #1A1A1A; este da 6:1
+    seleccion: '#1A9E5C', // en oscuro el negro desaparece sobre el fondo: el activo va en verde
+    dorado:   '#FFD23F', // el dorado oscuro no se lee sobre #1A1A1A
+    esOscuro: true,
   },
 }
 

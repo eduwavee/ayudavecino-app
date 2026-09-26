@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, KeyboardAvoidingView } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Colors } from '../constants/colors'
 import { useAuthStore } from '../store/authStore'
 import { useTema, TemaTokens } from '../store/temaStore'
 import { usePlan } from '../hooks/usePlan'
 import { FUENTES as F } from '../constants/diseno'
+import { Icono } from '../components/ui/Icono'
 import {
   leerRespuestas, guardarRespuestas, MAX_RESPUESTAS, MAX_LARGO_RESPUESTA,
 } from '../utils/respuestasRapidas'
@@ -49,23 +50,24 @@ export default function RespuestasRapidasScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <View style={[styles.header, { paddingTop: 56 }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>←</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="Volver">
+          <Icono nombre="arrow-back" tamano={20} color={tema.texto} />
         </TouchableOpacity>
         <Text style={styles.title}>Respuestas rápidas</Text>
       </View>
 
       {!esPremium ? (
         <View style={styles.bloqueado}>
-          <Text style={styles.bloqueadoIco}>💬</Text>
+          <View style={styles.bloqueadoIco}><Icono nombre="chatbubbles" tamano={34} color={Colors.primary} /></View>
           <Text style={styles.bloqueadoTitulo}>Contestá con un toque</Text>
           <Text style={styles.bloqueadoSub}>
             Guardá tus mensajes de siempre ("Voy mañana a las 10", "¿Me mandás una foto?") y mandalos desde el chat sin escribirlos.
           </Text>
           <TouchableOpacity style={styles.bloqueadoBtn} onPress={() => router.push('/planes')}>
-            <Text style={styles.bloqueadoBtnText}>👑 Disponible en Premium</Text>
+            <Icono nombre="diamond" tamano={16} color={Colors.dark} />
+            <Text style={styles.bloqueadoBtnText}>Disponible en Premium</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -89,8 +91,10 @@ export default function RespuestasRapidasScreen() {
               style={[styles.addBtn, !nueva.trim() && { opacity: .4 }]}
               onPress={() => agregar(nueva)}
               disabled={!nueva.trim()}
+              accessibilityRole="button"
+              accessibilityLabel="Agregar respuesta"
             >
-              <Text style={styles.addBtnText}>+</Text>
+              <Icono nombre="add" tamano={26} color="white" />
             </TouchableOpacity>
           </View>
           <Text style={styles.contador}>{respuestas.length} / {MAX_RESPUESTAS}</Text>
@@ -105,8 +109,8 @@ export default function RespuestasRapidasScreen() {
           {respuestas.map(r => (
             <View key={r} style={styles.item}>
               <Text style={styles.itemText}>{r}</Text>
-              <TouchableOpacity onPress={() => quitar(r)} hitSlop={10}>
-                <Text style={styles.itemQuitar}>✕</Text>
+              <TouchableOpacity onPress={() => quitar(r)} hitSlop={10} accessibilityRole="button" accessibilityLabel={`Quitar "${r}"`}>
+                <Icono nombre="close-circle" tamano={20} color="#C0392B" />
               </TouchableOpacity>
             </View>
           ))}
@@ -118,7 +122,7 @@ export default function RespuestasRapidasScreen() {
           ))}
         </ScrollView>
       )}
-    </View>
+    </KeyboardAvoidingView>
   )
 }
 
@@ -126,27 +130,24 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   container:        { flex: 1, backgroundColor: tema.bg },
   header:           { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 22, paddingBottom: 16 },
   backBtn:          { width: 38, height: 38, borderRadius: 12, backgroundColor: tema.overlay, alignItems: 'center', justifyContent: 'center' },
-  backText:         { fontFamily: F.regular, fontSize: 16, color: tema.texto },
   title:            { fontSize: 22, fontFamily: F.extrabold, color: tema.texto },
   contenido:        { paddingHorizontal: 22, paddingBottom: 60 },
   ayuda:            { fontFamily: F.regular, fontSize: 13, color: tema.subTexto, lineHeight: 19, marginBottom: 16 },
   inputRow:         { flexDirection: 'row', gap: 10 },
   input:            { fontFamily: F.regular, flex: 1, backgroundColor: tema.card, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 13, fontSize: 14, color: tema.texto, borderWidth: 1.5, borderColor: tema.border },
   addBtn:           { width: 50, borderRadius: 14, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
-  addBtnText:       { color: 'white', fontSize: 24, fontFamily: F.bold },
   contador:         { fontFamily: F.regular, fontSize: 11, color: tema.subTexto, textAlign: 'right', marginTop: 6, marginBottom: 14 },
   item:             { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: tema.card, borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: tema.border },
   itemText:         { fontFamily: F.regular, flex: 1, fontSize: 14, color: tema.texto },
-  itemQuitar:       { fontSize: 14, color: '#FF7675', fontFamily: F.extrabold },
   vacio:            { alignItems: 'center', paddingVertical: 16 },
   vacioTitulo:      { fontSize: 15, fontFamily: F.extrabold, color: tema.texto },
   vacioSub:         { fontFamily: F.regular, fontSize: 12, color: tema.subTexto, marginTop: 4 },
   sugerencia:       { borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1.5, borderColor: tema.border, borderStyle: 'dashed' },
   sugerenciaText:   { fontSize: 13, color: Colors.primary, fontFamily: F.semibold },
   bloqueado:        { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  bloqueadoIco:     { fontFamily: F.regular, fontSize: 52, marginBottom: 14 },
+  bloqueadoIco:     { width: 76, height: 76, borderRadius: 24, backgroundColor: 'rgba(26,158,92,.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
   bloqueadoTitulo:  { fontSize: 20, fontFamily: F.extrabold, color: tema.texto, marginBottom: 8 },
   bloqueadoSub:     { fontFamily: F.regular, fontSize: 13, color: tema.subTexto, textAlign: 'center', lineHeight: 20, marginBottom: 22 },
-  bloqueadoBtn:     { backgroundColor: '#FFD23F', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24 },
+  bloqueadoBtn:     { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFD23F', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24 },
   bloqueadoBtnText: { fontSize: 14, fontFamily: F.extrabold, color: Colors.dark },
 })

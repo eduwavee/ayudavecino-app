@@ -12,7 +12,18 @@ import { planesService } from '../../services/planes.service'
 import { usePlan } from '../../hooks/usePlan'
 import { FUENTES as F, HIT_SLOP } from '../../constants/diseno'
 import { PressScale } from '../../components/ui/PressScale'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
 import { haptica } from '../../utils/haptica'
+import { Icono } from '../../components/ui/Icono'
+import { Aparecer } from '../../components/ui/Aparecer'
+import Animated, { Keyframe, Easing, useReducedMotion } from 'react-native-reanimated'
+
+// Momento de celebración (se ve una vez por compra): el ícono del plan llega desde 60%
+// de tamaño con una desaceleración fuerte, sin rebote. Nunca desde 0.
+const ENTRADA_EXITO = new Keyframe({
+  0:   { opacity: 0, transform: [{ scale: 0.6 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }], easing: Easing.bezier(0.23, 1, 0.32, 1) },
+}).duration(520)
 
 // Checkout de prueba: los datos de la tarjeta solo se validan en pantalla, nunca se
 // guardan ni se mandan. El cobro lo hace el backend con la pasarela de pagos, que hoy
@@ -42,6 +53,7 @@ export default function CheckoutScreen() {
   const [cvv, setCvv]               = useState('')
   const [pagando, setPagando]       = useState(false)
   const [listo, setListo]           = useState(false)
+  const reducirMovimiento = useReducedMotion()
 
   if (!info || info.id === 'GRATIS') {
     return (
@@ -89,25 +101,33 @@ export default function CheckoutScreen() {
   if (listo) {
     return (
       <View style={[styles.container, styles.exito]}>
-        <View style={styles.exitoIcoWrap}><Text style={styles.exitoIco}>{info.ico}</Text></View>
-        <Text style={styles.exitoTitulo}>¡Ya sos {info.nombre}!</Text>
-        <Text style={styles.exitoSub}>
-          Tu plan está activo hasta el {vence.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}.
-        </Text>
+        <Animated.View entering={reducirMovimiento ? undefined : ENTRADA_EXITO} style={styles.exitoIcoWrap}>
+          <Icono nombre={info.icono} tamano={46} color="#B8860B" />
+        </Animated.View>
+        <Aparecer indice={1}>
+          <Text style={styles.exitoTitulo}>¡Ya sos {info.nombre}!</Text>
+          <Text style={styles.exitoSub}>
+            Tu plan está activo hasta el {vence.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}.
+          </Text>
+        </Aparecer>
         <View style={styles.exitoBeneficios}>
-          {info.beneficios.slice(0, 4).map(b => (
-            <Text key={b} style={styles.exitoBeneficio}>✓  {b}</Text>
+          {info.beneficios.slice(0, 4).map((b, i) => (
+            <Aparecer key={b} indice={i + 2} style={styles.exitoBeneficioFila}>
+              <Icono nombre="checkmark-circle" tamano={17} color={Colors.primary} />
+              <Text style={styles.exitoBeneficio}>{b}</Text>
+            </Aparecer>
           ))}
         </View>
-        <TouchableOpacity style={[styles.pagarBtn, { alignSelf: 'stretch' }]} onPress={terminar}>
-          <Text style={styles.pagarText}>Empezar a usarlo →</Text>
-        </TouchableOpacity>
+        <PressScale haptico style={[styles.pagarBtn, styles.pagarBtnFila, { alignSelf: 'stretch' }]} onPress={terminar}>
+          <Text style={styles.pagarText}>Empezar a usarlo</Text>
+          <Icono nombre="arrow-forward" tamano={17} color="white" />
+        </PressScale>
       </View>
     )
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={[styles.header, { paddingTop: 56 }]}>
           <TouchableOpacity
@@ -117,7 +137,7 @@ export default function CheckoutScreen() {
             accessibilityRole="button"
             accessibilityLabel="Volver"
           >
-            <Text style={styles.backText}>←</Text>
+            <Icono nombre="arrow-back" tamano={20} color={tema.texto} />
           </TouchableOpacity>
           <Text style={styles.title}>Confirmar plan</Text>
         </View>
@@ -125,7 +145,9 @@ export default function CheckoutScreen() {
         {/* Resumen */}
         <View style={styles.resumen}>
           <View style={styles.resumenTop}>
-            <Text style={{ fontFamily: F.regular, fontSize: 30 }}>{info.ico}</Text>
+            <View style={styles.resumenIco}>
+              <Icono nombre={info.icono} tamano={24} color="#FFD23F" />
+            </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.resumenNombre}>{info.nombre}</Text>
               <Text style={styles.resumenPeriodo}>
@@ -145,7 +167,7 @@ export default function CheckoutScreen() {
         </View>
 
         <View style={styles.prueba}>
-          <Text style={styles.pruebaIco}>🧪</Text>
+          <Icono nombre="flask-outline" tamano={18} color={tema.dorado} />
           <Text style={styles.pruebaText}>
             Modo de prueba: no se cobra nada y los datos de la tarjeta no se guardan. Podés usar cualquier número de 16 dígitos.
           </Text>
@@ -219,6 +241,7 @@ export default function CheckoutScreen() {
         </Text>
         <View style={{ height: 40 }} />
       </ScrollView>
+      <FondoBarraEstado color={tema.bg} />
     </KeyboardAvoidingView>
   )
 }
@@ -227,12 +250,12 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   container:       { flex: 1, backgroundColor: tema.bg },
   header:          { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 22, paddingBottom: 16 },
   backBtn:         { width: 38, height: 38, borderRadius: 12, backgroundColor: tema.overlay, alignItems: 'center', justifyContent: 'center' },
-  backText:        { fontFamily: F.regular, fontSize: 16, color: tema.texto },
   title:           { fontSize: 22, fontFamily: F.extrabold, color: tema.texto },
   errorText:       { fontFamily: F.regular, fontSize: 15, color: tema.texto, textAlign: 'center' },
 
   resumen:         { backgroundColor: '#1a1a1a', marginHorizontal: 22, borderRadius: 20, padding: 20, marginBottom: 14 },
   resumenTop:      { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  resumenIco:      { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,210,63,.14)', alignItems: 'center', justifyContent: 'center' },
   resumenNombre:   { fontSize: 18, fontFamily: F.extrabold, color: 'white' },
   resumenPeriodo:  { fontFamily: F.regular, fontSize: 12, color: 'rgba(255,255,255,.5)', marginTop: 2 },
   resumenDivider:  { height: 1, backgroundColor: 'rgba(255,255,255,.08)', marginVertical: 14 },
@@ -242,7 +265,6 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   resumenTotal:    { fontSize: 24, color: 'white', fontFamily: F.extrabold },
 
   prueba:          { flexDirection: 'row', gap: 10, marginHorizontal: 22, padding: 14, borderRadius: 14, backgroundColor: 'rgba(255,210,63,.14)', marginBottom: 20 },
-  pruebaIco:       { fontFamily: F.regular, fontSize: 16 },
   pruebaText:      { fontFamily: F.regular, flex: 1, fontSize: 12, color: tema.texto, lineHeight: 18 },
 
   form:            { paddingHorizontal: 22 },
@@ -251,15 +273,16 @@ const getStyles = (tema: TemaTokens) => StyleSheet.create({
   fila:            { flexDirection: 'row', gap: 12 },
 
   pagarBtn:        { backgroundColor: Colors.primary, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  pagarBtnFila:    { flexDirection: 'row', justifyContent: 'center', gap: 8 },
   pagarBtnFlotante:{ marginHorizontal: 22, marginTop: 8 },
   pagarText:       { color: 'white', fontSize: 15, fontFamily: F.extrabold },
   legal:           { fontFamily: F.regular, fontSize: 11, color: tema.subTexto, textAlign: 'center', marginTop: 10, paddingHorizontal: 32 },
 
   exito:           { alignItems: 'center', justifyContent: 'center', padding: 28 },
   exitoIcoWrap:    { width: 96, height: 96, borderRadius: 30, backgroundColor: 'rgba(255,210,63,.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  exitoIco:        { fontFamily: F.regular, fontSize: 48 },
   exitoTitulo:     { fontSize: 26, fontFamily: F.extrabold, color: tema.texto, textAlign: 'center', marginBottom: 8 },
   exitoSub:        { fontFamily: F.regular, fontSize: 14, color: tema.subTexto, textAlign: 'center', marginBottom: 22 },
   exitoBeneficios: { alignSelf: 'stretch', backgroundColor: tema.card, borderRadius: 18, padding: 18, gap: 10, marginBottom: 24 },
-  exitoBeneficio:  { fontFamily: F.regular, fontSize: 13, color: tema.texto, lineHeight: 18 },
+  exitoBeneficioFila: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  exitoBeneficio:  { flex: 1, fontFamily: F.regular, fontSize: 13, color: tema.texto, lineHeight: 18 },
 })

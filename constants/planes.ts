@@ -1,4 +1,5 @@
 import type { Plan, Rol, Usuario } from '../store/authStore'
+import type { NombreIcono } from '../components/ui/Icono'
 
 // Catálogo de planes que ve el usuario (nombres, precios, beneficios).
 // Los límites que se hacen cumplir de verdad están en el backend
@@ -11,15 +12,15 @@ export type InfoPlan = {
   nombre:        string
   precioMensual: number   // en US$
   lema:          string
-  ico:           string
+  icono:         NombreIcono
   beneficios:    string[]
-  destacado?:    boolean  // se muestra como "Más elegido"
+  destacado?:    boolean  // se muestra como "Recomendado"
 }
 
 export const PLANES: Record<Rol, InfoPlan[]> = {
   PROVEEDOR: [
     {
-      id: 'GRATIS', nombre: 'Gratis', precioMensual: 0, ico: '🌱',
+      id: 'GRATIS', nombre: 'Gratis', precioMensual: 0, icono: 'leaf',
       lema: 'Para empezar a recibir pedidos',
       beneficios: [
         'Hasta 3 servicios publicados, con fotos',
@@ -28,7 +29,7 @@ export const PLANES: Record<Rol, InfoPlan[]> = {
       ],
     },
     {
-      id: 'PRO', nombre: 'Pro', precioMensual: 5, ico: '🚀',
+      id: 'PRO', nombre: 'Pro', precioMensual: 5, icono: 'rocket',
       lema: 'Para el que trabaja solo y quiere más clientes',
       beneficios: [
         'Hasta 10 servicios publicados',
@@ -38,7 +39,7 @@ export const PLANES: Record<Rol, InfoPlan[]> = {
       ],
     },
     {
-      id: 'PREMIUM', nombre: 'Premium', precioMensual: 12, ico: '👑', destacado: true,
+      id: 'PREMIUM', nombre: 'Premium', precioMensual: 12, icono: 'diamond', destacado: true,
       lema: 'Para el profesional que quiere destacarse',
       beneficios: [
         'Todo lo del plan Pro',
@@ -53,7 +54,7 @@ export const PLANES: Record<Rol, InfoPlan[]> = {
   ],
   CLIENTE: [
     {
-      id: 'GRATIS', nombre: 'Gratis', precioMensual: 0, ico: '🏠',
+      id: 'GRATIS', nombre: 'Gratis', precioMensual: 0, icono: 'home',
       lema: 'Todo lo básico, sin límites',
       beneficios: [
         'Buscar con filtros y contratar servicios',
@@ -62,7 +63,7 @@ export const PLANES: Record<Rol, InfoPlan[]> = {
       ],
     },
     {
-      id: 'PLUS', nombre: 'Vecino Plus', precioMensual: 2, ico: '✨',
+      id: 'PLUS', nombre: 'Vecino Plus', precioMensual: 2, icono: 'sparkles',
       lema: 'Tus proveedores de confianza, a un toque',
       beneficios: [
         'Repetir un pedido con un toque',
@@ -71,11 +72,11 @@ export const PLANES: Record<Rol, InfoPlan[]> = {
       ],
     },
     {
-      id: 'PREMIUM', nombre: 'Vecino Premium', precioMensual: 5, ico: '💎', destacado: true,
+      id: 'PREMIUM', nombre: 'Vecino Premium', precioMensual: 5, icono: 'diamond', destacado: true,
       lema: 'Para cuando no podés esperar',
       beneficios: [
         'Todo lo de Vecino Plus',
-        'Pedidos urgentes ⚡ resaltados para el proveedor',
+        'Pedidos urgentes resaltados para el proveedor',
         'Tus pedidos aparecen primero en el panel del proveedor',
         'Pedí presupuesto a hasta 3 proveedores a la vez',
         'Soporte prioritario',

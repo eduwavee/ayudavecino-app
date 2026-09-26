@@ -8,15 +8,23 @@ import { Colors } from '../constants/colors'
 import { useNotifStore, Notificacion } from '../store/notificacionesStore'
 import { notificacionesService } from '../services/notificaciones.service'
 import { FUENTES as F } from '../constants/diseno'
+import { useTema, TemaTokens } from '../store/temaStore'
 import { conEntrada } from '../components/ui/Aparecer'
 import { PressScale } from '../components/ui/PressScale'
+import { Icono, NombreIcono } from '../components/ui/Icono'
+import { FondoBarraEstado } from '../components/ui/FondoBarraEstado'
 
-const TIPO_CONFIG: Record<string, { ico: string; color: string; bg: string }> = {
-  pedido:  { ico:'📋', color:Colors.primary,  bg:'rgba(26,158,92,.1)' },
-  pago:    { ico:'💳', color:'#FFD23F',        bg:'rgba(255,210,63,.1)' },
-  mensaje: { ico:'💬', color:'#74B9FF',        bg:'rgba(116,185,255,.1)' },
-  resena:  { ico:'⭐', color:'#FFD23F',        bg:'rgba(255,210,63,.1)' },
-  sistema: { ico:'🏘️', color:'#888',           bg:'rgba(0,0,0,.05)' },
+const TIPO_CONFIG: Record<string, { ico: NombreIcono; color: string; bg: string }> = {
+  pedido:  { ico:'clipboard',    color:Colors.primary, bg:'rgba(26,158,92,.1)' },
+  pago:    { ico:'card',         color:'#8A6500',      bg:'rgba(255,210,63,.16)' },
+  mensaje: { ico:'chatbubble',   color:'#1F6FD1',      bg:'rgba(116,185,255,.14)' },
+  resena:  { ico:'star',         color:'#8A6500',      bg:'rgba(255,210,63,.16)' },
+  sistema: { ico:'home',         color:'#6B6B6B',      bg:'rgba(0,0,0,.05)' },
+}
+
+// En oscuro los dorados/azules/grises de arriba no se leen sobre la tarjeta
+const TIPO_COLOR_OSCURO: Record<string, string> = {
+  pago: '#FFD23F', mensaje: '#74B9FF', resena: '#FFD23F', sistema: '#9A9A9A',
 }
 
 function tiempoRelativo(fecha: string) {
@@ -32,6 +40,8 @@ function tiempoRelativo(fecha: string) {
 
 export default function NotificacionesScreen() {
   const router = useRouter()
+  const tema   = useTema()
+  const styles = getStyles(tema)
   const { notificaciones, noLeidas, cargar, marcarLeida, marcarTodas } = useNotifStore()
   const [refrescando, setRefrescando] = useState(false)
 
@@ -57,7 +67,7 @@ export default function NotificacionesScreen() {
       {/* Header */}
       <View style={styles.header}>
         <PressScale accessibilityLabel="Volver" hitSlop={10} style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>←</Text>
+          <Icono nombre="arrow-back" tamano={20} color={tema.texto} />
         </PressScale>
         <Text style={styles.title}>Notificaciones</Text>
       </View>
@@ -65,7 +75,10 @@ export default function NotificacionesScreen() {
       {/* Badge no leídas */}
       {noLeidas > 0 && (
         <View style={styles.unreadBanner}>
-          <Text style={styles.unreadText}>🔴 {noLeidas} sin leer</Text>
+          <View style={styles.unreadFila}>
+            <View style={styles.unreadPunto} />
+            <Text style={styles.unreadText}>{noLeidas} sin leer</Text>
+          </View>
           <TouchableOpacity onPress={marcarTodas}>
             <Text style={styles.marcarBtn}>Marcar todas como leídas</Text>
           </TouchableOpacity>
@@ -80,13 +93,15 @@ export default function NotificacionesScreen() {
         refreshControl={<RefreshControl refreshing={refrescando} onRefresh={alRefrescar} tintColor={Colors.primary} colors={[Colors.primary]} />}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIco}>🔔</Text>
+            <Icono nombre="notifications-outline" tamano={56} color={tema.subTexto} style={styles.emptyIco} />
             <Text style={styles.emptyTitle}>Sin notificaciones</Text>
             <Text style={styles.emptySub}>Te avisaremos cuando haya novedades</Text>
           </View>
         }
         renderItem={conEntrada(({ item: n }) => {
           const cfg = TIPO_CONFIG[n.tipo] ?? TIPO_CONFIG.sistema
+          const tipo = n.tipo in TIPO_CONFIG ? n.tipo : 'sistema'
+          const colorIco = (tema.esOscuro && TIPO_COLOR_OSCURO[tipo]) || cfg.color
           return (
             <TouchableOpacity
               style={[styles.notifCard, !n.leida && styles.notifCardUnread]}
@@ -94,8 +109,8 @@ export default function NotificacionesScreen() {
               onPress={() => abrir(n)}
             >
               {!n.leida && <View style={styles.unreadDot} />}
-              <View style={[styles.notifIco, { backgroundColor: cfg.bg }]}>
-                <Text style={styles.notifIcoText}>{cfg.ico}</Text>
+              <View style={[styles.notifIco, { backgroundColor: tema.esOscuro && tipo === 'sistema' ? tema.overlay : cfg.bg }]}>
+                <Icono nombre={cfg.ico} tamano={22} color={colorIco} />
               </View>
               <View style={styles.notifContent}>
                 <Text style={styles.notifTitulo}>{n.titulo}</Text>
@@ -106,35 +121,35 @@ export default function NotificacionesScreen() {
           )
         })}
       />
-
+      <FondoBarraEstado color={tema.bg} />
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  container:       { flex:1, backgroundColor:Colors.cream },
+const getStyles = (tema: TemaTokens) => StyleSheet.create({
+  container:       { flex:1, backgroundColor:tema.bg },
   header:          { flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:22, paddingTop:56, paddingBottom:16 },
-  backBtn:         { width:38, height:38, borderRadius:12, backgroundColor:'rgba(0,0,0,.06)', alignItems:'center', justifyContent:'center' },
-  backText:        { fontFamily: F.regular, fontSize:16, color:Colors.dark },
-  title:           { flex:1, fontSize:22, fontFamily: F.extrabold, color:Colors.dark },
-  clearBtn:        { fontSize:13, color:'#FF7675', fontFamily: F.semibold },
+  backBtn:         { width:38, height:38, borderRadius:12, backgroundColor:tema.overlay, alignItems:'center', justifyContent:'center' },
+  title:           { flex:1, fontSize:22, fontFamily: F.extrabold, color:tema.texto },
+  clearBtn:        { fontSize:13, color:tema.peligro, fontFamily: F.semibold },
   unreadBanner:    { flexDirection:'row', justifyContent:'space-between', alignItems:'center', backgroundColor:'rgba(26,158,92,.08)', marginHorizontal:22, borderRadius:14, padding:12, marginBottom:8 },
+  unreadFila:      { flexDirection:'row', alignItems:'center', gap:8 },
+  unreadPunto:     { width:8, height:8, borderRadius:4, backgroundColor:'#E74C3C' },
   unreadText:      { fontSize:13, fontFamily: F.bold, color:Colors.primary },
   marcarBtn:       { fontSize:12, color:Colors.primary, fontFamily: F.semibold },
   list:            { paddingHorizontal:22, gap:10, paddingBottom:120 },
-  notifCard:       { backgroundColor:'white', borderRadius:18, padding:16, flexDirection:'row', alignItems:'flex-start', gap:14, shadowColor:'#000', shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2, position:'relative' },
-  notifCardUnread: { backgroundColor:'#F0FDF4', borderWidth:1.5, borderColor:'rgba(26,158,92,.15)' },
+  notifCard:       { backgroundColor:tema.card, borderRadius:18, padding:16, flexDirection:'row', alignItems:'flex-start', gap:14, shadowColor:tema.sombra, shadowOffset:{width:0,height:2}, shadowOpacity:.05, shadowRadius:8, elevation:2, position:'relative' },
+  notifCardUnread: { backgroundColor:tema.esOscuro ? 'rgba(26,158,92,.12)' : '#F0FDF4', borderWidth:1.5, borderColor:tema.esOscuro ? 'rgba(26,158,92,.35)' : 'rgba(26,158,92,.15)' },
   unreadDot:       { position:'absolute', top:16, left:6, width:6, height:6, borderRadius:3, backgroundColor:Colors.primary },
   notifIco:        { width:46, height:46, borderRadius:14, alignItems:'center', justifyContent:'center', flexShrink:0 },
-  notifIcoText:    { fontFamily: F.regular, fontSize:22 },
   notifContent:    { flex:1, gap:3 },
-  notifTitulo:     { fontSize:14, fontFamily: F.extrabold, color:Colors.dark },
-  notifCuerpo:     { fontFamily: F.regular, fontSize:13, color:'#666', lineHeight:18 },
-  notifFecha:      { fontFamily: F.regular, fontSize:11, color:'#bbb', marginTop:2 },
+  notifTitulo:     { fontSize:14, fontFamily: F.extrabold, color:tema.texto },
+  notifCuerpo:     { fontFamily: F.regular, fontSize:13, color:tema.subTexto, lineHeight:18 },
+  notifFecha:      { fontFamily: F.regular, fontSize:11, color:tema.subTexto, marginTop:2 },
   empty:           { alignItems:'center', paddingTop:80 },
-  emptyIco:        { fontFamily: F.regular, fontSize:56, marginBottom:16, opacity:.3 },
-  emptyTitle:      { fontSize:18, fontFamily: F.extrabold, color:Colors.dark, marginBottom:6 },
-  emptySub:        { fontFamily: F.regular, fontSize:13, color:'#6B6B6B', textAlign:'center' },
+  emptyIco:        { marginBottom:16, opacity:.5 },
+  emptyTitle:      { fontSize:18, fontFamily: F.extrabold, color:tema.texto, marginBottom:6 },
+  emptySub:        { fontFamily: F.regular, fontSize:13, color:tema.subTexto, textAlign:'center' },
   testWrap:        { position:'absolute', bottom:32, left:22, right:22 },
   testBtn:         { backgroundColor:'#1a1a1a', borderRadius:16, paddingVertical:14, alignItems:'center' },
   testBtnText:     { color:'white', fontSize:14, fontFamily: F.bold },

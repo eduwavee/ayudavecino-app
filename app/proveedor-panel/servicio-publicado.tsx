@@ -7,6 +7,15 @@ import { useRouter, useLocalSearchParams } from 'expo-router'
 import { categoriaInfo } from '../../constants/categorias'
 import { FUENTES as F } from '../../constants/diseno'
 import { PressScale } from '../../components/ui/PressScale'
+import { Icono, NombreIcono } from '../../components/ui/Icono'
+import { FondoBarraEstado } from '../../components/ui/FondoBarraEstado'
+import { Colors } from '../../constants/colors'
+
+const TIPS: { icono: NombreIcono; texto: string }[] = [
+  { icono: 'camera-outline',  texto: 'Agregá fotos de trabajos anteriores' },
+  { icono: 'flash-outline',   texto: 'Respondé rápido para subir tu rating' },
+  { icono: 'pricetag-outline', texto: 'Ofrecé un precio competitivo al inicio' },
+]
 
 const { width } = Dimensions.get('window')
 
@@ -64,10 +73,9 @@ export default function ServicioPublicadoScreen() {
           opacity: rippleOpacity,
         }]} />
         {/* Partículas decorativas */}
-        <View style={[styles.particle, { top:'15%', left:'10%' }]}><Text style={styles.particleText}>✦</Text></View>
-        <View style={[styles.particle, { top:'20%', right:'12%' }]}><Text style={styles.particleText}>✦</Text></View>
-        <View style={[styles.particle, { top:'35%', left:'5%' }]}><Text style={styles.particleText}>·</Text></View>
-        <View style={[styles.particle, { top:'30%', right:'8%' }]}><Text style={styles.particleText}>✦</Text></View>
+        <View style={[styles.particle, { top:'15%', left:'10%' }]}><Icono nombre="sparkles" tamano={18} color="rgba(255,255,255,.3)" /></View>
+        <View style={[styles.particle, { top:'20%', right:'12%' }]}><Icono nombre="sparkles" tamano={14} color="rgba(255,255,255,.25)" /></View>
+        <View style={[styles.particle, { top:'30%', right:'8%' }]}><Icono nombre="sparkles" tamano={20} color="rgba(255,255,255,.3)" /></View>
       </View>
 
       {/* TOP — check animado */}
@@ -77,7 +85,9 @@ export default function ServicioPublicadoScreen() {
           <View style={styles.checkRing2} />
           <View style={styles.checkRing1} />
           <View style={styles.checkCircle}>
-            <Animated.Text style={[styles.checkMark, { transform:[{ rotate }] }]}>🚀</Animated.Text>
+            <Animated.View style={{ transform:[{ rotate }] }}>
+              <Icono nombre="rocket" tamano={36} color={COLOR} />
+            </Animated.View>
           </View>
         </Animated.View>
 
@@ -96,13 +106,13 @@ export default function ServicioPublicadoScreen() {
 
         <View style={styles.servicePreview}>
           <View style={styles.serviceIco}>
-            <Text style={styles.serviceIcoText}>{categoriaInfo(categoria).ico}</Text>
+            <Icono nombre={categoriaInfo(categoria).icono} tamano={24} color={Colors.primary} />
           </View>
           <View style={styles.serviceInfo}>
             <Text style={styles.serviceName}>{nombre}</Text>
             <Text style={styles.serviceCat}>{categoriaInfo(categoria).nombre}</Text>
           </View>
-          <Text style={styles.servicePrice}>${Number(precio).toLocaleString()}</Text>
+          <Text style={styles.servicePrice}>${Number(precio).toLocaleString('es-AR')}</Text>
         </View>
 
         <View style={styles.divider} />
@@ -131,39 +141,37 @@ export default function ServicioPublicadoScreen() {
 
         {/* Tips */}
         <View style={styles.tipsSection}>
-          <Text style={styles.tipsTitle}>💡 Tips para conseguir más clientes</Text>
           <View style={styles.tipRow}>
-            <Text style={styles.tipIco}>📸</Text>
-            <Text style={styles.tipText}>Agregá fotos de trabajos anteriores</Text>
+            <Icono nombre="bulb-outline" tamano={16} color="#8A6500" />
+            <Text style={styles.tipsTitle}>Tips para conseguir más clientes</Text>
           </View>
-          <View style={styles.tipRow}>
-            <Text style={styles.tipIco}>⚡</Text>
-            <Text style={styles.tipText}>Respondé rápido para subir tu rating</Text>
-          </View>
-          <View style={styles.tipRow}>
-            <Text style={styles.tipIco}>💰</Text>
-            <Text style={styles.tipText}>Ofrecé un precio competitivo al inicio</Text>
-          </View>
+          {TIPS.map(t => (
+            <View key={t.texto} style={styles.tipRow}>
+              <View style={styles.tipIco}><Icono nombre={t.icono} tamano={15} color={Colors.primary} /></View>
+              <Text style={styles.tipText}>{t.texto}</Text>
+            </View>
+          ))}
         </View>
 
       </Animated.View>
 
-      {/* Botones */}
+      {/* Botones: dismissTo vuelve a la pantalla si ya está en la pila (con replace
+          quedaba duplicada y "Atrás" llevaba a otra copia del panel) */}
       <Animated.View style={[styles.buttons, { opacity:fadeContent }]}>
         <PressScale haptico
           style={styles.btnPrimary}
-          onPress={() => router.replace('/proveedor-panel/servicios')}
+          onPress={() => router.dismissTo('/proveedor-panel/servicios')}
         >
           <Text style={styles.btnPrimaryText}>Ver mis servicios</Text>
         </PressScale>
         <PressScale haptico
           style={styles.btnSecondary}
-          onPress={() => router.replace('/proveedor-panel')}
+          onPress={() => router.dismissTo('/proveedor-panel')}
         >
-          <Text style={styles.btnSecondaryText}>Ir al dashboard</Text>
+          <Text style={styles.btnSecondaryText}>Ir al panel</Text>
         </PressScale>
       </Animated.View>
-
+      <FondoBarraEstado color={COLOR} />
     </View>
   )
 }
@@ -174,14 +182,12 @@ const styles = StyleSheet.create({
   ripple:          { position:'absolute', width:width, height:width, borderRadius:width/2, backgroundColor:'rgba(255,255,255,.12)' },
   ripple2:         { position:'absolute', width:width*1.6, height:width*1.6, borderRadius:width, backgroundColor:'rgba(255,255,255,.06)' },
   particle:        { position:'absolute' },
-  particleText:    { fontFamily: F.regular, color:'rgba(255,255,255,.3)', fontSize:20 },
   topSection:      { alignItems:'center', paddingTop:72, paddingBottom:28 },
   checkWrap:       { alignItems:'center', justifyContent:'center', marginBottom:24, position:'relative' },
   checkRing3:      { position:'absolute', width:160, height:160, borderRadius:80, backgroundColor:'rgba(255,255,255,.08)' },
   checkRing2:      { position:'absolute', width:120, height:120, borderRadius:60, backgroundColor:'rgba(255,255,255,.12)' },
   checkRing1:      { position:'absolute', width:90, height:90, borderRadius:45, backgroundColor:'rgba(255,255,255,.18)' },
   checkCircle:     { width:72, height:72, borderRadius:36, backgroundColor:'white', alignItems:'center', justifyContent:'center', shadowColor:'#000', shadowOffset:{width:0,height:8}, shadowOpacity:.2, shadowRadius:16, elevation:8 },
-  checkMark:       { fontFamily: F.regular, fontSize:34 },
   topTexts:        { alignItems:'center' },
   exitoTitle:      { fontSize:36, fontFamily: F.extrabold, color:'white', textAlign:'center', lineHeight:42, marginBottom:8 },
   exitoSub:        { fontFamily: F.regular, fontSize:14, color:'rgba(255,255,255,.7)', textAlign:'center', paddingHorizontal:32 },
@@ -190,7 +196,6 @@ const styles = StyleSheet.create({
   cardHeaderText:  { fontSize:12, fontFamily: F.bold, color:'rgba(255,255,255,.8)', letterSpacing:1 },
   servicePreview:  { flexDirection:'row', alignItems:'center', gap:14, padding:20 },
   serviceIco:      { width:50, height:50, borderRadius:15, backgroundColor:'rgba(108,99,255,.1)', alignItems:'center', justifyContent:'center' },
-  serviceIcoText:  { fontFamily: F.regular, fontSize:24 },
   serviceInfo:     { flex:1 },
   serviceName:     { fontSize:16, fontFamily: F.extrabold, color:'#1a1a1a', marginBottom:3 },
   serviceCat:      { fontFamily: F.regular, fontSize:12, color:'#6B6B6B' },
@@ -204,9 +209,9 @@ const styles = StyleSheet.create({
   activeBadge:     { backgroundColor:'rgba(108,99,255,.1)', paddingHorizontal:10, paddingVertical:3, borderRadius:100 },
   activeBadgeText: { fontSize:11, fontFamily: F.bold, color:COLOR },
   tipsSection:     { padding:20, gap:10 },
-  tipsTitle:       { fontSize:13, fontFamily: F.extrabold, color:'#1a1a1a', marginBottom:4 },
+  tipsTitle:       { fontSize:13, fontFamily: F.extrabold, color:'#1a1a1a' },
   tipRow:          { flexDirection:'row', alignItems:'center', gap:10 },
-  tipIco:          { fontFamily: F.regular, fontSize:16, width:24 },
+  tipIco:          { width:28, height:28, borderRadius:9, backgroundColor:'rgba(26,158,92,.1)', alignItems:'center', justifyContent:'center' },
   tipText:         { fontFamily: F.regular, fontSize:12, color:'#666', flex:1 },
   buttons:         { padding:20, gap:10 },
   btnPrimary:      { backgroundColor:'white', borderRadius:16, paddingVertical:16, alignItems:'center' },

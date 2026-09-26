@@ -10,10 +10,11 @@ const power3Out = (t: number) => 1 - Math.pow(1 - t, 3)
 // Con "reducir movimiento" muestra el valor final directamente.
 export function ContadorAnimado({
   valor,
+  prefijo = '',
   sufijo = '',
   duracion = DURACION.lenta + 300,
   ...props
-}: TextProps & { valor: number | null | undefined; sufijo?: string; duracion?: number }) {
+}: TextProps & { valor: number | null | undefined; prefijo?: string; sufijo?: string; duracion?: number }) {
   const reducirMovimiento = useReducedMotion()
   const [mostrado, setMostrado] = useState(0)
 
@@ -34,7 +35,7 @@ export function ContadorAnimado({
 
   return (
     <Text {...props}>
-      {valor == null ? '—' : mostrado.toLocaleString('es-AR') + sufijo}
+      {valor == null ? '—' : prefijo + mostrado.toLocaleString('es-AR') + sufijo}
     </Text>
   )
 }
